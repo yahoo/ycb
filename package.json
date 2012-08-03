@@ -1,7 +1,7 @@
 {
     "name": "ycb",
     "version": "1.0.0",
-    "description": "Mojito provides an architecture, components and tools for developers to build complex web applications faster.",
+    "description": "",
     "preferGlobal": true,
     "author": "Drew Folta <folta@yahoo-inc.com>",
     "contributors": [
