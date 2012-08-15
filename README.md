@@ -1,0 +1,4 @@
+ycb
+===
+
+Yahoo! Configuration Bundle
