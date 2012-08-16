@@ -414,4 +414,9 @@ suite.add(new Y.Test.Case({
 
 
 Y.Test.Runner.add(suite);
+Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT, function (results) {
+    if (results.results.failed > 0 || results.results.errors > 0) {
+        process.exit(1);
+    }
+});
 Y.Test.Runner.run();
