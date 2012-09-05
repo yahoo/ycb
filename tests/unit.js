@@ -13,7 +13,8 @@ var Y = require('yui').YUI({useSync: true}).use('json', 'oop', 'test'),
     libycb = require('../index'),
     suite = new Y.Test.Suite('ycb unit tests'),
     A = Y.Assert,
-    AA = Y.ArrayAssert;
+    AA = Y.ArrayAssert,
+    OA = Y.ObjectAssert;
 
 
 function readFixtureFile(file){
@@ -407,6 +408,37 @@ suite.add(new Y.Test.Case({
         A.isTrue(ctxs['{"region":"ca","flavor":"att"}']);
         A.isTrue(ctxs['{"region":"gb","flavor":"bt"}']);
         A.isTrue(ctxs['{"region":"fr","flavor":"bt"}']);
+    },
+
+
+    'clone object': function() {
+        var bundle, ycb;
+        bundle = readFixtureFile('dimensions.json')
+            .concat(readFixtureFile('simple-1.json'));
+        ycb = new libycb.Ycb(bundle);
+
+        var obj, copy;
+        obj = {
+            inner: {
+                string: "value",
+                number: 1,
+                fn: function() {}
+            },
+            list: ['a', 'b', 'c']
+        };
+        copy = ycb._cloneObj(obj);
+
+        A.areNotSame(obj, copy);
+
+        A.areNotSame(obj.inner, copy.inner);
+        OA.areEqual(obj.inner, copy.inner);
+
+        A.areSame(obj.inner.string, copy.inner.string);
+        A.areSame(obj.inner.number, copy.inner.number);
+        A.areSame(obj.inner.fn, copy.inner.fn);
+
+        A.areNotSame(obj.list, copy.list);
+        AA.itemsAreEqual(obj.list, copy.list);
     }
 
 
