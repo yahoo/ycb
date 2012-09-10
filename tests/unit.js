@@ -59,7 +59,7 @@ suite.add(new Y.Test.Case({
 
 
     'test if we can use the module': function() {
-        A.isTrue(libycb.version === '2.0.0');
+        A.isTrue(libycb.version === '1.0.2');
     },
 
 

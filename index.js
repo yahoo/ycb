@@ -8,7 +8,7 @@
 /*jslint anon:true, sloppy:true, node:true, nomen:true*/
 
 
-var VERSION = '2.0.0',
+var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
     SUBMATCH = /\$\$[a-zA-Z0-9.-_]*\$\$/,
