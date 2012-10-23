@@ -17,7 +17,9 @@
         "node": ">0.4",
         "npm": ">1.0"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "yui": ">3.5"
+    },
     "repository": {
         "type": "git",
         "url": "git://github.com/yahoo/ycb.git"
