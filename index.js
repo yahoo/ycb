@@ -5,17 +5,56 @@
  */
 
 
-/*jslint anon:true, sloppy:true, node:true, nomen:true*/
+/*jslint anon:true, node:true, nomen:true*/
 
+'use strict';
 
 var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
-    SUBMATCH = /\$\$[a-zA-Z0-9.-_]*\$\$/,
-    Y = require('yui').YUI({useSync: true}).use('json-parse', 'json-stringify', 'oop');
+    SUBMATCH = /\$\$[a-zA-Z0-9.-_]*\$\$/;
 
-Y.applyConfig({useSync: false});
+//---------------------------------------------------------------
+// UTILITY FUNCTIONS
 
+function objectMerge(from, to) {
+    var key;
+    for (key in from) {
+        if (from.hasOwnProperty(key)) {
+            if (to.hasOwnProperty(key)) {
+                // Property in destination object set; update its value.
+                if (from[key].constructor === Object) {
+                    to[key] = objectMerge(from[key], to[key]);
+                } else {
+                    to[key] = from[key];
+                }
+            } else {
+                // Property in destination object not set; create it and set its value.
+                to[key] = from[key];
+            }
+        }
+    }
+    return to;
+}
+
+
+function extract(bag, key, def) {
+    var keys,
+        cur  = bag,
+        i;
+    if (!key) {
+        return bag || {};
+    }
+    keys = key.split('.');
+    for (i = 0; i < keys.length; i += 1) {
+        if (cur[keys[i]]) {
+            cur = cur[keys[i]];
+        } else {
+            return def;
+        }
+    }
+    return cur;
+}
 
 //---------------------------------------------------------------
 // OBJECT ORIENTED INTERFACE
@@ -36,7 +75,7 @@ Ycb.prototype = {
      * @method getDimensions
      * @return {object} the dimensions
      */
-    getDimensions: function() {
+    getDimensions: function () {
         return this._cloneObj(this.dimensions);
     },
 
@@ -51,7 +90,7 @@ Ycb.prototype = {
      * @param callback.return {boolean} if the callback returns false, then walking is stopped
      * @return {nothing} results returned via callback
      */
-    walkSettings: function(callback) {
+    walkSettings: function (callback) {
         var path,
             context;
         for (path in this.settings) {
@@ -73,7 +112,7 @@ Ycb.prototype = {
      * @param options {object}
      * @return {object}
      */
-    read: function(context, options) {
+    read: function (context, options) {
         var lookupPaths,
             path,
             config = {};
@@ -84,11 +123,11 @@ Ycb.prototype = {
         lookupPaths = this._getLookupPaths(context, options);
 
         if (options.debug) {
-            console.log(Y.JSON.stringify(context, null, 4));
-            console.log(Y.JSON.stringify(this.dimensions, null, 4));
-            console.log(Y.JSON.stringify(this.settings, null, 4));
-            console.log(Y.JSON.stringify(this.schema, null, 4));
-            console.log(Y.JSON.stringify(lookupPaths, null, 4));
+            console.log(JSON.stringify(context, null, 4));
+            console.log(JSON.stringify(this.dimensions, null, 4));
+            console.log(JSON.stringify(this.settings, null, 4));
+            console.log(JSON.stringify(this.schema, null, 4));
+            console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
         // Now we simply merge each macting settings section we find into the config
@@ -96,7 +135,7 @@ Ycb.prototype = {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
                     console.log('----USING---- ' + lookupPaths[path]);
-                    console.log(Y.JSON.stringify(this.settings[lookupPaths[path]], null, 4));
+                    console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
                 }
                 // merge a copy so that we don't modify the source
                 config = objectMerge(this._cloneObj(this.settings[lookupPaths[path]]), config);
@@ -122,7 +161,7 @@ Ycb.prototype = {
      * @param options {object}
      * @return {array of objects}
      */
-    readNoMerge: function(context, options) {
+    readNoMerge: function (context, options) {
         var lookupPaths,
             path,
             config = [];
@@ -132,11 +171,11 @@ Ycb.prototype = {
         lookupPaths = this._getLookupPaths(context, options);
 
         if (options.debug) {
-            console.log(Y.JSON.stringify(context, null, 4));
-            console.log(Y.JSON.stringify(this.dimensions, null, 4));
-            console.log(Y.JSON.stringify(this.settings, null, 4));
-            console.log(Y.JSON.stringify(this.schema, null, 4));
-            console.log(Y.JSON.stringify(lookupPaths, null, 4));
+            console.log(JSON.stringify(context, null, 4));
+            console.log(JSON.stringify(this.dimensions, null, 4));
+            console.log(JSON.stringify(this.settings, null, 4));
+            console.log(JSON.stringify(this.schema, null, 4));
+            console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
         // Now we simply merge each macting settings section we find into the config
@@ -144,7 +183,7 @@ Ycb.prototype = {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
                     console.log('----USING---- ' + lookupPaths[path]);
-                    console.log(Y.JSON.stringify(this.settings[lookupPaths[path]], null, 4));
+                    console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
                 }
                 config.push(this._cloneObj(this.settings[lookupPaths[path]]));
             }
@@ -163,7 +202,7 @@ Ycb.prototype = {
      * @param parent {object}
      * @return void
      */
-    _applySubstitutions: function(config, base, parent) {
+    _applySubstitutions: function (config, base, parent) {
         var key,
             sub,
             find,
@@ -212,7 +251,7 @@ Ycb.prototype = {
                         // We have a match so lets use it
                         sub = SUBMATCH.exec(config[key]);
                         // Pull out he key to "find"
-                        find = sub[0].slice(2,-2);
+                        find = sub[0].slice(2, -2);
                         // First see if it is the whole value
                         if (sub[0] === config[key]) {
                             // Replace the whole value with the value found by the sub string
@@ -245,35 +284,36 @@ Ycb.prototype = {
      * @param options {object} runtime options
      * @return {Array}
      */
-    _getLookupPaths: function(context, options) {
-        var lookupList = Y.Object.values(this._makeOrderedLookupList(context, options)),
+    _getLookupPaths: function (context, options) {
+        var values = this._makeOrderedLookupList(context, options),
+            lookupList = Object.keys(values),
             path = [],
             paths = [],
             pos,
-            current = lookupList.length-1,
+            current = lookupList.length - 1,
             combination = [];
 
         // This is our combination that we will tumble over
         for (pos = 0; pos < lookupList.length; pos += 1) {
             combination.push({
                 current: 0,
-                total: lookupList[pos].length-1
+                total: values[lookupList[pos]].length - 1
             });
         }
 
         function tumble(combination, location) {
             // If the location is not found return
-            if(!combination[location]){
+            if (!combination[location]) {
                 return false;
             }
 
             // Move along to the next item
-            combination[location].current++;
+            combination[location].current += 1;
 
             // If the next item is not found move to the prev location
             if (combination[location].current > combination[location].total) {
                 combination[location].current = 0;
-                return tumble(combination, location-1);
+                return tumble(combination, location - 1);
             }
 
             return true;
@@ -282,7 +322,7 @@ Ycb.prototype = {
         do {
             path = [];
             for (pos = 0; pos < lookupList.length; pos += 1) {
-                path.push(lookupList[pos][combination[pos].current]);
+                path.push(values[lookupList[pos]][combination[pos].current]);
             }
             paths.push(path.join(SEPARATOR));
         } while (tumble(combination, current));
@@ -298,7 +338,7 @@ Ycb.prototype = {
      * @param options {object}
      * @return {nothing}
      */
-    _processRawBundle: function(bundle, options) {
+    _processRawBundle: function (bundle, options) {
         var pos,
             section,
             part,
@@ -337,7 +377,8 @@ Ycb.prototype = {
                 if (!this.settings[key]) {
                     this.settings[key] = section;
                 } else {
-                    throw new Error("The settings group '"+Y.JSON.stringify(context)+"' has already been added.");
+                    throw new Error("The settings group '" + JSON.stringify(context) +
+                        "' has already been added.");
                 }
             }
         }
@@ -351,7 +392,7 @@ Ycb.prototype = {
      * @param options {object}
      * @return {string}
      */
-    _getLookupPath: function(context, options) {
+    _getLookupPath: function (context, options) {
         var lookupList = this._makeOrderedLookupList(context, options),
             name,
             list,
@@ -390,7 +431,7 @@ Ycb.prototype = {
      * @param path {string} the path
      * @return {object} the cooresponding context (really a partial context)
      */
-    _getContextFromLookupPath: function(path) {
+    _getContextFromLookupPath: function (path) {
         var parts = path.split(SEPARATOR),
             p,
             part,
@@ -398,13 +439,12 @@ Ycb.prototype = {
             ctx = {};
         for (p = 0; p < this.dimensions.length; p += 1) {
             part = parts[p];
-            if ('*' === part) {
-                continue;
+            if ('*' !== part) {
+                // Having more than one key in the dimensions structure is against
+                // the YCB spec.
+                dimName = Object.keys(this.dimensions[p])[0];
+                ctx[dimName] = part;
             }
-            // Having more than one key in the dimensions structure is against
-            // the YCB spec.
-            dimName = Object.keys(this.dimensions[p])[0];
-            ctx[dimName] = part;
         }
         return ctx;
     },
@@ -417,38 +457,40 @@ Ycb.prototype = {
      * @param options {object}
      * @return {object} list of lists
      */
-    _makeOrderedLookupList: function(context, options) {
+    _makeOrderedLookupList: function (context, options) {
         var pos,
             name,
             path,
             value,
             used,
+            parts,
+            i,
             chains = {};
 
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
                     for (path in this._dimensionPaths[name]) {
-                        if (!this._dimensionPaths[name].hasOwnProperty(path)) {
-                            continue;
-                        }
-                        value = this._dimensionPaths[name][path];
-                        used = options.useAllDimensions || false;
-                        if (!options.useAllDimensions) {
-                            Y.Array.forEach(path.split(SEPARATOR), function (part) {
-                                if ((this.dimsUsed[name] && this.dimsUsed[name][part])) {
-                                    used = true;
+                        if (this._dimensionPaths[name].hasOwnProperty(path)) {
+                            value = this._dimensionPaths[name][path];
+                            used = options.useAllDimensions || false;
+                            if (!options.useAllDimensions && this.dimsUsed[name]) {
+                                parts = path.split(SEPARATOR);
+                                for (i = 0; i < parts.length; i += 1) {
+                                    if (this.dimsUsed[name][parts[i]]) {
+                                        used = true;
+                                    }
                                 }
-                            }, this);
-                        }
-                        if (used && value === context[name]) {
-                            chains[name] = path;
+                            }
+                            if (used && value === context[name]) {
+                                chains[name] = path;
+                            }
                         }
                     }
                     if (chains[name]) {
                         // Convert to an ordered list
                         chains[name] = chains[name].split(SEPARATOR).reverse().concat(DEFAULT);
-                    } else{
+                    } else {
                         // If there was no match set to default
                         chains[name] = [DEFAULT];
                     }
@@ -467,7 +509,7 @@ Ycb.prototype = {
      * @param build {string}
      * @return {object} k/v map
      */
-    _flattenDimension: function(prefix, dimension, build) {
+    _flattenDimension: function (prefix, dimension, build) {
         var key,
             newPrefix,
             nextDimension;
@@ -494,7 +536,7 @@ Ycb.prototype = {
      * @method _flattenDimensions
      * @return {nothing}
      */
-    _flattenDimensions: function() {
+    _flattenDimensions: function () {
         var pos,
             name;
         this._dimensionPaths = {};
@@ -514,7 +556,7 @@ Ycb.prototype = {
      * @param {object} o object to clone
      * @return {object} a copy of the object
      */
-    _cloneObj: function(o) {
+    _cloneObj: function (o) {
         var newO,
             i;
 
@@ -567,7 +609,7 @@ module.exports = {
      * @param debug {boolean}
      * @return {object}
      */
-    read: function(bundle, context, validate, debug) {
+    read: function (bundle, context, validate, debug) {
         var ycb = new Ycb(bundle),
             opts = {
                 validate: validate,
@@ -586,7 +628,7 @@ module.exports = {
      * @param debug {boolean}
      * @return {array of objects}
      */
-    readNoMerge: function(bundle, context, validate, debug) {
+    readNoMerge: function (bundle, context, validate, debug) {
         var ycb = new Ycb(bundle),
             opts = { debug: debug };
         return ycb.readNoMerge(context, opts);
@@ -594,47 +636,3 @@ module.exports = {
 
 
 };
-
-
-
-//---------------------------------------------------------------
-// UTILITY FUNCTIONS
-
-function objectMerge(from, to) {
-    var key;
-    for (key in from) {
-        if (from.hasOwnProperty(key)) {
-            if (to.hasOwnProperty(key)) {
-                // Property in destination object set; update its value.
-                if (from[key].constructor === Object) {
-                    to[key] = objectMerge(from[key], to[key]);
-                } else {
-                    to[key] = from[key];
-                }
-            } else {
-                // Property in destination object not set; create it and set its value.
-                to[key] = from[key];
-            }
-        }
-    }
-    return to;
-}
-
-
-function extract(bag, key, def) {
-    var keys,
-        cur  = bag,
-        i;
-    if (!key) {
-        return bag || {};
-    }
-    keys = key.split('.');
-    for (i = 0; i < keys.length; i += 1) {
-        if (cur[keys[i]]) {
-            cur = cur[keys[i]];
-        } else {
-            return def;
-        }
-    }
-    return cur;
-}
