@@ -8,9 +8,7 @@
         "Michael Ridgway <mridgway@yahoo-inc.com>",
         "Caridy Patino <caridy@yahoo-inc.com>"
     ],
-    "dependencies": {
-        "yui": ">3.5"
-    },
+    "dependencies": {},
     "main": "index",
     "scripts": {
         "test": "node tests/unit"
