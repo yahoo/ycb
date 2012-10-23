@@ -5,7 +5,8 @@
     "author": "Ric Allinson <allinson@yahoo-inc.com>",
     "contributors": [
         "Drew Folta <folta@yahoo-inc.com>",
-        "Michael Ridgway <mridgway@yahoo-inc.com>"
+        "Michael Ridgway <mridgway@yahoo-inc.com>",
+        "Caridy Patino <caridy@yahoo-inc.com>"
     ],
     "dependencies": {
         "yui": ">3.5"
