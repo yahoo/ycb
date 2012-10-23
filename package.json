@@ -8,9 +8,7 @@
         "Michael Ridgway <mridgway@yahoo-inc.com>",
         "Caridy Patino <caridy@yahoo-inc.com>"
     ],
-    "dependencies": {
-        "yui": ">3.5"
-    },
+    "dependencies": {},
     "main": "index",
     "scripts": {
         "test": "node tests/unit"
@@ -19,7 +17,9 @@
         "node": ">0.4",
         "npm": ">1.0"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "yui": ">3.5"
+    },
     "repository": {
         "type": "git",
         "url": "git://github.com/yahoo/ycb.git"
