@@ -1,0 +1,20 @@
+[
+    {
+        "settings": ["master"],
+        "foo": null,
+        "bar": 0,
+        "baz": false,
+        "oof": 4,
+        "rab": 5,
+        "zab": 6
+    },
+    {
+        "settings": ["lang:fr"],
+        "foo": 1,
+        "bar": 2,
+        "baz": 3,
+        "oof": null,
+        "rab": 0,
+        "zab": false
+    }
+]
