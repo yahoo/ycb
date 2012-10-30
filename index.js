@@ -23,7 +23,7 @@ function objectMerge(from, to) {
         if (from.hasOwnProperty(key)) {
             if (to.hasOwnProperty(key)) {
                 // Property in destination object set; update its value.
-                if (from[key].constructor === Object) {
+                if (from[key] && from[key].constructor === Object) {
                     to[key] = objectMerge(from[key], to[key]);
                 } else {
                     to[key] = from[key];
@@ -604,6 +604,7 @@ module.exports = {
      * Processes an Object representing a YCB 2.0 Bundle as defined in the spec.
      *
      * @method read
+     * @param bundle {object}
      * @param context {object}
      * @param validate {boolean}
      * @param debug {boolean}
@@ -623,6 +624,7 @@ module.exports = {
      * Like read(), but doesn't merge the found sections.
      *
      * @method readNoMerge
+     * @param bundle {object}
      * @param context {object}
      * @param validate {boolean}
      * @param debug {boolean}
