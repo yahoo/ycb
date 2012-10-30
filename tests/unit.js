@@ -266,7 +266,6 @@ suite.add(new Y.Test.Case({
             'lang': 'fr_FR'
         };
         config = libycb.read(bundle, context);
-
         A.areSame('YRB_YAHOO', config.title_key);
         A.areSame('yahoo_FR.png', config.logo);
         A.areSame('http://gb.yahoo.com', config.links.home);
@@ -439,8 +438,27 @@ suite.add(new Y.Test.Case({
 
         A.areNotSame(obj.list, copy.list);
         AA.itemsAreEqual(obj.list, copy.list);
-    }
+    },
 
+    'test objectMerge': function () {
+        var bundle,
+            ycb;
+
+        bundle = readFixtureFile('dimensions.json')
+            .concat(readFixtureFile('simple-4.json'));
+        ycb = new libycb.Ycb(bundle);
+        var config = ycb.read({
+            'lang': 'fr'
+        });
+        OA.areEqual({
+            foo: 1,
+            bar: 2,
+            baz: 3,
+            oof: null,
+            rab: 0,
+            zab: false
+        }, config);
+    }
 
 }));
 
