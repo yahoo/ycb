@@ -465,8 +465,12 @@ suite.add(new Y.Test.Case({
 
 Y.Test.Runner.add(suite);
 Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT, function (results) {
+    var resultsObject = Y.Test.Runner.getResults();
+        resultsXML = Y.Test.Runner.getResults(Y.Test.Format.XML);
+    libfs.writeFileSync('./results.xml', resultsXML);
     if (results.results.failed > 0 || results.results.errors > 0) {
         process.exit(1);
     }
 });
+
 Y.Test.Runner.run();
