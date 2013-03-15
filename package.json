@@ -18,7 +18,8 @@
         "npm": ">1.0"
     },
     "devDependencies": {
-        "yui": ">3.5"
+        "yui": ">3.5",
+        "istanbul": ">=0.1.32"
     },
     "repository": {
         "type": "git",
