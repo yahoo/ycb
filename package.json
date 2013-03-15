@@ -19,7 +19,8 @@
     },
     "devDependencies": {
         "yui": ">3.5",
-        "istanbul": ">=0.1.32"
+        "istanbul": ">=0.1.32",
+        "jslint": "~0.1.9"
     },
     "repository": {
         "type": "git",
