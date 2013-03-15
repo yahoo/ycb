@@ -439,11 +439,6 @@ suite.add(new Y.Test.Case({
         A.areNotSame(obj.list, copy.list);
         AA.itemsAreEqual(obj.list, copy.list);
     },
-    
-}));
-
-suite.add(new Y.Test.Case({
-    name: 'suite2',
 
     'test objectMerge': function () {
         var bundle,
