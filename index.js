@@ -12,7 +12,7 @@
 var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
-    SUBMATCH = /\$\$[a-zA-Z0-9.-_]*\$\$/;
+    SUBMATCH = /\$\$([a-zA-Z0-9.-_]+)\$\$/;
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
@@ -227,41 +227,39 @@ Ycb.prototype = {
                     // parent param {ref: config, key: key} is a recursion
                     // pointer that needed only when replacing "keys"
                     this._applySubstitutions(config[key], base, {ref: config, key: key});
+
                 } else {
                     // Test if the key is a "substitution" key
-                    if (SUBMATCH.test(key)) {
-                        // We have a match so lets do some work
-                        sub = SUBMATCH.exec(key);
-                        // Is it the whole key or just something odd
-                        if (sub[0] === key) {
-                            // Pull out the key to "find"
-                            find = extract(base, sub[0].slice(2, -2), null);
+                    sub = SUBMATCH.exec(key);
+                    if (sub && (sub[0] === key)) {
+                        // Pull out the key to "find"
+                        find = extract(base, sub[1], null);
 
-                            if (isA(find, Object)) {
-                                // Remove the "substitution" key
-                                delete config[key];
-                                // Add the keys founds
-                                // This should be inline at the point where the "substitution" key was.
-                                // Currently they will be added out of order on the end of the map.
-                                for (item in find) {
-                                    if (find.hasOwnProperty(item)) {
-                                        if (!parent.ref[parent.key]) {
-                                            parent.ref[item] = find[item];
-                                        } else {
-                                            parent.ref[parent.key][item] = find[item];
-                                        }
+                        if (isA(find, Object)) {
+                            // Remove the "substitution" key
+                            delete config[key];
+
+                            // Add the keys founds
+                            // This should be inline at the point where the "substitution" key was.
+                            // Currently they will be added out of order on the end of the map.
+                            for (item in find) {
+                                if (find.hasOwnProperty(item)) {
+                                    if (!parent.ref[parent.key]) {
+                                        parent.ref[item] = find[item];
+                                    } else {
+                                        parent.ref[parent.key][item] = find[item];
                                     }
                                 }
-                            } else {
-                                config[key] = '--YCB-SUBSTITUTION-ERROR--';
                             }
+                        } else {
+                            config[key] = '--YCB-SUBSTITUTION-ERROR--';
                         }
                     } else if (SUBMATCH.test(config[key])) {
-                    // Test if the value is a "substitution" value
+                        // Test if the value is a "substitution" value
                         // We have a match so lets use it
                         sub = SUBMATCH.exec(config[key]);
                         // Pull out the key to "find"
-                        find = sub[0].slice(2, -2);
+                        find = sub[1];
                         // First see if it is the whole value
                         if (sub[0] === config[key]) {
                             // Replace the whole value with the value found by the sub string
