@@ -11,7 +11,7 @@ var Y = require('yui').YUI({useSync: true}).use('json', 'oop', 'test'),
     libpath = require('path'),
     libfs = require('fs'),
     libycb = require('../index'),
-    suite = new Y.Test.Suite('ycb unit tests'),
+    cases = {},
     A = Y.Assert,
     AA = Y.ArrayAssert,
     OA = Y.ObjectAssert;
@@ -49,9 +49,9 @@ function cmp(x, y, msg) {
 }
 
 
-suite.add(new Y.Test.Case({
+cases = {
 
-    name: 'ycb',
+    name: 'ycb unit tests',
 
     setUp: function() {},
 
@@ -460,10 +460,10 @@ suite.add(new Y.Test.Case({
         }, config);
     }
 
-}));
+};
 
 
-Y.Test.Runner.add(suite);
+Y.Test.Runner.add(new Y.Test.Case(cases));
 Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT, function (results) {
     var resultsObject = Y.Test.Runner.getResults();
         resultsXML = Y.Test.Runner.getResults(Y.Test.Format.XML);
