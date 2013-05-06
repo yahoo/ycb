@@ -37,7 +37,6 @@ function objectMerge(from, to) {
     return to;
 }
 
-
 function extract(bag, key, def) {
     var keys,
         cur  = bag,
@@ -96,7 +95,7 @@ Ycb.prototype = {
         for (path in this.settings) {
             if (this.settings.hasOwnProperty(path)) {
                 context = this._getContextFromLookupPath(path);
-                // clone, so that noone mutates us
+                // clone, so that no-one mutates us
                 if (!callback(context, this._cloneObj(this.settings[path]))) {
                     break;
                 }
@@ -130,7 +129,7 @@ Ycb.prototype = {
             console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
-        // Now we simply merge each macting settings section we find into the config
+        // Now we simply merge each matching settings section we find into the config
         for (path = 0; path < lookupPaths.length; path += 1) {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
@@ -178,7 +177,7 @@ Ycb.prototype = {
             console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
-        // Now we simply merge each macting settings section we find into the config
+        // Now we simply merge each matching settings section we find into the config
         for (path = 0; path < lookupPaths.length; path += 1) {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
@@ -193,7 +192,7 @@ Ycb.prototype = {
 
 
     /**
-     * This is a first pass at hairball of a funciton.
+     * This is a first pass at hairball of a function.
      *
      * @private
      * @method _applySubstitutions
@@ -220,11 +219,11 @@ Ycb.prototype = {
                 } else {
                     // Test if the key is a "substitution" key
                     if (SUBMATCH.test(key)) {
-                        // We have a matching so lets do some work
+                        // We have a match so lets do some work
                         sub = SUBMATCH.exec(key);
                         // Is it the whole key or just something odd
                         if (sub[0] === key) {
-                            // Pull out he key to "find"
+                            // Pull out the key to "find"
                             find = extract(base, sub[0].slice(2, -2), null);
 
                             if (find.constructor === Object) {
@@ -250,15 +249,15 @@ Ycb.prototype = {
                     // Test if the value is a "substitution" value
                         // We have a match so lets use it
                         sub = SUBMATCH.exec(config[key]);
-                        // Pull out he key to "find"
+                        // Pull out the key to "find"
                         find = sub[0].slice(2, -2);
                         // First see if it is the whole value
                         if (sub[0] === config[key]) {
                             // Replace the whole value with the value found by the sub string
                             find = extract(base, find, null);
                             // If we have an array in an array do it "special like"
-                            if (find.constructor === Array && config.constructor === Array) {
-                                // This has to be done on the parent or the referance is lost
+                            if (isA(find, Array) && isA(config, Array)) {
+                                // This has to be done on the parent or the reference is lost
                                 // The whole {ref: config, key: key} is needed only when replacing "keys"
                                 parent.ref[parent.key] = config.slice(0, parseInt(key, 10))
                                     .concat(find)
@@ -429,7 +428,7 @@ Ycb.prototype = {
      * @private
      * @method _getContextFromLookupPath
      * @param path {string} the path
-     * @return {object} the cooresponding context (really a partial context)
+     * @return {object} the corresponding context (really a partial context)
      */
     _getContextFromLookupPath: function (path) {
         var parts = path.split(SEPARATOR),
