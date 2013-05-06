@@ -17,13 +17,22 @@ var VERSION = '1.0.2',
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
 
+function isA(item, constructor) {
+    /*jslint eqeq:true*/
+    return (item != null) && (item.constructor === constructor);
+}
+
+function isIterable(item) {
+    return isA(item, Object) || isA(item, Array);
+}
+
 function objectMerge(from, to) {
     var key;
     for (key in from) {
         if (from.hasOwnProperty(key)) {
             if (to.hasOwnProperty(key)) {
                 // Property in destination object set; update its value.
-                if (from[key] && from[key].constructor === Object) {
+                if (isA(from[key], Object)) {
                     to[key] = objectMerge(from[key], to[key]);
                 } else {
                     to[key] = from[key];
@@ -213,8 +222,10 @@ Ycb.prototype = {
         for (key in config) {
             if (config.hasOwnProperty(key)) {
                 // If the value is an "Object" or an "Array" drill into it
-                if (config[key] && (config[key].constructor === Object || config[key].constructor === Array)) {
-                    // The whole {ref: config, key: key} is needed only when replacing "keys"
+
+                if (isIterable(config[key])) {
+                    // parent param {ref: config, key: key} is a recursion
+                    // pointer that needed only when replacing "keys"
                     this._applySubstitutions(config[key], base, {ref: config, key: key});
                 } else {
                     // Test if the key is a "substitution" key
@@ -226,7 +237,7 @@ Ycb.prototype = {
                             // Pull out the key to "find"
                             find = extract(base, sub[0].slice(2, -2), null);
 
-                            if (find.constructor === Object) {
+                            if (isA(find, Object)) {
                                 // Remove the "substitution" key
                                 delete config[key];
                                 // Add the keys founds
