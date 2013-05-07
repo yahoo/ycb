@@ -4,7 +4,6 @@
  * See the accompanying LICENSE file for terms.
  */
 
-
 /*jslint anon:true, node:true, nomen:true*/
 
 'use strict';
@@ -12,7 +11,9 @@
 var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
-    SUBMATCH = /\$\$([a-zA-Z0-9.-_]+)\$\$/;
+    SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
+    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g;
+
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
@@ -62,6 +63,12 @@ function extract(bag, key, def) {
         }
     }
     return cur;
+}
+
+function replacer(base) {
+    return function replaceCb(match, key) {
+        return extract(base, key, match);
+    };
 }
 
 //---------------------------------------------------------------
@@ -254,6 +261,7 @@ Ycb.prototype = {
                         } else {
                             config[key] = '--YCB-SUBSTITUTION-ERROR--';
                         }
+
                     } else if (SUBMATCH.test(config[key])) {
                         // Test if the value is a "substitution" value
                         // We have a match so lets use it
@@ -276,7 +284,8 @@ Ycb.prototype = {
                             }
                         } else {
                             // If not it's just part of the whole value
-                            config[key] = config[key].replace(sub[0], extract(base, find, null));
+                            config[key] = config[key]
+                                .replace(SUBMATCHES, replacer(base));
                         }
                     }
                 }
