@@ -4,7 +4,6 @@
  * See the accompanying LICENSE file for terms.
  */
 
-
 /*jslint anon:true, node:true, nomen:true*/
 
 'use strict';
@@ -12,10 +11,21 @@
 var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
-    SUBMATCH = /\$\$[a-zA-Z0-9.-_]*\$\$/;
+    SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
+    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g;
+
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
+
+function isA(item, constructor) {
+    /*jslint eqeq:true*/
+    return (item != null) && (item.constructor === constructor);
+}
+
+function isIterable(item) {
+    return isA(item, Object) || isA(item, Array);
+}
 
 function objectMerge(from, to) {
     var key;
@@ -23,7 +33,7 @@ function objectMerge(from, to) {
         if (from.hasOwnProperty(key)) {
             if (to.hasOwnProperty(key)) {
                 // Property in destination object set; update its value.
-                if (from[key] && from[key].constructor === Object) {
+                if (isA(from[key], Object)) {
                     to[key] = objectMerge(from[key], to[key]);
                 } else {
                     to[key] = from[key];
@@ -36,7 +46,6 @@ function objectMerge(from, to) {
     }
     return to;
 }
-
 
 function extract(bag, key, def) {
     var keys,
@@ -54,6 +63,12 @@ function extract(bag, key, def) {
         }
     }
     return cur;
+}
+
+function replacer(base) {
+    return function replaceCb(match, key) {
+        return extract(base, key, match);
+    };
 }
 
 //---------------------------------------------------------------
@@ -96,7 +111,7 @@ Ycb.prototype = {
         for (path in this.settings) {
             if (this.settings.hasOwnProperty(path)) {
                 context = this._getContextFromLookupPath(path);
-                // clone, so that noone mutates us
+                // clone, so that no-one mutates us
                 if (!callback(context, this._cloneObj(this.settings[path]))) {
                     break;
                 }
@@ -130,7 +145,7 @@ Ycb.prototype = {
             console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
-        // Now we simply merge each macting settings section we find into the config
+        // Now we simply merge each matching settings section we find into the config
         for (path = 0; path < lookupPaths.length; path += 1) {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
@@ -178,7 +193,7 @@ Ycb.prototype = {
             console.log(JSON.stringify(lookupPaths, null, 4));
         }
 
-        // Now we simply merge each macting settings section we find into the config
+        // Now we simply merge each matching settings section we find into the config
         for (path = 0; path < lookupPaths.length; path += 1) {
             if (this.settings[lookupPaths[path]]) {
                 if (options.debug) {
@@ -193,7 +208,7 @@ Ycb.prototype = {
 
 
     /**
-     * This is a first pass at hairball of a funciton.
+     * This is a first pass at hairball of a function.
      *
      * @private
      * @method _applySubstitutions
@@ -214,51 +229,52 @@ Ycb.prototype = {
         for (key in config) {
             if (config.hasOwnProperty(key)) {
                 // If the value is an "Object" or an "Array" drill into it
-                if (config[key] && (config[key].constructor === Object || config[key].constructor === Array)) {
-                    // The whole {ref: config, key: key} is needed only when replacing "keys"
+
+                if (isIterable(config[key])) {
+                    // parent param {ref: config, key: key} is a recursion
+                    // pointer that needed only when replacing "keys"
                     this._applySubstitutions(config[key], base, {ref: config, key: key});
+
                 } else {
                     // Test if the key is a "substitution" key
-                    if (SUBMATCH.test(key)) {
-                        // We have a matching so lets do some work
-                        sub = SUBMATCH.exec(key);
-                        // Is it the whole key or just something odd
-                        if (sub[0] === key) {
-                            // Pull out he key to "find"
-                            find = extract(base, sub[0].slice(2, -2), null);
+                    sub = SUBMATCH.exec(key);
+                    if (sub && (sub[0] === key)) {
+                        // Pull out the key to "find"
+                        find = extract(base, sub[1], null);
 
-                            if (find.constructor === Object) {
-                                // Remove the "substitution" key
-                                delete config[key];
-                                // Add the keys founds
-                                // This should be inline at the point where the "substitution" key was.
-                                // Currently they will be added out of order on the end of the map.
-                                for (item in find) {
-                                    if (find.hasOwnProperty(item)) {
-                                        if (!parent.ref[parent.key]) {
-                                            parent.ref[item] = find[item];
-                                        } else {
-                                            parent.ref[parent.key][item] = find[item];
-                                        }
+                        if (isA(find, Object)) {
+                            // Remove the "substitution" key
+                            delete config[key];
+
+                            // Add the keys founds
+                            // This should be inline at the point where the "substitution" key was.
+                            // Currently they will be added out of order on the end of the map.
+                            for (item in find) {
+                                if (find.hasOwnProperty(item)) {
+                                    if (!parent.ref[parent.key]) {
+                                        parent.ref[item] = find[item];
+                                    } else {
+                                        parent.ref[parent.key][item] = find[item];
                                     }
                                 }
-                            } else {
-                                config[key] = '--YCB-SUBSTITUTION-ERROR--';
                             }
+                        } else {
+                            config[key] = '--YCB-SUBSTITUTION-ERROR--';
                         }
+
                     } else if (SUBMATCH.test(config[key])) {
-                    // Test if the value is a "substitution" value
+                        // Test if the value is a "substitution" value
                         // We have a match so lets use it
                         sub = SUBMATCH.exec(config[key]);
-                        // Pull out he key to "find"
-                        find = sub[0].slice(2, -2);
+                        // Pull out the key to "find"
+                        find = sub[1];
                         // First see if it is the whole value
                         if (sub[0] === config[key]) {
                             // Replace the whole value with the value found by the sub string
                             find = extract(base, find, null);
                             // If we have an array in an array do it "special like"
-                            if (find.constructor === Array && config.constructor === Array) {
-                                // This has to be done on the parent or the referance is lost
+                            if (isA(find, Array) && isA(config, Array)) {
+                                // This has to be done on the parent or the reference is lost
                                 // The whole {ref: config, key: key} is needed only when replacing "keys"
                                 parent.ref[parent.key] = config.slice(0, parseInt(key, 10))
                                     .concat(find)
@@ -268,7 +284,8 @@ Ycb.prototype = {
                             }
                         } else {
                             // If not it's just part of the whole value
-                            config[key] = config[key].replace(sub[0], extract(base, find, null));
+                            config[key] = config[key]
+                                .replace(SUBMATCHES, replacer(base));
                         }
                     }
                 }
@@ -429,7 +446,7 @@ Ycb.prototype = {
      * @private
      * @method _getContextFromLookupPath
      * @param path {string} the path
-     * @return {object} the cooresponding context (really a partial context)
+     * @return {object} the corresponding context (really a partial context)
      */
     _getContextFromLookupPath: function (path) {
         var parts = path.split(SEPARATOR),

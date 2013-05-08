@@ -218,6 +218,54 @@ cases = {
         A.isTrue(config.key8.key4 === 'The value of key0.key2 is value2');
     },
 
+    'test _applySubstitutions against ./fixtures/subs-expected.json': function() {
+        var config = require('./fixtures/substitutions.json'),
+            expected = require('./fixtures/subs-expected.json'),
+            ycb;
+
+        ycb = new libycb.Ycb([]);
+        ycb._applySubstitutions(config);
+        cmp(config, expected);
+    },
+
+
+    'test _applySubstitutions replaces': function() {
+        var ycb = new libycb.Ycb([]),
+            config,
+            expected;
+
+        config = {
+            key0: {
+                key1: 'value1',
+                key2: 'value2',
+                key3: '$$key0.key1$$',
+                key4: 'values of keys 1-3: $$key0.key1$$, $$key0.key2$$, $$key0.key3$$'
+            }
+        };
+
+        expected = {
+            key0: {
+                key1: 'value1',
+                key2: 'value2',
+                key3: 'value1',
+                key4: 'values of keys 1-3: value1, value2, value1'
+            }
+        };
+
+        ycb._applySubstitutions(config);
+        cmp(config, expected);
+    },
+
+    'test _applySubstitutions wrt ./fixtures/subs-expected.json': function() {
+        var config = require('./fixtures/substitutions.json'),
+            expected = require('./fixtures/subs-expected.json'),
+            ycb;
+
+        ycb = new libycb.Ycb([]);
+        ycb._applySubstitutions(config);
+        cmp(config, expected);
+    },
+
 
     'test if we can use a simple config': function() {
         var bundle, config;
