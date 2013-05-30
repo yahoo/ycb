@@ -1,0 +1,21 @@
+[
+  {
+    "dimensions": [
+      {
+        "environment": {
+          "testing": null,
+          "prod": null
+        }
+      },
+      {
+        "device": {
+          "desktop": null,
+          "mobile": {
+            "table": null,
+            "smartphone": null
+          }
+        }
+      }
+    ]
+  }
+]

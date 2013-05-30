@@ -1,0 +1,18 @@
+[
+  {
+    "settings": [ "master" ],
+    "appPort": 8666
+  },
+  {
+    "settings": [ "environment:prod" ],
+    "appPort": 80
+  },
+  {
+    "settings": [ "device:desktop" ],
+    "appPort": 8080
+  },
+  {
+    "settings": [ "environment:prod", "device:smartphone" ],
+    "appPort": 8888
+  }
+]
