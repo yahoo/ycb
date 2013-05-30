@@ -1,0 +1,10 @@
+{
+ "name": "simple",
+ "description": "A simple example of how to use ycb.",
+ "version": "0.1.0",
+ "keywords": [
+     "ycb"
+ ],
+ "dependencies": {
+  }
+}

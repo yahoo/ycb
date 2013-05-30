@@ -6,6 +6,8 @@ YCB is a multi-dimensional configuration library that builds bundles from resour
 
 More info on the [wiki](https://github.com/yahoo/ycb/wiki).
 
+Examples are provided in the [this directory](https://github.com/yahoo/ycb/tree/master/tests).
+
 ### Install
 
 `npm install ycb --save`
