@@ -76,6 +76,12 @@ function replacer(base) {
 
 function Ycb(bundle, options) {
     this.options = options || {};
+
+    // set options.substitutions to it's default: true
+    if (!this.options.hasOwnProperty('substitutions')) {
+        this.options.substitutions = true;
+    }
+
     this.dimensions = {};
     this.settings = {};
     this.schema = {};
@@ -157,7 +163,10 @@ Ycb.prototype = {
             }
         }
 
-        this._applySubstitutions(config);
+        // check option to skip the $$foo$$ substitutions, which can be costly
+        if (this.options.substitutions) {
+            this._applySubstitutions(config);
+        }
 
         if (options.validate) {
             console.log('The YCB option "validate" is not implemented yet.');
