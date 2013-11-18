@@ -166,7 +166,7 @@ cases = {
             .concat(readFixtureFile('simple-1.json')[0]);
         ycb = new libycb.Ycb(bundle),
 
-            A.areSame('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+        A.areSame('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
         A.isNotUndefined(ycb.dimensions[7].region.us);
     },
 
@@ -176,15 +176,11 @@ cases = {
         bundle = readFixtureFile('dimensions.json')
             .concat(readFixtureFile('simple-1.json'))
             .concat(readFixtureFile('simple-2.json'));
+        ycb = new libycb.Ycb(bundle);
 
-        // This should throw an error for us to trap
-        try {
-            ycb = new libycb.Ycb(bundle);
-        } catch(err) {
-            A.isTrue(true);
-            return;
-        }
-        A.isTrue(false);
+        A.areSame('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+        A.areSame('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
+        A.isNotUndefined(ycb.dimensions[7].region.us);
     },
 
 
