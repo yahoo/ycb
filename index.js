@@ -394,8 +394,7 @@ Ycb.prototype = {
                 if (!this.settings[key]) {
                     this.settings[key] = section;
                 } else {
-                    throw new Error("The settings group '" + JSON.stringify(context) +
-                        "' has already been added.");
+                    objectMerge(section, this.settings[key]);
                 }
             }
         }

@@ -4,7 +4,7 @@
 
         "title_key": "YRB_YAHOO",
         "data-url": "http://service.yahoo.com",
-        "logo": "yahoo.png",
+        "logo1": "yahoo.png",
         "links": {
             "home": "http://www.yahoo.com",
             "mail": "http://mail.yahoo.com"

@@ -2,7 +2,7 @@
     {
         "settings": ["master"],
 
-        "title_key": "YRB_YAHOO",
+        "title_key": "YRB_YAHOO_2nd",
         "data-url": "http://service.yahoo.com",
         "logo": "yahoo.png",
         "links": {
