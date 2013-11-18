@@ -361,6 +361,7 @@ Ycb.prototype = {
             part,
             kv,
             context,
+            setting,
             key;
 
         // Extract each section from the bundle
@@ -383,6 +384,7 @@ Ycb.prototype = {
                     }
                     context[kv[0]] = kv[1];
                 }
+                setting = section.settings;
                 // Remove the settings key now we are done with it
                 delete section.settings;
 
@@ -394,6 +396,9 @@ Ycb.prototype = {
                 if (!this.settings[key]) {
                     this.settings[key] = section;
                 } else {
+                    if (options.debug) {
+                        console.log("Merging sections for setting: " + setting);
+                    }
                     objectMerge(section, this.settings[key]);
                 }
             }
