@@ -180,7 +180,7 @@ cases = {
 
         A.areSame('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
         A.areSame('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
-        A.areSame('a/b/c/x.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
+        A.areSame('tests/fixtures/simple-2.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
         A.isNotUndefined(ycb.dimensions[7].region.us);
     },
 

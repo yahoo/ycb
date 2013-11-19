@@ -7,7 +7,7 @@
         "oof": 4,
         "rab": 5,
         "zab": 6,
-        "__ycb_source__": "a/b/c/x.json"
+        "__ycb_source__": "tests/fixtures/simple-4.json"
     },
     {
         "settings": ["lang:fr"],
@@ -17,6 +17,6 @@
         "oof": null,
         "rab": 0,
         "zab": false,
-        "__ycb_source__": "a/b/c/y.json"
+        "__ycb_source__": "tests/fixtures/simple-4.json"
     }
 ]

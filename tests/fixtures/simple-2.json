@@ -9,6 +9,6 @@
             "home": "http://www.yahoo.com",
             "mail": "http://mail.yahoo.com"
         },
-        "__ycb_source__": "a/b/c/x.json"
+        "__ycb_source__": "tests/fixtures/simple-2.json"
     }
 ]

@@ -33,30 +33,30 @@
             "home": "http://fr.yahoo.com",
             "mail": "http://fr.mail.yahoo.com"
         },
-        "__ycb_source__": "a/b/c/x2.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["flavor:att"],
 
         "logo": "yahoo_att.png",
-        "__ycb_source__": "a/b/c/x1.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["flavor:att","region:ca"],
 
         "logo": "yahoo_att_CA.png",
-        "__ycb_source__": "a/b/c/x.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["flavor:bt","region:gb"],
 
         "logo": "yahoo_bt_GB.png",
-        "__ycb_source__": "a/b/c/x.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["region:fr","flavor:bt"],
 
         "logo": "yahoo_bt_FR.png",
-        "__ycb_source__": "a/b/c/x.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     }
 ]

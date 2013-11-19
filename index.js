@@ -397,12 +397,11 @@ Ycb.prototype = {
                     this.settings[key] = section;
                 } else {
                     if (options.debug) {
-                        if (section.__ycb_source__) {
-                            console.log("Settings " + JSON.stringify(settings, null) + " of " + section.__ycb_source__
-                                + " being merged into " + this.settings[key].__ycb_source__);
-                        } else {
-                            console.log("Settings " + JSON.stringify(settings, null) + " from different sections being merged");
-                        }
+                        console.log('Merging section ' + JSON.stringify(settings) + (
+                            section.__ycb_source__ ? (' from ' + section.__ycb_source__) : ''
+                        ) + (
+                            this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
+                        ));
                     }
                     objectMerge(section, this.settings[key]);
                 }
