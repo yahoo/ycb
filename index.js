@@ -162,7 +162,7 @@ Ycb.prototype = {
         if (options.validate) {
             console.log('The YCB option "validate" is not implemented yet.');
         }
-        delete config.__source;
+        delete config.__ycb_source__;
         return config;
     },
 
@@ -397,9 +397,9 @@ Ycb.prototype = {
                     this.settings[key] = section;
                 } else {
                     if (options.debug) {
-                        if (section.__source) {
-                            console.log("Settings " + JSON.stringify(settings, null) + " of " + section.__source
-                                + " being merged into " + this.settings[key].__source);
+                        if (section.__ycb_source__) {
+                            console.log("Settings " + JSON.stringify(settings, null) + " of " + section.__ycb_source__
+                                + " being merged into " + this.settings[key].__ycb_source__);
                         } else {
                             console.log("section for " + settings + " was merged");
                         }
