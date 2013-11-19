@@ -7,7 +7,7 @@
             "home": "http://ca.yahoo.com",
             "mail": "http://ca.mail.yahoo.com"
         },
-        "__ycb_source__": "a/b/c/x1.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["region:gb"],
@@ -17,13 +17,13 @@
             "home": "http://gb.yahoo.com",
             "mail": "http://gb.mail.yahoo.com"
         },
-        "__ycb_source__": "a/b/c/x2.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["lang:fr"],
 
         "logo": "yahoo_FR.png",
-        "__ycb_source__": "a/b/c/x1.json"
+        "__ycb_source__": "tests/fixtures/simple-3.json"
     },
     {
         "settings": ["region:fr"],
