@@ -162,7 +162,7 @@ Ycb.prototype = {
         if (options.validate) {
             console.log('The YCB option "validate" is not implemented yet.');
         }
-
+        delete config.__source;
         return config;
     },
 
@@ -397,11 +397,12 @@ Ycb.prototype = {
                     this.settings[key] = section;
                 } else {
                     if (options.debug) {
-                        console.log(settings + " has been specified multiple times.");
-                        console.log("Merging config:");
-                        console.log(section);
-                        console.log("to:");
-                        console.log(this.settings[key]);
+                        if (section.__source) {
+                            console.log("Settings " + JSON.stringify(settings, null) + " of " + section.__source
+                                + " being merged into " + this.settings[key].__source);
+                        } else {
+                            console.log("section for " + settings + " was merged");
+                        }
                     }
                     objectMerge(section, this.settings[key]);
                 }
