@@ -401,7 +401,7 @@ Ycb.prototype = {
                             console.log("Settings " + JSON.stringify(settings, null) + " of " + section.__ycb_source__
                                 + " being merged into " + this.settings[key].__ycb_source__);
                         } else {
-                            console.log("section for " + settings + " was merged");
+                            console.log("section for " + JSON.stringify(settings, null) + " was merged");
                         }
                     }
                     objectMerge(section, this.settings[key]);
