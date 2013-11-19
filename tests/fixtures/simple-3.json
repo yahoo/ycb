@@ -6,7 +6,8 @@
         "links": {
             "home": "http://ca.yahoo.com",
             "mail": "http://ca.mail.yahoo.com"
-        }
+        },
+        "__ycb_source__": "a/b/c/x1.json"
     },
     {
         "settings": ["region:gb"],
@@ -15,12 +16,14 @@
         "links": {
             "home": "http://gb.yahoo.com",
             "mail": "http://gb.mail.yahoo.com"
-        }
+        },
+        "__ycb_source__": "a/b/c/x2.json"
     },
     {
         "settings": ["lang:fr"],
 
-        "logo": "yahoo_FR.png"
+        "logo": "yahoo_FR.png",
+        "__ycb_source__": "a/b/c/x1.json"
     },
     {
         "settings": ["region:fr"],
@@ -29,26 +32,31 @@
         "links": {
             "home": "http://fr.yahoo.com",
             "mail": "http://fr.mail.yahoo.com"
-        }
+        },
+        "__ycb_source__": "a/b/c/x2.json"
     },
     {
         "settings": ["flavor:att"],
 
-        "logo": "yahoo_att.png"
+        "logo": "yahoo_att.png",
+        "__ycb_source__": "a/b/c/x1.json"
     },
     {
         "settings": ["flavor:att","region:ca"],
 
-        "logo": "yahoo_att_CA.png"
+        "logo": "yahoo_att_CA.png",
+        "__ycb_source__": "a/b/c/x.json"
     },
     {
         "settings": ["flavor:bt","region:gb"],
 
-        "logo": "yahoo_bt_GB.png"
+        "logo": "yahoo_bt_GB.png",
+        "__ycb_source__": "a/b/c/x.json"
     },
     {
         "settings": ["region:fr","flavor:bt"],
 
-        "logo": "yahoo_bt_FR.png"
+        "logo": "yahoo_bt_FR.png",
+        "__ycb_source__": "a/b/c/x.json"
     }
 ]

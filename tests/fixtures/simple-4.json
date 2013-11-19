@@ -6,7 +6,8 @@
         "baz": false,
         "oof": 4,
         "rab": 5,
-        "zab": 6
+        "zab": 6,
+        "__ycb_source__": "a/b/c/x.json"
     },
     {
         "settings": ["lang:fr"],
@@ -15,6 +16,7 @@
         "baz": 3,
         "oof": null,
         "rab": 0,
-        "zab": false
+        "zab": false,
+        "__ycb_source__": "a/b/c/y.json"
     }
 ]
