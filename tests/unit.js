@@ -180,6 +180,7 @@ cases = {
 
         A.areSame('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
         A.areSame('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
+        A.areSame('tests/fixtures/simple-2.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
         A.isNotUndefined(ycb.dimensions[7].region.us);
     },
 
@@ -271,6 +272,7 @@ cases = {
         A.areSame('YRB_YAHOO', config.title_key);
         A.areSame('http://www.yahoo.com', config.links.home);
         A.areSame('http://mail.yahoo.com', config.links.mail);
+        A.isUndefined(config.__ycb_source__);
     },
 
 

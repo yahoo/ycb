@@ -162,7 +162,7 @@ Ycb.prototype = {
         if (options.validate) {
             console.log('The YCB option "validate" is not implemented yet.');
         }
-
+        delete config.__ycb_source__;
         return config;
     },
 
@@ -361,7 +361,7 @@ Ycb.prototype = {
             part,
             kv,
             context,
-            setting,
+            settings,
             key;
 
         // Extract each section from the bundle
@@ -384,7 +384,7 @@ Ycb.prototype = {
                     }
                     context[kv[0]] = kv[1];
                 }
-                setting = section.settings;
+                settings = section.settings;
                 // Remove the settings key now we are done with it
                 delete section.settings;
 
@@ -397,7 +397,11 @@ Ycb.prototype = {
                     this.settings[key] = section;
                 } else {
                     if (options.debug) {
-                        console.log("Merging sections for setting: " + setting);
+                        console.log('Merging section ' + JSON.stringify(settings) + (
+                            section.__ycb_source__ ? (' from ' + section.__ycb_source__) : ''
+                        ) + (
+                            this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
+                        ));
                     }
                     objectMerge(section, this.settings[key]);
                 }
