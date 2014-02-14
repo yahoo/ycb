@@ -61,6 +61,7 @@ Examples are provided in the [this directory](https://github.com/yahoo/ycb/tree/
 ]
 ```
 
+`app.js` file:
 ```javascript
 var Ycb = require('ycb').Ycb;
 var dimensions = require('./dimensions');
