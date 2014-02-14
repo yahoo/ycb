@@ -12,5 +12,79 @@ Examples are provided in the [this directory](https://github.com/yahoo/ycb/tree/
 
 `npm install ycb --save`
 
+### Example
+
+`dimensions.json` file:
+```json
+[
+  {
+    "dimensions": [
+      {
+        "environment": {
+          "testing": null,
+          "prod": null
+        }
+      },
+      {
+        "device": {
+          "desktop": null,
+          "mobile": {
+            "tablet": null,
+            "smartphone": null
+          }
+        }
+      }
+    ]
+  }
+]
+```
+
+`application.json` file:
+```json
+[
+  {
+    "settings": [ "master" ],
+    "appPort": 8666
+  },
+  {
+    "settings": [ "environment:prod" ],
+    "appPort": 80
+  },
+  {
+    "settings": [ "device:desktop" ],
+    "appPort": 8080
+  },
+  {
+    "settings": [ "environment:prod", "device:smartphone" ],
+    "appPort": 8888
+  }
+]
+```
+
+`app.js` file:
+```javascript
+var Ycb = require('ycb').Ycb;
+var dimensions = require('./dimensions');
+var application = require('./application');
+
+var data = dimensions.concat(config);
+
+var ycb = new Ycb(data, {});
+
+var config;
+
+// read "master"
+config = ycb.read({});
+
+// read "environment:prod"
+config = ycb.read({environment: 'prod'});
+
+// read "device:desktop"
+config = ycb.read({device: 'desktop'});
+
+//  read "environment:prod", "device:desktop"
+config = ycb.read({environment: 'prod', device: 'smartphone'});
+```
+
 ### License
 BSD see LICENSE.txt

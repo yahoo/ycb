@@ -6,42 +6,29 @@
 
 /*jslint node:true, nomen:true*/
 
-var libfs = require('fs'),
-    libpath = require('path'),
-    libycb = require('../../'),
-    assert = require('assert'),
-    data,
-    ycb,
-    context,
-    config;
+var assert = require('assert');
+var Ycb = require('../../').Ycb;
+var dimensions = require('./dimensions');
+var application = require('./application');
 
-/**
-@param {string} file JSON valid file representing a configuration
-@return {object} the parsed version of `file` 
-**/
-function readFile(file) {
-    var raw = libfs.readFileSync(libpath.join(__dirname, file));
-    return JSON.parse(raw);
-}
+var data = dimensions.concat(application);
 
-data = readFile('dimensions.json').concat(readFile('application.json'));
+var ycb = new Ycb(data, {});
 
-// create a new Ycb instance with `data`
-ycb = new libycb.Ycb(data, {});
+var config;
 
 // read "master"
 config = ycb.read({});
 assert.equal(8666, config.appPort);
 
 // read "environment:prod"
-config = ycb.read({ environment: 'prod' });
+config = ycb.read({environment: 'prod'});
 assert.equal(80, config.appPort);
 
 // read "device:desktop"
-config = ycb.read({ device: 'desktop' });
+config = ycb.read({device: 'desktop'});
 assert.equal(8080, config.appPort);
 
-// read "environment:prod", "device:desktop"
-config = ycb.read({ environment: 'prod', device: 'smartphone' });
+//  read "environment:prod", "device:desktop"
+config = ycb.read({environment: 'prod', device: 'smartphone'});
 assert.equal(8888, config.appPort);
-
