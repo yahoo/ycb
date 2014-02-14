@@ -17,47 +17,47 @@ Examples are provided in the [this directory](https://github.com/yahoo/ycb/tree/
 `dimensions.json` file:
 ```json
 [
-    {
-        "dimensions": [
-            {
-                "environment": {
-                    "testing": null,
-                        "prod": null
-                }
-            },
-            {
-                "device": {
-                    "desktop": null,
-                    "mobile": {
-                        "table": null,
-                        "smartphone": null
-                    }
-                }
-            }
-        ]
-    }
+  {
+    "dimensions": [
+      {
+        "environment": {
+          "testing": null,
+          "prod": null
+        }
+      },
+      {
+        "device": {
+          "desktop": null,
+          "mobile": {
+            "tablet": null,
+            "smartphone": null
+          }
+        }
+      }
+    ]
+  }
 ]
 ```
 
 `application.json` file:
 ```json
 [
-    {
-        "settings": [ "master" ],
-            "appPort": 8666
-    },
-    {
-        "settings": [ "environment:prod" ],
-        "appPort": 80
-    },
-    {
-        "settings": [ "device:desktop" ],
-        "appPort": 8080
-    },
-    {
-        "settings": [ "environment:prod", "device:smartphone" ],
-        "appPort": 8888
-    }
+  {
+    "settings": [ "master" ],
+    "appPort": 8666
+  },
+  {
+    "settings": [ "environment:prod" ],
+    "appPort": 80
+  },
+  {
+    "settings": [ "device:desktop" ],
+    "appPort": 8080
+  },
+  {
+    "settings": [ "environment:prod", "device:smartphone" ],
+    "appPort": 8888
+  }
 ]
 ```
 
