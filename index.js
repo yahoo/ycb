@@ -56,7 +56,7 @@ function extract(bag, key, def) {
     }
     keys = key.split('.');
     for (i = 0; i < keys.length; i += 1) {
-        if (cur[keys[i]]) {
+        if (cur && cur.hasOwnProperty(keys[i])) {
             cur = cur[keys[i]];
         } else {
             return def;
