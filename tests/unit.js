@@ -536,23 +536,37 @@ cases = {
         }, config);
     },
 
-    'unknown dimensions and options.strictDimensions': function() {
+    'test options.lenientDimensions': function() {
         var bundle,
             ycb,
             config;
 
-        bundle = readFixtureFile('dimensions.json')
+        bundle = readFixtureFile('dimensions.json');
         bundle.push({
             settings: ['master'],
             appPort: 80
         });
         bundle.push({
-            settings: ['environment:stage'],
+            settings: ['environment:lkjsdflksdhlskdfs'],
             appPort: 81
         });
-        ycb = new libycb.Ycb(bundle, {strictDimensions: true});
+        ycb = new libycb.Ycb(bundle);
         config = ycb.read({});
         A.areSame(80, config.appPort);
+
+        bundle = readFixtureFile('dimensions.json');
+        bundle.push({
+            settings: ['master'],
+            appPort: 80
+        });
+        bundle.push({
+            settings: ['environment:lkjsdflksdhlskdfs'],
+            appPort: 81
+        });
+        ycb = new libycb.Ycb(bundle, {lenientDimensions: true});
+        config = ycb.read({});
+        A.areSame(81, config.appPort);
+
     }
 
 };

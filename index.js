@@ -79,7 +79,7 @@ function replacer(base) {
  * @contructor
  * @param bundle {array} array of bundle parts
  * @param options {object}
- * @param options.strictDimensions {bool} whether unknown dimensions in the settings should be ignored
+ * @param options.lenientDimensions {bool} whether unknown dimensions in the settings should be applied to "master"
  */
 function Ycb(bundle, options) {
     this.options = options || {};
@@ -456,13 +456,14 @@ Ycb.prototype = {
                     }
                 }
                 if (!lookup[name]) {
-                    if (options.strictDimensions) {
+                    if (!context.hasOwnProperty(name) || options.lenientDimensions) {
+                        lookup[name] = DEFAULT;
+                    }
+                    else {
                         console.log('invalid value for dimension "' + name +
                             '" in settings ' + JSON.stringify(settings));
                         return undefined;
                     }
-                    // be lenient and act as if the dimension wasn't specified
-                    lookup[name] = DEFAULT;
                 }
             }
         }
