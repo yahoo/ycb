@@ -534,6 +534,25 @@ cases = {
             rab: 0,
             zab: false
         }, config);
+    },
+
+    'unknown dimensions and options.strictDimensions': function() {
+        var bundle,
+            ycb,
+            config;
+
+        bundle = readFixtureFile('dimensions.json')
+        bundle.push({
+            settings: ['master'],
+            appPort: 80
+        });
+        bundle.push({
+            settings: ['environment:stage'],
+            appPort: 81
+        });
+        ycb = new libycb.Ycb(bundle, {strictDimensions: true});
+        config = ycb.read({});
+        A.areSame(80, config.appPort);
     }
 
 };
