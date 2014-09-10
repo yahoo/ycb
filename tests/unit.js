@@ -534,6 +534,25 @@ cases = {
             rab: 0,
             zab: false
         }, config);
+    },
+
+    'unknown dimension values dont polute master': function() {
+        var bundle,
+            ycb,
+            config;
+
+        bundle = readFixtureFile('dimensions.json');
+        bundle.push({
+            settings: ['master'],
+            appPort: 80
+        });
+        bundle.push({
+            settings: ['environment:lkjsdflksdhlskdfs'],
+            appPort: 81
+        });
+        ycb = new libycb.Ycb(bundle);
+        config = ycb.read({});
+        A.areSame(80, config.appPort);
     }
 
 };

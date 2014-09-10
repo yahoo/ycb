@@ -74,6 +74,12 @@ function replacer(base) {
 //---------------------------------------------------------------
 // OBJECT ORIENTED INTERFACE
 
+/**
+ * @class Ycb
+ * @contructor
+ * @param bundle {array} array of bundle parts
+ * @param options {object}
+ */
 function Ycb(bundle, options) {
     this.options = options || {};
     this.dimensions = {};
@@ -389,7 +395,12 @@ Ycb.prototype = {
                 delete section.settings;
 
                 // Build the full context path
-                key = this._getLookupPath(context, options);
+                key = this._getLookupPath(context, options, settings);
+
+                if ('undefined' === typeof key) {
+                    // warning already reported
+                    continue;
+                }
 
                 // Add the section to the settings list with it's full key
                 // IMY Bug 5439377 configuration does not accept neither null nor false values?
@@ -415,15 +426,24 @@ Ycb.prototype = {
      * @method _getContextPath
      * @param context {object} Key/Value list
      * @param options {object}
+     * @param settings {object} the settings, for logging output
      * @return {string}
      */
-    _getLookupPath: function (context, options) {
+    _getLookupPath: function (context, options, settings) {
         var lookupList = this._makeOrderedLookupList(context, options),
             name,
             list,
             lookup = {},
             item,
             path = [];
+
+        // shortcut for master
+        if (context.hasOwnProperty('master')) {
+            for (name in lookupList) {
+                path.push(DEFAULT);
+            }
+            return path.join(SEPARATOR);
+        }
 
         for (name in lookupList) {
             if (lookupList.hasOwnProperty(name)) {
@@ -434,9 +454,15 @@ Ycb.prototype = {
                         }
                     }
                 }
-                // If there was no match set to default
                 if (!lookup[name]) {
-                    lookup[name] = DEFAULT;
+                    if (!context.hasOwnProperty(name)) {
+                        lookup[name] = DEFAULT;
+                    }
+                    else {
+                        console.log('invalid value for dimension "' + name +
+                            '" in settings ' + JSON.stringify(settings));
+                        return undefined;
+                    }
                 }
             }
         }
