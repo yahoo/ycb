@@ -79,7 +79,6 @@ function replacer(base) {
  * @contructor
  * @param bundle {array} array of bundle parts
  * @param options {object}
- * @param options.lenientDimensions {bool} whether unknown dimensions in the settings should be applied to "master"
  */
 function Ycb(bundle, options) {
     this.options = options || {};
@@ -456,7 +455,7 @@ Ycb.prototype = {
                     }
                 }
                 if (!lookup[name]) {
-                    if (!context.hasOwnProperty(name) || options.lenientDimensions) {
+                    if (!context.hasOwnProperty(name)) {
                         lookup[name] = DEFAULT;
                     }
                     else {

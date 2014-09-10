@@ -536,7 +536,7 @@ cases = {
         }, config);
     },
 
-    'test options.lenientDimensions': function() {
+    'unknown dimension values dont polute master': function() {
         var bundle,
             ycb,
             config;
@@ -553,20 +553,6 @@ cases = {
         ycb = new libycb.Ycb(bundle);
         config = ycb.read({});
         A.areSame(80, config.appPort);
-
-        bundle = readFixtureFile('dimensions.json');
-        bundle.push({
-            settings: ['master'],
-            appPort: 80
-        });
-        bundle.push({
-            settings: ['environment:lkjsdflksdhlskdfs'],
-            appPort: 81
-        });
-        ycb = new libycb.Ycb(bundle, {lenientDimensions: true});
-        config = ycb.read({});
-        A.areSame(81, config.appPort);
-
     }
 
 };
