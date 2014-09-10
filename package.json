@@ -12,6 +12,7 @@
     "dependencies": {},
     "main": "index",
     "scripts": {
+        "pretest": "jshint index.js tests/unit.js examples/*/*.js",
         "test": "node tests/unit"
     },
     "engines": {
@@ -21,7 +22,7 @@
     "devDependencies": {
         "yui": ">3.5",
         "istanbul": ">=0.1.32",
-        "jslint": "~0.1.9"
+        "jshint": "2.5.5"
     },
     "repository": {
         "type": "git",
