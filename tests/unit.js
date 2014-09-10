@@ -5,7 +5,6 @@
  */
 
 /*jslint node:true*/
-/*global YUI*/
 
 var Y = require('yui').YUI({useSync: true}).use('json', 'oop', 'test'),
     libpath = require('path'),
@@ -25,11 +24,12 @@ function readFixtureFile(file){
 
 
 function cmp(x, y, msg) {
+    var i;
     if (Y.Lang.isArray(x)) {
         A.isArray(x, msg || 'first arg should be an array');
         A.isArray(y, msg || 'second arg should be an array');
         A.areSame(x.length, y.length, msg || 'arrays are different lengths');
-        for (var i = 0; i < x.length; i += 1) {
+        for (i = 0; i < x.length; i += 1) {
             cmp(x[i], y[i], msg);
         }
         return;
@@ -38,7 +38,7 @@ function cmp(x, y, msg) {
         A.isObject(x, msg || 'first arg should be an object');
         A.isObject(y, msg || 'second arg should be an object');
         A.areSame(Object.keys(x).length, Object.keys(y).length, msg || 'object keys are different lengths');
-        for (var i in x) {
+        for (i in x) {
             if (x.hasOwnProperty(i)) {
                 cmp(x[i], y[i], msg);
             }
@@ -66,11 +66,11 @@ cases = {
     'test _flattenDimension': function() {
         var dims = readFixtureFile('dimensions.json'),
             ycb = new libycb.Ycb(dims),
-            flat = ycb._flattenDimension('', dims[0].dimensions[6]['lang']);
+            flat = ycb._flattenDimension('', dims[0].dimensions[6].lang);
 
-        A.areSame('en', flat['en']);
+        A.areSame('en', flat.en);
         A.areSame('en_CA', flat['en/en_CA']);
-        A.areSame('fr', flat['fr']);
+        A.areSame('fr', flat.fr);
         A.areSame('fr_CA', flat['fr/fr_FR/fr_CA']);
     },
 
@@ -80,10 +80,10 @@ cases = {
             ycb = new libycb.Ycb(dims),
             flat = ycb._dimensionPaths;
 
-        A.areSame('en', flat['lang']['en']);
-        A.areSame('en_CA', flat['lang']['en/en_CA']);
-        A.areSame('fr', flat['lang']['fr']);
-        A.areSame('fr_CA', flat['lang']['fr/fr_FR/fr_CA']);
+        A.areSame('en', flat.lang.en);
+        A.areSame('en_CA', flat.lang['en/en_CA']);
+        A.areSame('fr', flat.lang.fr);
+        A.areSame('fr_CA', flat.lang['fr/fr_FR/fr_CA']);
     },
 
 
@@ -98,15 +98,15 @@ cases = {
         };
         list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
 
-        A.areSame('preproduction', list['environment'][0]);
-        A.areSame('*', list['environment'][1]);
-        A.areSame('fr_CA', list['lang'][0]);
-        A.areSame('fr_FR', list['lang'][1]);
-        A.areSame('fr', list['lang'][2]);
-        A.areSame('*', list['lang'][3]);
-        A.areSame('ir', list['region'][0]);
-        A.areSame('gb', list['region'][1]);
-        A.areSame('*', list['region'][2]);
+        A.areSame('preproduction', list.environment[0]);
+        A.areSame('*', list.environment[1]);
+        A.areSame('fr_CA', list.lang[0]);
+        A.areSame('fr_FR', list.lang[1]);
+        A.areSame('fr', list.lang[2]);
+        A.areSame('*', list.lang[3]);
+        A.areSame('ir', list.region[0]);
+        A.areSame('gb', list.region[1]);
+        A.areSame('*', list.region[2]);
     },
 
 
@@ -164,7 +164,7 @@ cases = {
         var bundle, ycb;
         bundle = readFixtureFile('dimensions.json')
             .concat(readFixtureFile('simple-1.json')[0]);
-        ycb = new libycb.Ycb(bundle),
+        ycb = new libycb.Ycb(bundle);
 
         A.areSame('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
         A.isNotUndefined(ycb.dimensions[7].region.us);
@@ -469,7 +469,7 @@ cases = {
             .concat(readFixtureFile('simple-3.json'));
         ycb = new libycb.Ycb(bundle);
         var ctxs = {};
-        ycb.walkSettings(function(settings, config) {
+        ycb.walkSettings(function(settings) {
             ctxs[JSON.stringify(settings)] = true;
             return true;
         });
@@ -560,8 +560,7 @@ cases = {
 
 Y.Test.Runner.add(new Y.Test.Case(cases));
 Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT, function (results) {
-    var resultsObject = Y.Test.Runner.getResults();
-        resultsXML = Y.Test.Runner.getResults(Y.Test.Format.XML);
+    var resultsXML = Y.Test.Runner.getResults(Y.Test.Format.XML);
     libfs.writeFileSync('./results.xml', resultsXML);
     if (results.results.failed > 0 || results.results.errors > 0) {
         process.exit(1);

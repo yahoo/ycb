@@ -12,7 +12,6 @@ var libfs = require('fs'),
     assert = require('assert'),
     data,
     ycb,
-    context,
     config;
 
 /**

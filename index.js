@@ -19,8 +19,7 @@ var VERSION = '1.0.2',
 // UTILITY FUNCTIONS
 
 function isA(item, constructor) {
-    /*jslint eqeq:true*/
-    return (item != null) && (item.constructor === constructor);
+    return item && (item.constructor === constructor);
 }
 
 function isIterable(item) {
@@ -440,7 +439,9 @@ Ycb.prototype = {
         // shortcut for master
         if (context.hasOwnProperty('master')) {
             for (name in lookupList) {
-                path.push(DEFAULT);
+                if (lookupList.hasOwnProperty(name)) {
+                    path.push(DEFAULT);
+                }
             }
             return path.join(SEPARATOR);
         }
