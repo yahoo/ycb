@@ -1,11 +1,12 @@
 language: node_js
 node_js:
-  - 0.8
-  - 0.6
+  - 0.10
+  - 0.11
 notifications:
   email:
     recipients:
       - "devel-mojito@yahoo-inc.com"
+      - "ypt-team@yahoo-inc.com"
     on_success: change
     on_failure: always
   irc:
