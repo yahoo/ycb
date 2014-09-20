@@ -437,7 +437,7 @@ Ycb.prototype = {
             path = [];
 
         // shortcut for master
-        // TODO: is this really needed?
+        // TODO: is this shortcut really needed?
         if (context.hasOwnProperty('master')) {
             for (name in lookupList) {
                 if (lookupList.hasOwnProperty(name)) {
