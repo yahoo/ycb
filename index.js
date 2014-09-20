@@ -437,6 +437,7 @@ Ycb.prototype = {
             path = [];
 
         // shortcut for master
+        // TODO: is this really needed?
         if (context.hasOwnProperty('master')) {
             for (name in lookupList) {
                 if (lookupList.hasOwnProperty(name)) {
@@ -460,14 +461,20 @@ Ycb.prototype = {
                         lookup[name] = DEFAULT;
                     }
                     else {
-                        console.log('invalid value for dimension "' + name +
+                        console.log('WARNING: invalid value for dimension "' + name +
                             '" in settings ' + JSON.stringify(settings));
-                        return undefined;
+                        return;
                     }
                 }
             }
         }
-
+        for (name in context) {
+            if (context.hasOwnProperty(name) && !lookupList.hasOwnProperty(name)) {
+                console.log('WARNING: invalid dimension "' + name +
+                    '" in settings ' + JSON.stringify(settings));
+                return;
+            }
+        }
         for (item in lookup) {
             if (lookup.hasOwnProperty(item)) {
                 path.push(lookup[item]);

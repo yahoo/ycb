@@ -553,6 +553,68 @@ cases = {
         ycb = new libycb.Ycb(bundle);
         config = ycb.read({});
         A.areSame(80, config.appPort);
+    },
+
+    'unknown dimension should be ignored': function() {
+        var bundle,
+            ycb,
+            config;
+
+        bundle = readFixtureFile('dimensions-other.json');
+        bundle.push({
+            settings: ['master'],
+            appPort: 80
+        });
+        bundle.push({
+            settings: ['unknown:value'],
+            appPort: 81
+        });
+        ycb = new libycb.Ycb(bundle);
+        config = ycb.read({ environment: 'desktop'});
+        A.areSame(80, config.appPort);
+    },
+
+    'multi-level match': function() {
+        var bundle,
+            ycb,
+            config;
+
+        bundle = readFixtureFile('dimensions-other.json');
+        bundle = bundle.concat([
+            {
+                "settings": [ "master" ],
+                "appPort": 8666
+            },
+            {
+                "settings": [ "environment:prod" ],
+                "appPort": 80
+            },
+            {
+                "settings": [ "environment:prod", "device:smartphone" ],
+                "appPort": 8888
+            },
+            {
+                "settings": [ "environment:prod", "device:desktop" ],
+                "appPort": 8080
+            }
+        ]);
+        ycb = new libycb.Ycb(bundle);
+        config = ycb.read({});
+        A.areSame(8666, config.appPort);
+        config = ycb.read({
+            environment: 'prod',
+            device: 'smartphone'
+        });
+        A.areSame(8888, config.appPort);
+        config = ycb.read({
+            environment: 'prod',
+            device: 'desktop'
+        });
+        A.areSame(8080, config.appPort);
+        config = ycb.read({
+            environment: 'prod'
+        });
+        A.areSame(80, config.appPort);
     }
 
 };
