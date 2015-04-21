@@ -12,5 +12,37 @@ Examples are provided in [this directory](https://github.com/yahoo/ycb/tree/mast
 
 `npm install ycb --save`
 
+### Usage
+
+```
+var YCB = require('ycb');
+var configArray = [
+    {
+        "dimensions": [
+            {
+                "environment": {
+                    "dev": null,
+                    "prod": null
+                }
+            }
+        ]
+    },
+    {
+        "settings": ["master"],
+        "host": "example.com"
+    },
+    {
+        "settings": ["environment:dev"],
+        "host": "dev.example.com"
+    }
+];
+
+var ycbObj = new YCB.Ycb(configArray),
+var computedConfig = ycbObj.read({ environment: 'dev' });
+
+console.log(computedConfig.host); // dev.example.com
+```
+
+
 ### License
 BSD see LICENSE.txt
