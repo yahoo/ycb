@@ -1,8 +1,9 @@
 {
     "name": "ycb",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "description": "YCB is a multi-dimensional configuration library that builds bundles from resource files describing a variety of values.",
     "author": "Ric Allinson <allinson@yahoo-inc.com>",
+    "license": "BSD",
     "contributors": [
         "Drew Folta <folta@yahoo-inc.com>",
         "Michael Ridgway <mridgway@yahoo-inc.com>",
