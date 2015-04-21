@@ -13,35 +13,34 @@ Examples are provided in the [this directory](https://github.com/yahoo/ycb/tree/
 `npm install ycb --save`
 
 ### Usage
-```
-var Ycb = require('ycb'),
-    dimensions = [
-        {
-            "dimensions": [
-                {
-                    "environment": {
-                        "dev": null,
-                        "prod": null
-                    }
-                }
-            ]
-        }
-    ],
-    config = [
-        {
-            "settings": ["master"],
-            "host": "example.com"
-        },
-        {
-            "settings": ["environment:dev"],
-            "host": "dev.example.com"
-        }
-    ],
-    context = { environment: 'dev' },
-    ycb = new Ycb.Ycb(dimensions.concat(config)),
-    config = ycb.read(context);
 
-console.log(config.host); // dev.example.com
+```
+var YCB = require('ycb');
+var configArray = [
+    {
+        "dimensions": [
+            {
+                "environment": {
+                    "dev": null,
+                    "prod": null
+                }
+            }
+        ]
+    },
+    {
+        "settings": ["master"],
+        "host": "example.com"
+    },
+    {
+        "settings": ["environment:dev"],
+        "host": "dev.example.com"
+    }
+];
+
+var ycbObj = new YCB.Ycb(configArray),
+var computedConfig = ycbObj.read({ environment: 'dev' });
+
+console.log(computedConfig.host); // dev.example.com
 ```
 
 
