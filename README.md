@@ -37,7 +37,7 @@ var configArray = [
     }
 ];
 
-var ycbObj = new YCB.Ycb(configArray),
+var ycbObj = new YCB.Ycb(configArray);
 var computedConfig = ycbObj.read({ environment: 'dev' });
 
 console.log(computedConfig.host); // dev.example.com
