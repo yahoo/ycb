@@ -66,24 +66,25 @@ cases = {
     'test _flattenDimension': function() {
         var dims = readFixtureFile('dimensions.json'),
             ycb = new libycb.Ycb(dims),
-            flat = ycb._flattenDimension('', dims[0].dimensions[6].lang);
+            flat = ycb._calculateHierarchy(['*'], dims[0].dimensions[6].lang);
 
-        A.areSame('en', flat.en);
-        A.areSame('en_CA', flat['en/en_CA']);
-        A.areSame('fr', flat.fr);
-        A.areSame('fr_CA', flat['fr/fr_FR/fr_CA']);
+        AA.itemsAreSame(['en', '*'], flat.en);
+        AA.itemsAreSame(['en_CA', 'en', '*'], flat.en_CA);
+        AA.itemsAreSame(['fr', '*'], flat.fr);
+        AA.itemsAreSame(['fr_CA', 'fr_FR', 'fr', '*'], flat.fr_CA);
     },
 
 
     'test _flattenDimensions': function() {
         var dims = readFixtureFile('dimensions.json'),
             ycb = new libycb.Ycb(dims),
-            flat = ycb._dimensionPaths;
+            flat = ycb._dimensionHeierarchies;
 
-        A.areSame('en', flat.lang.en);
-        A.areSame('en_CA', flat.lang['en/en_CA']);
-        A.areSame('fr', flat.lang.fr);
-        A.areSame('fr_CA', flat.lang['fr/fr_FR/fr_CA']);
+
+        AA.itemsAreSame(['en', '*'], flat.lang.en);
+        AA.itemsAreSame(['en_CA', 'en', '*'], flat.lang.en_CA);
+        AA.itemsAreSame(['fr', '*'], flat.lang.fr);
+        AA.itemsAreSame(['fr_CA', 'fr_FR', 'fr', '*'], flat.lang.fr_CA);
     },
 
 
@@ -97,16 +98,21 @@ cases = {
             'lang': 'fr_CA'
         };
         list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
-
-        A.areSame('preproduction', list.environment[0]);
-        A.areSame('*', list.environment[1]);
-        A.areSame('fr_CA', list.lang[0]);
-        A.areSame('fr_FR', list.lang[1]);
-        A.areSame('fr', list.lang[2]);
-        A.areSame('*', list.lang[3]);
-        A.areSame('ir', list.region[0]);
-        A.areSame('gb', list.region[1]);
-        A.areSame('*', list.region[2]);
+        AA.itemsAreSame([
+            'preproduction',
+            '*'
+        ], list.environment);
+        AA.itemsAreSame([
+            'fr_CA',
+            'fr_FR',
+            'fr',
+            '*'
+        ], list.lang);
+        AA.itemsAreSame([
+            'ir',
+            'gb',
+            '*'
+        ], list.region);
     },
 
 
@@ -423,12 +429,15 @@ cases = {
 
         A.areSame(3, Object.keys(ycb.dimsUsed).length);
         A.isNotUndefined(ycb.dimsUsed.region);
-        A.areSame(3, Object.keys(ycb.dimsUsed.region).length);
+        A.areSame(4, Object.keys(ycb.dimsUsed.region).length);
         A.isTrue(ycb.dimsUsed.region.ca);
         A.isTrue(ycb.dimsUsed.region.gb);
         A.isTrue(ycb.dimsUsed.region.fr);
-        A.areSame(1, Object.keys(ycb.dimsUsed.lang).length);
+        A.isTrue(ycb.dimsUsed.region.ir);
+        A.areSame(3, Object.keys(ycb.dimsUsed.lang).length);
         A.isTrue(ycb.dimsUsed.lang.fr);
+        A.isTrue(ycb.dimsUsed.lang.fr_FR);
+        A.isTrue(ycb.dimsUsed.lang.fr_CA);
         A.areSame(2, Object.keys(ycb.dimsUsed.flavor).length);
         A.isTrue(ycb.dimsUsed.flavor.att);
         A.isTrue(ycb.dimsUsed.flavor.bt);

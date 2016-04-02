@@ -367,14 +367,15 @@ Ycb.prototype = {
             kv,
             context,
             settings,
-            key;
+            key,
+            dimsUsed = {};
 
         // Extract each section from the bundle
         for (pos = 0; pos < bundle.length; pos += 1) {
             section = bundle[pos];
             if (section.dimensions) {
                 this.dimensions = section.dimensions;
-                this._flattenDimensions();
+                this._calculateHierarchies();
             } else if (section.schema) {
                 this.schema = section.schema;
             } else if (section.settings) {
@@ -382,10 +383,9 @@ Ycb.prototype = {
                 for (part = 0; part < section.settings.length; part += 1) {
                     kv = section.settings[part].split(':');
                     if ('master' !== section.settings[0]) {
-                        if (!this.dimsUsed[kv[0]]) {
-                            this.dimsUsed[kv[0]] = {};
-                        }
-                        this.dimsUsed[kv[0]][kv[1]] = true;
+
+                        dimsUsed[kv[0]] = dimsUsed[kv[0]] || [];
+                        dimsUsed[kv[0]].push(kv[1]);
                     }
                     context[kv[0]] = kv[1];
                 }
@@ -394,7 +394,9 @@ Ycb.prototype = {
                 delete section.settings;
 
                 // Build the full context path
-                key = this._getLookupPath(context, options, settings);
+                key = this._getLookupPath(context, {
+                    useAllDimensions: true
+                }, settings);
 
                 if ('undefined' === typeof key) {
                     // warning already reported
@@ -414,6 +416,33 @@ Ycb.prototype = {
                         ));
                     }
                     objectMerge(section, this.settings[key]);
+                }
+            }
+        }
+
+        this._buildUsageMap(dimsUsed);
+    },
+
+    _buildUsageMap: function (dimsUsed) {
+        var i, j, k,
+            value,
+            name,
+            hierarchy;
+
+        // Assemble map of all dimensions used including ancestry
+        this.dimsUsed = {};
+        for (name in dimsUsed) {
+            if (dimsUsed.hasOwnProperty(name) && this._dimensionHeierarchies.hasOwnProperty(name)) {
+                this.dimsUsed[name] = {};
+                for (i=0; i<dimsUsed[name].length; i += 1) {
+                    value = dimsUsed[name][i];
+                    for (hierarchy in this._dimensionHeierarchies[name]) {
+                        if (this._dimensionHeierarchies[name].hasOwnProperty(hierarchy)) {
+                            if (-1 !== this._dimensionHeierarchies[name][hierarchy].indexOf(value)) {
+                                this.dimsUsed[name][hierarchy] = true;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -519,39 +548,15 @@ Ycb.prototype = {
     _makeOrderedLookupList: function (context, options) {
         var pos,
             name,
-            path,
-            value,
-            used,
-            parts,
-            i,
             chains = {};
 
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
-                    for (path in this._dimensionPaths[name]) {
-                        if (this._dimensionPaths[name].hasOwnProperty(path)) {
-                            value = this._dimensionPaths[name][path];
-                            used = options.useAllDimensions || false;
-                            if (!options.useAllDimensions && this.dimsUsed[name]) {
-                                parts = path.split(SEPARATOR);
-                                for (i = 0; i < parts.length; i += 1) {
-                                    if (this.dimsUsed[name][parts[i]]) {
-                                        used = true;
-                                    }
-                                }
-                            }
-                            if (used && value === context[name]) {
-                                chains[name] = path;
-                            }
-                        }
-                    }
-                    if (chains[name]) {
-                        // Convert to an ordered list
-                        chains[name] = chains[name].split(SEPARATOR).reverse().concat(DEFAULT);
+                    if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
+                        chains[name] = this._dimensionHeierarchies[name][context[name]] || ['*'];
                     } else {
-                        // If there was no match set to default
-                        chains[name] = [DEFAULT];
+                        chains[name] = ['*'];
                     }
                 }
             }
@@ -562,15 +567,15 @@ Ycb.prototype = {
 
     /**
      * @private
-     * @method _flattenDimension
-     * @param prefix {string}
+     * @method _calculateHierarchy
+     * @param parents {array}
      * @param dimension {object} A single YCB dimension structured object
      * @param build {string}
      * @return {object} k/v map
      */
-    _flattenDimension: function (prefix, dimension, build) {
+    _calculateHierarchy: function (parents, dimension, build) {
         var key,
-            newPrefix,
+            newParents,
             nextDimension;
 
         build = build || {};
@@ -578,10 +583,10 @@ Ycb.prototype = {
             for (key in dimension) {
                 if (dimension.hasOwnProperty(key)) {
                     nextDimension = dimension[key];
-                    newPrefix = (prefix ? prefix + SEPARATOR + key : key);
-                    build[newPrefix] = key;
+                    newParents = ([key].concat(parents));
+                    build[key] = newParents;
                     if (typeof nextDimension === 'object') {
-                        build = this._flattenDimension(newPrefix, nextDimension, build);
+                        this._calculateHierarchy(newParents, nextDimension, build);
                     }
                 }
             }
@@ -592,17 +597,17 @@ Ycb.prototype = {
 
     /**
      * @private
-     * @method _flattenDimensions
+     * @method _calculateHierarchies
      * @return {nothing}
      */
-    _flattenDimensions: function () {
+    _calculateHierarchies: function () {
         var pos,
             name;
-        this._dimensionPaths = {};
+        this._dimensionHeierarchies = {};
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionPaths[name] = this._flattenDimension('', this.dimensions[pos][name]);
+                    this._dimensionHeierarchies[name] = this._calculateHierarchy(['*'], this.dimensions[pos][name]);
                 }
             }
         }
