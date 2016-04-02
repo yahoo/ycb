@@ -432,13 +432,13 @@ Ycb.prototype = {
         // Assemble map of all dimensions used including ancestry
         this.dimsUsed = {};
         for (name in dimsUsed) {
-            if (dimsUsed.hasOwnProperty(name) && this._dimensionHeierarchies.hasOwnProperty(name)) {
+            if (dimsUsed.hasOwnProperty(name) && this._dimensionHierarchies.hasOwnProperty(name)) {
                 this.dimsUsed[name] = {};
                 for (i=0; i<dimsUsed[name].length; i += 1) {
                     value = dimsUsed[name][i];
-                    for (hierarchy in this._dimensionHeierarchies[name]) {
-                        if (this._dimensionHeierarchies[name].hasOwnProperty(hierarchy)) {
-                            if (-1 !== this._dimensionHeierarchies[name][hierarchy].indexOf(value)) {
+                    for (hierarchy in this._dimensionHierarchies[name]) {
+                        if (this._dimensionHierarchies[name].hasOwnProperty(hierarchy)) {
+                            if (-1 !== this._dimensionHierarchies[name][hierarchy].indexOf(value)) {
                                 this.dimsUsed[name][hierarchy] = true;
                             }
                         }
@@ -554,7 +554,7 @@ Ycb.prototype = {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
                     if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                        chains[name] = this._dimensionHeierarchies[name][context[name]] || [DEFAULT];
+                        chains[name] = this._dimensionHierarchies[name][context[name]] || [DEFAULT];
                     } else {
                         chains[name] = [DEFAULT];
                     }
@@ -603,11 +603,11 @@ Ycb.prototype = {
     _calculateHierarchies: function () {
         var pos,
             name;
-        this._dimensionHeierarchies = {};
+        this._dimensionHierarchies = {};
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionHeierarchies[name] = this._calculateHierarchy([DEFAULT], this.dimensions[pos][name]);
+                    this._dimensionHierarchies[name] = this._calculateHierarchy([DEFAULT], this.dimensions[pos][name]);
                 }
             }
         }

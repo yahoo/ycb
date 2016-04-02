@@ -63,7 +63,7 @@ cases = {
     },
 
 
-    'test _flattenDimension': function() {
+    'test _calculateHierarchy': function() {
         var dims = readFixtureFile('dimensions.json'),
             ycb = new libycb.Ycb(dims),
             flat = ycb._calculateHierarchy(['*'], dims[0].dimensions[6].lang);
@@ -75,10 +75,10 @@ cases = {
     },
 
 
-    'test _flattenDimensions': function() {
+    'test _calculateHierarchies': function() {
         var dims = readFixtureFile('dimensions.json'),
             ycb = new libycb.Ycb(dims),
-            flat = ycb._dimensionHeierarchies;
+            flat = ycb._dimensionHierarchies;
 
 
         AA.itemsAreSame(['en', '*'], flat.lang.en);
