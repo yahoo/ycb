@@ -527,7 +527,7 @@ Ycb.prototype = {
             ctx = {};
         for (p = 0; p < this.dimensions.length; p += 1) {
             part = parts[p];
-            if ('*' !== part) {
+            if (DEFAULT !== part) {
                 // Having more than one key in the dimensions structure is against
                 // the YCB spec.
                 dimName = Object.keys(this.dimensions[p])[0];
@@ -554,9 +554,9 @@ Ycb.prototype = {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
                     if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                        chains[name] = this._dimensionHeierarchies[name][context[name]] || ['*'];
+                        chains[name] = this._dimensionHeierarchies[name][context[name]] || [DEFAULT];
                     } else {
-                        chains[name] = ['*'];
+                        chains[name] = [DEFAULT];
                     }
                 }
             }
@@ -607,7 +607,7 @@ Ycb.prototype = {
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionHeierarchies[name] = this._calculateHierarchy(['*'], this.dimensions[pos][name]);
+                    this._dimensionHeierarchies[name] = this._calculateHierarchy([DEFAULT], this.dimensions[pos][name]);
                 }
             }
         }
