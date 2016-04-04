@@ -4,10 +4,6 @@
 
 YCB is a multi-dimensional configuration library that builds bundles from resource files describing a variety of values. The library allows applications to configure themselves based on multiple dimensions describing locations, languages, environments, etc.
 
-More info on the [wiki](https://github.com/yahoo/ycb/wiki).
-
-Examples are provided in [this directory](https://github.com/yahoo/ycb/tree/master/tests).
-
 ### Install
 
 `npm install ycb --save`
@@ -43,6 +39,10 @@ var computedConfig = ycbObj.read({ environment: 'dev' });
 console.log(computedConfig.host); // dev.example.com
 ```
 
+### Examples
+
+Examples are provided in [the tests directory](https://github.com/yahoo/ycb/tree/master/tests).
 
 ### License
+
 BSD see LICENSE.txt
