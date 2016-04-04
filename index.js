@@ -85,7 +85,7 @@ function Ycb(bundle, options) {
     this.settings = {};
     this.schema = {};
     this.dimsUsed = {}; // dim name: value: true
-    this._processRawBundle(bundle, this.options);
+    this._processRawBundle(this._cloneObj(bundle), this.options);
 }
 Ycb.prototype = {
 
