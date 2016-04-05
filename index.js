@@ -12,7 +12,8 @@ var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
-    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g;
+    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
+    DEFAULT_LOOKUP = [DEFAULT];
 
 
 //---------------------------------------------------------------
@@ -554,9 +555,9 @@ Ycb.prototype = {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
                     if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                        chains[name] = this._dimensionHierarchies[name][context[name]] || [DEFAULT];
+                        chains[name] = this._dimensionHierarchies[name][context[name]] || DEFAULT_LOOKUP;
                     } else {
-                        chains[name] = [DEFAULT];
+                        chains[name] = DEFAULT_LOOKUP;
                     }
                 }
             }
