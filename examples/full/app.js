@@ -16,7 +16,7 @@ var libfs = require('fs'),
 
 /**
 @param {string} file JSON valid file representing a configuration
-@return {object} the parsed version of `file` 
+@return {object} the parsed version of `file`
 **/
 function readFile(file) {
     var raw = libfs.readFileSync(libpath.join(__dirname, file));
@@ -43,7 +43,7 @@ assert.equal(8000, config.appPort);
 // read "environment:development"
 config = ycb.read({ environment: 'development' });
 assert.equal(false, config.yui.config.combine);
-assert.equal("debug", config.yui.config.logLevel);
+assert.equal('debug', config.yui.config.logLevel);
 assert.equal(false, config.yui.config.fetchCSS);
 
 config = ycb.readNoMerge({ environment: 'development' }, {});

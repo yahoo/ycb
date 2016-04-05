@@ -4,40 +4,35 @@
  * See the accompanying LICENSE file for terms.
  */
 
-/*jslint node:true*/
+/*globals describe,it*/
 
-var Y = require('yui').YUI({useSync: true}).use('json', 'oop', 'test'),
-    libpath = require('path'),
-    libfs = require('fs'),
-    libycb = require('../index'),
-    cases = {},
-    A = Y.Assert,
-    AA = Y.ArrayAssert,
-    OA = Y.ObjectAssert;
-
+var libpath = require('path');
+var libfs = require('fs');
+var libycb = require('../index');
+var assert = require('assert');
 
 function readFixtureFile(file){
     var path = libpath.join(__dirname, 'fixtures' , file);
     var data = libfs.readFileSync(path, 'utf8');
-    return Y.JSON.parse(data);
+    return JSON.parse(data);
 }
 
 
 function cmp(x, y, msg) {
     var i;
-    if (Y.Lang.isArray(x)) {
-        A.isArray(x, msg || 'first arg should be an array');
-        A.isArray(y, msg || 'second arg should be an array');
-        A.areSame(x.length, y.length, msg || 'arrays are different lengths');
+    if (Array.isArray(x)) {
+        Array.isArray(x, msg || 'first arg should be an array');
+        Array.isArray(y, msg || 'second arg should be an array');
+        assert.equal(x.length, y.length, msg || 'arrays are different lengths');
         for (i = 0; i < x.length; i += 1) {
             cmp(x[i], y[i], msg);
         }
         return;
     }
-    if (Y.Lang.isObject(x)) {
-        A.isObject(x, msg || 'first arg should be an object');
-        A.isObject(y, msg || 'second arg should be an object');
-        A.areSame(Object.keys(x).length, Object.keys(y).length, msg || 'object keys are different lengths');
+    if (typeof x === 'object' && x !== null) {
+        assert(typeof x === 'object', msg || 'first arg should be an object');
+        assert(typeof y === 'object', msg || 'second arg should be an object');
+        assert.equal(Object.keys(x).length, Object.keys(y).length, msg || 'object keys are different lengths');
         for (i in x) {
             if (x.hasOwnProperty(i)) {
                 cmp(x[i], y[i], msg);
@@ -45,629 +40,596 @@ function cmp(x, y, msg) {
         }
         return;
     }
-    A.areSame(x, y, msg || 'args should be the same');
+    assert.equal(x, y, msg || 'args should be the same');
 }
 
 
-cases = {
+describe('ycb unit tests', function () {
+    it('should be able to be used as a module', function() {
+        assert(libycb.version === '1.0.2');
+    });
 
-    name: 'ycb unit tests',
+    describe('_calculateHierarchy', function () {
+        it('should generate lookup paths', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                flat = ycb._calculateHierarchy(['*'], dims[0].dimensions[6].lang);
 
-    setUp: function() {},
-
-    tearDown: function() {},
-
-
-    'test if we can use the module': function() {
-        A.isTrue(libycb.version === '1.0.2');
-    },
-
-
-    'test _calculateHierarchy': function() {
-        var dims = readFixtureFile('dimensions.json'),
-            ycb = new libycb.Ycb(dims),
-            flat = ycb._calculateHierarchy(['*'], dims[0].dimensions[6].lang);
-
-        AA.itemsAreSame(['en', '*'], flat.en);
-        AA.itemsAreSame(['en_CA', 'en', '*'], flat.en_CA);
-        AA.itemsAreSame(['fr', '*'], flat.fr);
-        AA.itemsAreSame(['fr_CA', 'fr_FR', 'fr', '*'], flat.fr_CA);
-    },
-
-
-    'test _calculateHierarchies': function() {
-        var dims = readFixtureFile('dimensions.json'),
-            ycb = new libycb.Ycb(dims),
-            flat = ycb._dimensionHierarchies;
-
-
-        AA.itemsAreSame(['en', '*'], flat.lang.en);
-        AA.itemsAreSame(['en_CA', 'en', '*'], flat.lang.en_CA);
-        AA.itemsAreSame(['fr', '*'], flat.lang.fr);
-        AA.itemsAreSame(['fr_CA', 'fr_FR', 'fr', '*'], flat.lang.fr_CA);
-    },
-
-
-    'test _makeOrderedLookupList': function() {
-        var dims = readFixtureFile('dimensions.json'),
-            ycb = new libycb.Ycb(dims),
-            context, list;
-        context = {
-            'region': 'ir',
-            'environment': 'preproduction',
-            'lang': 'fr_CA'
-        };
-        list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
-        AA.itemsAreSame([
-            'preproduction',
-            '*'
-        ], list.environment);
-        AA.itemsAreSame([
-            'fr_CA',
-            'fr_FR',
-            'fr',
-            '*'
-        ], list.lang);
-        AA.itemsAreSame([
-            'ir',
-            'gb',
-            '*'
-        ], list.region);
-    },
-
-
-    'test _getLookupPath': function() {
-        var dims = readFixtureFile('dimensions.json'),
-            ycb = new libycb.Ycb(dims),
-            context, path;
-        context = {
-            'region': 'ir',
-            'environment': 'preproduction',
-            'lang': 'fr_FR'
-        };
-        path = ycb._getLookupPath(context, {useAllDimensions: true});
-
-        A.areSame('preproduction/*/*/*/*/*/fr_FR/ir/*/*/*', path);
-    },
-
-
-    'test _getLookupPaths': function() {
-        var dims = readFixtureFile('dimensions.json'),
-            ycb = new libycb.Ycb(dims),
-            context, paths, expected;
-        context = {
-            'region': 'ir',
-            'environment': 'preproduction',
-            'lang': 'fr_FR'
-        };
-        paths = ycb._getLookupPaths(context, {useAllDimensions: true});
-
-        expected = [
-            "*/*/*/*/*/*/*/*/*/*/*",
-            "*/*/*/*/*/*/*/gb/*/*/*",
-            "*/*/*/*/*/*/*/ir/*/*/*",
-            "*/*/*/*/*/*/fr/*/*/*/*",
-            "*/*/*/*/*/*/fr/gb/*/*/*",
-            "*/*/*/*/*/*/fr/ir/*/*/*",
-            "*/*/*/*/*/*/fr_FR/*/*/*/*",
-            "*/*/*/*/*/*/fr_FR/gb/*/*/*",
-            "*/*/*/*/*/*/fr_FR/ir/*/*/*",
-            "preproduction/*/*/*/*/*/*/*/*/*/*",
-            "preproduction/*/*/*/*/*/*/gb/*/*/*",
-            "preproduction/*/*/*/*/*/*/ir/*/*/*",
-            "preproduction/*/*/*/*/*/fr/*/*/*/*",
-            "preproduction/*/*/*/*/*/fr/gb/*/*/*",
-            "preproduction/*/*/*/*/*/fr/ir/*/*/*",
-            "preproduction/*/*/*/*/*/fr_FR/*/*/*/*",
-            "preproduction/*/*/*/*/*/fr_FR/gb/*/*/*",
-            "preproduction/*/*/*/*/*/fr_FR/ir/*/*/*"
-        ];
-        AA.itemsAreEqual(expected, paths);
-    },
-
-
-    'test _processRawBundle': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json')[0]);
-        ycb = new libycb.Ycb(bundle);
-
-        A.areSame('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
-        A.isNotUndefined(ycb.dimensions[7].region.us);
-    },
-
-
-    'test _processRawBundle with dupe error': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-2.json'));
-        ycb = new libycb.Ycb(bundle);
-
-        A.areSame('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
-        A.areSame('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
-        A.areSame('tests/fixtures/simple-2.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
-        A.isNotUndefined(ycb.dimensions[7].region.us);
-    },
-
-
-    'test _processRawBundle with many settings': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        ycb = new libycb.Ycb(bundle);
-
-        A.areSame('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
-        A.areSame('http://fr.yahoo.com', ycb.settings['*/*/*/*/*/*/*/fr/*/*/*'].links.home);
-        A.areSame('yahoo_bt_FR.png', ycb.settings['*/*/*/*/*/*/*/fr/*/*/bt'].logo);
-        A.isNotUndefined(ycb.dimensions[7].region.us);
-    },
-
-
-    'test _applySubstitutions': function() {
-        var config, ycb;
-        config = readFixtureFile('substitutions.json');
-        ycb = new libycb.Ycb([]);
-        ycb._applySubstitutions(config);
-
-        A.isTrue(config.key0.key4 === 'The value of key0.key2 is value2');
-        A.isTrue(config.key5.key4 === 'The value of key0.key2 is value2');
-        A.isTrue(config.key6.key7.key8.key4 === 'The value of key0.key2 is value2');
-        A.isTrue(config.key6.key9[2] === 'The value of key0.key2 is value2');
-        A.isTrue(config['$$key0.key1$$'] === '--YCB-SUBSTITUTION-ERROR--');
-        A.isTrue(config.key10.key11.key4 === 'The value of key0.key2 is value2');
-        A.isTrue(config.key11[4] === 'The value of key0.key2 is value2');
-        A.isTrue(config.key8.key4 === 'The value of key0.key2 is value2');
-    },
-
-    'test _applySubstitutions against ./fixtures/subs-expected.json': function() {
-        var config = require('./fixtures/substitutions.json'),
-            expected = require('./fixtures/subs-expected.json'),
-            ycb;
-
-        ycb = new libycb.Ycb([]);
-        ycb._applySubstitutions(config);
-        cmp(config, expected);
-    },
-
-
-    'test _applySubstitutions replaces': function() {
-        var ycb = new libycb.Ycb([]),
-            config,
-            expected;
-
-        config = {
-            key0: {
-                key1: 'value1',
-                key2: 'value2',
-                key3: '$$key0.key1$$',
-                key4: 'values of keys 1-3: $$key0.key1$$, $$key0.key2$$, $$key0.key3$$'
-            }
-        };
-
-        expected = {
-            key0: {
-                key1: 'value1',
-                key2: 'value2',
-                key3: 'value1',
-                key4: 'values of keys 1-3: value1, value2, value1'
-            }
-        };
-
-        ycb._applySubstitutions(config);
-        cmp(config, expected);
-    },
-
-    'test _applySubstitutions empty string': function() {
-        var ycb = new libycb.Ycb([]),
-            config,
-            expected;
-
-        config = {
-            key0: {
-                key1: 'value1',
-                key2: '',
-                key3: '$$key0.key1$$',
-                key4: '$$key0.key2$$$$key0.key2$$',
-                key5: 'values of keys 1-4: $$key0.key1$$, $$key0.key2$$, $$key0.key3$$, $$key0.key2$$$$key0.key2$$'
-            }
-        };
-
-        expected = {
-            key0: {
-                key1: 'value1',
-                key2: '',
-                key3: 'value1',
-                key4: '',
-                key5: 'values of keys 1-4: value1, , value1, '
-            }
-        };
-
-        ycb._applySubstitutions(config);
-        cmp(config, expected);
-    },
-
-
-    'test _applySubstitutions wrt ./fixtures/subs-expected.json': function() {
-        var config = require('./fixtures/substitutions.json'),
-            expected = require('./fixtures/subs-expected.json'),
-            ycb;
-
-        ycb = new libycb.Ycb([]);
-        ycb._applySubstitutions(config);
-        cmp(config, expected);
-    },
-
-
-    'test with substitutions': function() {
-        var bundle, config, expected;
-        bundle = readFixtureFile('substitutions.json');
-        bundle.settings = ["master"];
-        bundle = [bundle];
-        bundle = readFixtureFile('dimensions.json').concat(bundle);
-
-        config = (new libycb.Ycb(bundle)).read(bundle, {
-            applySubstitutions: true
+            assert.deepEqual(['en', '*'], flat.en);
+            assert.deepEqual(['en_CA', 'en', '*'], flat.en_CA);
+            assert.deepEqual(['fr', '*'], flat.fr);
+            assert.deepEqual(['fr_CA', 'fr_FR', 'fr', '*'], flat.fr_CA);
         });
-        expected = readFixtureFile('subs-expected.json');
+    });
 
-        cmp(config, expected);
-    },
+    describe('_calculateHierarchies', function () {
+        it('should generate lookup paths', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                flat = ycb._dimensionHierarchies;
 
 
-    'test with noSubstitutions': function() {
-        var bundle, config, expected;
-        bundle = readFixtureFile('substitutions.json');
-        bundle.settings = ["master"];
-        bundle = [bundle];
-        bundle = readFixtureFile('dimensions.json').concat(bundle);
-
-        config = (new libycb.Ycb(bundle)).read(bundle, {
-            applySubstitutions: false
+            assert.deepEqual(['en', '*'], flat.lang.en);
+            assert.deepEqual(['en_CA', 'en', '*'], flat.lang.en_CA);
+            assert.deepEqual(['fr', '*'], flat.lang.fr);
+            assert.deepEqual(['fr_CA', 'fr_FR', 'fr', '*'], flat.lang.fr_CA);
         });
-        expected = readFixtureFile('substitutions.json');
+    });
 
-        cmp(config, expected);
-    },
+    describe('_makeOrderedLookupList', function () {
+        it('should generate the lookup list', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, list;
+            context = {
+                'region': 'ir',
+                'environment': 'preproduction',
+                'lang': 'fr_CA'
+            };
+            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
+            assert.deepEqual([
+                'preproduction',
+                '*'
+            ], list.environment);
+            assert.deepEqual([
+                'fr_CA',
+                'fr_FR',
+                'fr',
+                '*'
+            ], list.lang);
+            assert.deepEqual([
+                'ir',
+                'gb',
+                '*'
+            ], list.region);
+        });
+    });
 
+    describe('_getLookupPath', function () {
+        it('should generate the look up path for the section', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, path;
+            context = {
+                'region': 'ir',
+                'environment': 'preproduction',
+                'lang': 'fr_FR'
+            };
+            path = ycb._getLookupPath(context, {useAllDimensions: true});
 
-    'test if we can use a simple config': function() {
-        var bundle, config;
-        bundle = readFixtureFile('simple-1.json');
-        config = libycb.read(bundle);
+            assert.equal('preproduction/*/*/*/*/*/fr_FR/ir/*/*/*', path);
+        });
+    });
 
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('http://www.yahoo.com', config.links.home);
-        A.areSame('http://mail.yahoo.com', config.links.mail);
-        A.isUndefined(config.__ycb_source__);
-    },
+    describe('_getLookupPaths', function () {
+        it('should generate the full list of lookup paths', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, paths, expected;
+            context = {
+                'region': 'ir',
+                'environment': 'preproduction',
+                'lang': 'fr_FR'
+            };
+            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
 
+            expected = [
+                '*/*/*/*/*/*/*/*/*/*/*',
+                '*/*/*/*/*/*/*/gb/*/*/*',
+                '*/*/*/*/*/*/*/ir/*/*/*',
+                '*/*/*/*/*/*/fr/*/*/*/*',
+                '*/*/*/*/*/*/fr/gb/*/*/*',
+                '*/*/*/*/*/*/fr/ir/*/*/*',
+                '*/*/*/*/*/*/fr_FR/*/*/*/*',
+                '*/*/*/*/*/*/fr_FR/gb/*/*/*',
+                '*/*/*/*/*/*/fr_FR/ir/*/*/*',
+                'preproduction/*/*/*/*/*/*/*/*/*/*',
+                'preproduction/*/*/*/*/*/*/gb/*/*/*',
+                'preproduction/*/*/*/*/*/*/ir/*/*/*',
+                'preproduction/*/*/*/*/*/fr/*/*/*/*',
+                'preproduction/*/*/*/*/*/fr/gb/*/*/*',
+                'preproduction/*/*/*/*/*/fr/ir/*/*/*',
+                'preproduction/*/*/*/*/*/fr_FR/*/*/*/*',
+                'preproduction/*/*/*/*/*/fr_FR/gb/*/*/*',
+                'preproduction/*/*/*/*/*/fr_FR/ir/*/*/*'
+            ];
+            assert.deepEqual(expected, paths);
+        });
 
-    'test if we can use a simple config with dimensions': function() {
-        var bundle, config;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'));
-        config = libycb.read(bundle);
+        it('should skip unused dimensions', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            ycb = new libycb.Ycb(bundle);
 
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('http://www.yahoo.com', config.links.home);
-        A.areSame('http://mail.yahoo.com', config.links.mail);
-    },
+            assert.equal(3, Object.keys(ycb.dimsUsed).length);
+            assert(undefined !==  ycb.dimsUsed.region);
+            assert.equal(4, Object.keys(ycb.dimsUsed.region).length);
+            assert(ycb.dimsUsed.region.ca);
+            assert(ycb.dimsUsed.region.gb);
+            assert(ycb.dimsUsed.region.fr);
+            assert(ycb.dimsUsed.region.ir);
+            assert.equal(3, Object.keys(ycb.dimsUsed.lang).length);
+            assert(ycb.dimsUsed.lang.fr);
+            assert(ycb.dimsUsed.lang.fr_FR);
+            assert(ycb.dimsUsed.lang.fr_CA);
+            assert.equal(2, Object.keys(ycb.dimsUsed.flavor).length);
+            assert(ycb.dimsUsed.flavor.att);
+            assert(ycb.dimsUsed.flavor.bt);
 
+            var context = {
+                'region': 'ir',
+                'environment': 'preproduction',
+                'lang': 'fr_FR'
+            };
+            var paths = ycb._getLookupPaths(context, {});
+            var expected = [
+                '*/*/*/*/*/*/*/*/*/*/*',
+                '*/*/*/*/*/*/*/gb/*/*/*',
+                '*/*/*/*/*/*/*/ir/*/*/*',
+                '*/*/*/*/*/*/fr/*/*/*/*',
+                '*/*/*/*/*/*/fr/gb/*/*/*',
+                '*/*/*/*/*/*/fr/ir/*/*/*',
+                '*/*/*/*/*/*/fr_FR/*/*/*/*',
+                '*/*/*/*/*/*/fr_FR/gb/*/*/*',
+                '*/*/*/*/*/*/fr_FR/ir/*/*/*'
+            ];
+            assert.deepEqual(expected, paths);
+        });
+    });
 
-    'test if we can use a simple config with dimensions and extra settings': function() {
-        var bundle, config;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        config = libycb.read(bundle);
+    describe('_processRawBundle', function () {
+        it('should set up settings and dimensions', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json')[0]);
+            ycb = new libycb.Ycb(bundle);
 
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('http://www.yahoo.com', config.links.home);
-        A.areSame('http://mail.yahoo.com', config.links.mail);
-    },
+            assert.equal('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+            assert(undefined !== ycb.dimensions[7].region.us);
+        });
 
+        it('should handle dupe error', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-2.json'));
+            ycb = new libycb.Ycb(bundle);
 
-    'test if we can use a simple config with dimensions and context IR': function() {
-        var bundle, context, config;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        context = {
-            'region': 'ir',
-            'environment': 'preproduction',
-            'lang': 'fr_FR'
-        };
-        config = libycb.read(bundle, context);
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('yahoo_FR.png', config.logo);
-        A.areSame('http://gb.yahoo.com', config.links.home);
-        A.areSame('http://gb.mail.yahoo.com', config.links.mail);
-    },
+            assert.equal('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+            assert.equal('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
+            assert.equal('tests/fixtures/simple-2.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
+            assert(undefined !== ycb.dimensions[7].region.us);
+        });
 
+        it('should handle many settings', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            ycb = new libycb.Ycb(bundle);
 
-    'test if we can use a simple config with dimensions and context FR': function() {
-        var bundle, context, config;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        context = {
-            'region': 'fr',
-            'environment': 'preproduction',
-            'lang': 'fr_FR'
-        };
-        config = libycb.read(bundle, context);
+            assert.equal('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+            assert.equal('http://fr.yahoo.com', ycb.settings['*/*/*/*/*/*/*/fr/*/*/*'].links.home);
+            assert.equal('yahoo_bt_FR.png', ycb.settings['*/*/*/*/*/*/*/fr/*/*/bt'].logo);
+            assert(undefined !== ycb.dimensions[7].region.us);
+        });
+    });
 
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('yahoo_FR.png', config.logo);
-        A.areSame('http://fr.yahoo.com', config.links.home);
-        A.areSame('http://fr.mail.yahoo.com', config.links.mail);
-    },
+    describe('_applySubstitutions', function () {
+        it('should substitute keys', function () {
+            var config, ycb;
+            config = readFixtureFile('substitutions.json');
+            ycb = new libycb.Ycb([]);
+            ycb._applySubstitutions(config);
 
+            assert(config.key0.key4 === 'The value of key0.key2 is value2');
+            assert(config.key5.key4 === 'The value of key0.key2 is value2');
+            assert(config.key6.key7.key8.key4 === 'The value of key0.key2 is value2');
+            assert(config.key6.key9[2] === 'The value of key0.key2 is value2');
+            assert(config['$$key0.key1$$'] === '--YCB-SUBSTITUTION-ERROR--');
+            assert(config.key10.key11.key4 === 'The value of key0.key2 is value2');
+            assert(config.key11[4] === 'The value of key0.key2 is value2');
+            assert(config.key8.key4 === 'The value of key0.key2 is value2');
+        });
 
-    'test if we can use a simple config with dimensions and context GB & BT': function() {
-        var bundle, context, config;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        context = {
-            'region': 'gb',
-            'environment': 'preproduction',
-            'flavor': 'bt'
-        };
-        config = libycb.read(bundle, context);
+        it('should substitute correctly against subs-expected', function () {
+            var config = require('./fixtures/substitutions.json'),
+                expected = require('./fixtures/subs-expected.json'),
+                ycb;
 
-        A.areSame('YRB_YAHOO', config.title_key);
-        A.areSame('yahoo_bt_GB.png', config.logo);
-        A.areSame('http://gb.yahoo.com', config.links.home);
-        A.areSame('http://gb.mail.yahoo.com', config.links.mail);
-    },
+            ycb = new libycb.Ycb([]);
+            ycb._applySubstitutions(config);
+            cmp(config, expected);
+        });
 
+        it('should substitute values', function () {
+            var ycb = new libycb.Ycb([]),
+                config,
+                expected;
 
-    'test ycb accepts falsey config values': function() {
-        var bundle,
-            config,
-            foo = {
-                settings: [ 'master' ],
-                title_key: 'YRB_YAHOO',
-                'data-url': 'http://service.yahoo.com',
-                logo: 'yahoo.png',
-                false_ok: false,
-                zero: 0,
-                undef: undefined,
-                links: { home: 'http://www.yahoo.com', mail: 'http://mail.yahoo.com' }
+            config = {
+                key0: {
+                    key1: 'value1',
+                    key2: 'value2',
+                    key3: '$$key0.key1$$',
+                    key4: 'values of keys 1-3: $$key0.key1$$, $$key0.key2$$, $$key0.key3$$'
+                }
             };
 
-        bundle = readFixtureFile('dimensions.json').concat([foo]);
-        config = libycb.read(bundle);
+            expected = {
+                key0: {
+                    key1: 'value1',
+                    key2: 'value2',
+                    key3: 'value1',
+                    key4: 'values of keys 1-3: value1, value2, value1'
+                }
+            };
 
-        A.areEqual(config['data-url'], foo['data-url']);
-        A.isTrue('false_ok' in config);
-        A.areEqual(config.false_ok, foo.false_ok);
-        A.isTrue('undef' in config);
-        A.areEqual(config.undef, foo.undef);
-        A.isTrue('zero' in config);
-        A.areEqual(config.zero, foo.zero);
-    },
-
-
-    'skip unused dimensions': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        ycb = new libycb.Ycb(bundle);
-
-        A.areSame(3, Object.keys(ycb.dimsUsed).length);
-        A.isNotUndefined(ycb.dimsUsed.region);
-        A.areSame(4, Object.keys(ycb.dimsUsed.region).length);
-        A.isTrue(ycb.dimsUsed.region.ca);
-        A.isTrue(ycb.dimsUsed.region.gb);
-        A.isTrue(ycb.dimsUsed.region.fr);
-        A.isTrue(ycb.dimsUsed.region.ir);
-        A.areSame(3, Object.keys(ycb.dimsUsed.lang).length);
-        A.isTrue(ycb.dimsUsed.lang.fr);
-        A.isTrue(ycb.dimsUsed.lang.fr_FR);
-        A.isTrue(ycb.dimsUsed.lang.fr_CA);
-        A.areSame(2, Object.keys(ycb.dimsUsed.flavor).length);
-        A.isTrue(ycb.dimsUsed.flavor.att);
-        A.isTrue(ycb.dimsUsed.flavor.bt);
-
-        var context = {
-            'region': 'ir',
-            'environment': 'preproduction',
-            'lang': 'fr_FR'
-        };
-        var paths = ycb._getLookupPaths(context, {});
-        var expected = [
-            '*/*/*/*/*/*/*/*/*/*/*',
-            '*/*/*/*/*/*/*/gb/*/*/*',
-            '*/*/*/*/*/*/*/ir/*/*/*',
-            '*/*/*/*/*/*/fr/*/*/*/*',
-            '*/*/*/*/*/*/fr/gb/*/*/*',
-            '*/*/*/*/*/*/fr/ir/*/*/*',
-            '*/*/*/*/*/*/fr_FR/*/*/*/*',
-            '*/*/*/*/*/*/fr_FR/gb/*/*/*',
-            '*/*/*/*/*/*/fr_FR/ir/*/*/*'
-        ];
-        AA.itemsAreEqual(expected, paths);
-    },
-
-
-    'get dimensions': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json');
-        ycb = new libycb.Ycb(Y.clone(bundle, true));
-        cmp(bundle[0].dimensions, ycb.getDimensions());
-    },
-
-
-    'walk settings': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'))
-            .concat(readFixtureFile('simple-3.json'));
-        ycb = new libycb.Ycb(bundle);
-        var ctxs = {};
-        ycb.walkSettings(function(settings) {
-            ctxs[JSON.stringify(settings)] = true;
-            return true;
+            ycb._applySubstitutions(config);
+            cmp(config, expected);
         });
-        A.areSame(9, Object.keys(ctxs).length);
-        A.isTrue(ctxs['{}']);
-        A.isTrue(ctxs['{"region":"ca"}']);
-        A.isTrue(ctxs['{"region":"gb"}']);
-        A.isTrue(ctxs['{"lang":"fr"}']);
-        A.isTrue(ctxs['{"region":"fr"}']);
-        A.isTrue(ctxs['{"flavor":"att"}']);
-        A.isTrue(ctxs['{"region":"ca","flavor":"att"}']);
-        A.isTrue(ctxs['{"region":"gb","flavor":"bt"}']);
-        A.isTrue(ctxs['{"region":"fr","flavor":"bt"}']);
-    },
 
+        it('should handle empty strings', function () {
+            var ycb = new libycb.Ycb([]),
+                config,
+                expected;
 
-    'clone object': function() {
-        var bundle, ycb;
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-1.json'));
-        ycb = new libycb.Ycb(bundle);
+            config = {
+                key0: {
+                    key1: 'value1',
+                    key2: '',
+                    key3: '$$key0.key1$$',
+                    key4: '$$key0.key2$$$$key0.key2$$',
+                    key5: 'values of keys 1-4: $$key0.key1$$, $$key0.key2$$, $$key0.key3$$, $$key0.key2$$$$key0.key2$$'
+                }
+            };
 
-        var obj, copy;
-        obj = {
-            inner: {
-                string: "value",
-                number: 1,
-                fn: function() {}
-            },
-            list: ['a', 'b', 'c']
-        };
-        copy = ycb._cloneObj(obj);
+            expected = {
+                key0: {
+                    key1: 'value1',
+                    key2: '',
+                    key3: 'value1',
+                    key4: '',
+                    key5: 'values of keys 1-4: value1, , value1, '
+                }
+            };
 
-        A.areNotSame(obj, copy);
-
-        A.areNotSame(obj.inner, copy.inner);
-        OA.areEqual(obj.inner, copy.inner);
-
-        A.areSame(obj.inner.string, copy.inner.string);
-        A.areSame(obj.inner.number, copy.inner.number);
-        A.areSame(obj.inner.fn, copy.inner.fn);
-
-        A.areNotSame(obj.list, copy.list);
-        AA.itemsAreEqual(obj.list, copy.list);
-    },
-
-    'test objectMerge': function () {
-        var bundle,
-            ycb;
-
-        bundle = readFixtureFile('dimensions.json')
-            .concat(readFixtureFile('simple-4.json'));
-        ycb = new libycb.Ycb(bundle);
-        var config = ycb.read({
-            'lang': 'fr'
+            ycb._applySubstitutions(config);
+            cmp(config, expected);
         });
-        OA.areEqual({
-            foo: 1,
-            bar: 2,
-            baz: 3,
-            oof: null,
-            rab: 0,
-            zab: false
-        }, config);
-    },
+    });
 
-    'unknown dimension values dont polute master': function() {
-        var bundle,
-            ycb,
-            config;
+    describe('read', function () {
+        it('should correctly read simple config with no dimensions', function () {
+            var bundle, config;
+            bundle = readFixtureFile('simple-1.json');
+            config = libycb.read(bundle);
 
-        bundle = readFixtureFile('dimensions.json');
-        bundle.push({
-            settings: ['master'],
-            appPort: 80
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('http://www.yahoo.com', config.links.home);
+            assert.equal('http://mail.yahoo.com', config.links.mail);
+            assert(undefined === config.__ycb_source__);
         });
-        bundle.push({
-            settings: ['environment:lkjsdflksdhlskdfs'],
-            appPort: 81
+
+        it('should correctly read simple config with dimensions', function () {
+            var bundle, config;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'));
+            config = libycb.read(bundle);
+
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('http://www.yahoo.com', config.links.home);
+            assert.equal('http://mail.yahoo.com', config.links.mail);
         });
-        ycb = new libycb.Ycb(bundle);
-        config = ycb.read({});
-        A.areSame(80, config.appPort);
-    },
 
-    'unknown dimension should be ignored': function() {
-        var bundle,
-            ycb,
-            config;
+        it('should correctly read simple config with dimensions and extra settings', function () {
+            var bundle, config;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            config = libycb.read(bundle);
 
-        bundle = readFixtureFile('dimensions-other.json');
-        bundle.push({
-            settings: ['master'],
-            appPort: 80
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('http://www.yahoo.com', config.links.home);
+            assert.equal('http://mail.yahoo.com', config.links.mail);
         });
-        bundle.push({
-            settings: ['unknown:value'],
-            appPort: 81
+
+        it('should correctly read simple config with dimensions and context IR', function () {
+            var bundle, context, config;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            context = {
+                'region': 'ir',
+                'environment': 'preproduction',
+                'lang': 'fr_FR'
+            };
+            config = libycb.read(bundle, context);
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('yahoo_FR.png', config.logo);
+            assert.equal('http://gb.yahoo.com', config.links.home);
+            assert.equal('http://gb.mail.yahoo.com', config.links.mail);
         });
-        ycb = new libycb.Ycb(bundle);
-        config = ycb.read({ environment: 'desktop'});
-        A.areSame(80, config.appPort);
-    },
 
-    'multi-level match': function() {
-        var bundle,
-            ycb,
-            config;
+        it('should correctly read simple config with dimensions and context FR', function () {
+            var bundle, context, config;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            context = {
+                'region': 'fr',
+                'environment': 'preproduction',
+                'lang': 'fr_FR'
+            };
+            config = libycb.read(bundle, context);
 
-        bundle = readFixtureFile('dimensions-other.json');
-        bundle = bundle.concat([
-            {
-                "settings": [ "master" ],
-                "appPort": 8666
-            },
-            {
-                "settings": [ "environment:prod" ],
-                "appPort": 80
-            },
-            {
-                "settings": [ "environment:prod", "device:smartphone" ],
-                "appPort": 8888
-            },
-            {
-                "settings": [ "environment:prod", "device:desktop" ],
-                "appPort": 8080
-            }
-        ]);
-        ycb = new libycb.Ycb(bundle);
-        config = ycb.read({});
-        A.areSame(8666, config.appPort);
-        config = ycb.read({
-            environment: 'prod',
-            device: 'smartphone'
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('yahoo_FR.png', config.logo);
+            assert.equal('http://fr.yahoo.com', config.links.home);
+            assert.equal('http://fr.mail.yahoo.com', config.links.mail);
         });
-        A.areSame(8888, config.appPort);
-        config = ycb.read({
-            environment: 'prod',
-            device: 'desktop'
+
+        it('should correctly read simple config with dimensions and context GB & BT', function () {
+            var bundle, context, config;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            context = {
+                'region': 'gb',
+                'environment': 'preproduction',
+                'flavor': 'bt'
+            };
+            config = libycb.read(bundle, context);
+
+            assert.equal('YRB_YAHOO', config.title_key);
+            assert.equal('yahoo_bt_GB.png', config.logo);
+            assert.equal('http://gb.yahoo.com', config.links.home);
+            assert.equal('http://gb.mail.yahoo.com', config.links.mail);
         });
-        A.areSame(8080, config.appPort);
-        config = ycb.read({
-            environment: 'prod'
+
+        it('should accept falsey config values', function () {
+            var bundle,
+                config,
+                foo = {
+                    settings: [ 'master' ],
+                    title_key: 'YRB_YAHOO',
+                    'data-url': 'http://service.yahoo.com',
+                    logo: 'yahoo.png',
+                    false_ok: false,
+                    zero: 0,
+                    undef: undefined,
+                    links: { home: 'http://www.yahoo.com', mail: 'http://mail.yahoo.com' }
+                };
+
+            bundle = readFixtureFile('dimensions.json').concat([foo]);
+            config = libycb.read(bundle);
+
+            assert.equal(config['data-url'], foo['data-url']);
+            assert('false_ok' in config);
+            assert.equal(config.false_ok, foo.false_ok);
+            assert('undef' in config);
+            assert.equal(config.undef, foo.undef);
+            assert('zero' in config);
+            assert.equal(config.zero, foo.zero);
         });
-        A.areSame(80, config.appPort);
-    }
 
-};
+        it('should merge matched settings', function () {
+            var bundle,
+                ycb;
 
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-4.json'));
+            ycb = new libycb.Ycb(bundle);
+            var config = ycb.read({
+                'lang': 'fr'
+            });
+            assert.deepEqual({
+                foo: 1,
+                bar: 2,
+                baz: 3,
+                oof: null,
+                rab: 0,
+                zab: false
+            }, config);
+        });
 
-Y.Test.Runner.add(new Y.Test.Case(cases));
-Y.Test.Runner.subscribe(Y.Test.Runner.COMPLETE_EVENT, function (results) {
-    var resultsXML = Y.Test.Runner.getResults(Y.Test.Format.XML);
-    libfs.writeFileSync('./results.xml', resultsXML);
-    if (results.results.failed > 0 || results.results.errors > 0) {
-        process.exit(1);
-    }
+        it('should not pollute master settings with dimension values', function () {
+            var bundle,
+                ycb,
+                config;
+
+            bundle = readFixtureFile('dimensions.json');
+            bundle.push({
+                settings: ['master'],
+                appPort: 80
+            });
+            bundle.push({
+                settings: ['environment:lkjsdflksdhlskdfs'],
+                appPort: 81
+            });
+            ycb = new libycb.Ycb(bundle);
+            config = ycb.read({});
+            assert.equal(80, config.appPort);
+        });
+
+        it('should ignore unknown dimensions', function () {
+            var bundle,
+                ycb,
+                config;
+
+            bundle = readFixtureFile('dimensions-other.json');
+            bundle.push({
+                settings: ['master'],
+                appPort: 80
+            });
+            bundle.push({
+                settings: ['unknown:value'],
+                appPort: 81
+            });
+            ycb = new libycb.Ycb(bundle);
+            config = ycb.read({ environment: 'desktop'});
+            assert.equal(80, config.appPort);
+        });
+
+        it('should handle multi-level matching', function () {
+            var bundle,
+                ycb,
+                config;
+
+            bundle = readFixtureFile('dimensions-other.json');
+            bundle = bundle.concat([
+                {
+                    'settings': [ 'master' ],
+                    'appPort': 8666
+                },
+                {
+                    'settings': [ 'environment:prod' ],
+                    'appPort': 80
+                },
+                {
+                    'settings': [ 'environment:prod', 'device:smartphone' ],
+                    'appPort': 8888
+                },
+                {
+                    'settings': [ 'environment:prod', 'device:desktop' ],
+                    'appPort': 8080
+                }
+            ]);
+            ycb = new libycb.Ycb(bundle);
+            config = ycb.read({});
+            assert.equal(8666, config.appPort);
+            config = ycb.read({
+                environment: 'prod',
+                device: 'smartphone'
+            });
+            assert.equal(8888, config.appPort);
+            config = ycb.read({
+                environment: 'prod',
+                device: 'desktop'
+            });
+            assert.equal(8080, config.appPort);
+            config = ycb.read({
+                environment: 'prod'
+            });
+            assert.equal(80, config.appPort);
+        });
+
+        it('should do substitutions by default', function () {
+            var bundle, config, expected;
+            bundle = readFixtureFile('substitutions.json');
+            bundle.settings = ['master'];
+            bundle = [bundle];
+            bundle = readFixtureFile('dimensions.json').concat(bundle);
+
+            config = (new libycb.Ycb(bundle)).read(bundle, {
+                applySubstitutions: true
+            });
+            expected = readFixtureFile('subs-expected.json');
+
+            cmp(config, expected);
+        });
+
+        it('should not do substitutions if applySubstitutions=false', function () {
+            var bundle, config, expected;
+            bundle = readFixtureFile('substitutions.json');
+            bundle.settings = ['master'];
+            bundle = [bundle];
+            bundle = readFixtureFile('dimensions.json').concat(bundle);
+
+            config = (new libycb.Ycb(bundle)).read(bundle, {
+                applySubstitutions: false
+            });
+            expected = readFixtureFile('substitutions.json');
+
+            cmp(config, expected);
+        });
+    });
+
+    describe('getDimensions', function () {
+        it('should return the bundle dimensions', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json');
+            ycb = new libycb.Ycb(bundle, true);
+            cmp(bundle[0].dimensions, ycb.getDimensions());
+        });
+    });
+
+    describe('walkSettings', function () {
+        it('should walk each setting', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            ycb = new libycb.Ycb(bundle);
+            var ctxs = {};
+            ycb.walkSettings(function(settings) {
+                ctxs[JSON.stringify(settings)] = true;
+                return true;
+            });
+            assert.equal(9, Object.keys(ctxs).length);
+            assert(ctxs['{}']);
+            assert(ctxs[JSON.stringify({region:'ca'})]);
+            assert(ctxs[JSON.stringify({region:'gb'})]);
+            assert(ctxs[JSON.stringify({lang:'fr'})]);
+            assert(ctxs[JSON.stringify({region:'fr'})]);
+            assert(ctxs[JSON.stringify({flavor:'att'})]);
+            assert(ctxs[JSON.stringify({region:'ca',flavor:'att'})]);
+            assert(ctxs[JSON.stringify({region:'gb',flavor:'bt'})]);
+            assert(ctxs[JSON.stringify({region:'fr',flavor:'bt'})]);
+        });
+    });
+
+    describe('_cloneObj', function () {
+        it('should deeply clone the full object', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'));
+            ycb = new libycb.Ycb(bundle);
+
+            var obj, copy;
+            obj = {
+                inner: {
+                    string: 'value',
+                    number: 1,
+                    fn: function() {}
+                },
+                list: ['a', 'b', 'c']
+            };
+            copy = ycb._cloneObj(obj);
+
+            assert.notEqual(obj, copy);
+
+            assert.notEqual(obj.inner, copy.inner);
+            assert.deepEqual(obj.inner, copy.inner);
+
+            assert.equal(obj.inner.string, copy.inner.string);
+            assert.equal(obj.inner.number, copy.inner.number);
+            assert.equal(obj.inner.fn, copy.inner.fn);
+
+            assert.notEqual(obj.list, copy.list);
+            assert.deepEqual(obj.list, copy.list);
+        });
+    });
 });
-
-Y.Test.Runner.run();
