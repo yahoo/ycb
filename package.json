@@ -13,17 +13,19 @@
     "dependencies": {},
     "main": "index",
     "scripts": {
-        "pretest": "jshint index.js tests/unit.js examples/*/*.js",
-        "test": "node tests/unit"
+        "cover": "istanbul cover --dir artifacts -- _mocha tests/unit --recursive--reporter spec",
+        "lint": "eslint .",
+        "pretest": "npm run lint",
+        "test": "mocha tests/unit --reporter spec"
     },
     "engines": {
         "node": ">0.4",
         "npm": ">1.0"
     },
     "devDependencies": {
-        "yui": ">3.5",
-        "istanbul": ">=0.1.32",
-        "jshint": "2.5.5"
+        "eslint": "^2.2.0",
+        "istanbul": "^0.4.2",
+        "mocha": "^2.0.1"
     },
     "repository": {
         "type": "git",
