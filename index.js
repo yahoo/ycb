@@ -12,7 +12,8 @@ var VERSION = '1.0.2',
     DEFAULT = '*',
     SEPARATOR = '/',
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
-    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g;
+    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
+    DEFAULT_LOOKUP = [DEFAULT];
 
 
 //---------------------------------------------------------------
@@ -556,9 +557,9 @@ Ycb.prototype = {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
                     if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                        chains[name] = this._dimensionHierarchies[name][context[name]] || [DEFAULT];
+                        chains[name] = this._dimensionHierarchies[name][context[name]] || DEFAULT_LOOKUP;
                     } else {
-                        chains[name] = [DEFAULT];
+                        chains[name] = DEFAULT_LOOKUP;
                     }
                 }
             }
@@ -609,7 +610,7 @@ Ycb.prototype = {
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionHierarchies[name] = this._calculateHierarchy([DEFAULT], this.dimensions[pos][name]);
+                    this._dimensionHierarchies[name] = this._calculateHierarchy(DEFAULT_LOOKUP, this.dimensions[pos][name]);
                 }
             }
         }
