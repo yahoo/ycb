@@ -294,6 +294,38 @@ cases = {
     },
 
 
+    'test with substitutions': function() {
+        var bundle, config, expected;
+        bundle = readFixtureFile('substitutions.json');
+        bundle.settings = ["master"];
+        bundle = [bundle];
+        bundle = readFixtureFile('dimensions.json').concat(bundle);
+
+        config = (new libycb.Ycb(bundle)).read(bundle, {
+            applySubstitutions: true
+        });
+        expected = readFixtureFile('subs-expected.json');
+
+        cmp(config, expected);
+    },
+
+
+    'test with noSubstitutions': function() {
+        var bundle, config, expected;
+        bundle = readFixtureFile('substitutions.json');
+        bundle.settings = ["master"];
+        bundle = [bundle];
+        bundle = readFixtureFile('dimensions.json').concat(bundle);
+
+        config = (new libycb.Ycb(bundle)).read(bundle, {
+            applySubstitutions: false
+        });
+        expected = readFixtureFile('substitutions.json');
+
+        cmp(config, expected);
+    },
+
+
     'test if we can use a simple config': function() {
         var bundle, config;
         bundle = readFixtureFile('simple-1.json');

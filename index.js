@@ -162,7 +162,9 @@ Ycb.prototype = {
             }
         }
 
-        this._applySubstitutions(config);
+        if (options.applySubstitutions !== false) {
+            this._applySubstitutions(config);
+        }
 
         if (options.validate) {
             console.log('The YCB option "validate" is not implemented yet.');
