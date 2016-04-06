@@ -86,6 +86,7 @@ function Ycb(bundle, options) {
     this.settings = {};
     this.schema = {};
     this.dimsUsed = {}; // dim name: value: true
+    this._dimensionHierarchies = {};
     this._processRawBundle(bundle, this.options);
 }
 Ycb.prototype = {
@@ -606,7 +607,6 @@ Ycb.prototype = {
     _calculateHierarchies: function () {
         var pos,
             name;
-        this._dimensionHierarchies = {};
         for (pos = 0; pos < this.dimensions.length; pos += 1) {
             for (name in this.dimensions[pos]) {
                 if (this.dimensions[pos].hasOwnProperty(name)) {
