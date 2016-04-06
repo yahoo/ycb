@@ -87,7 +87,7 @@ function Ycb(bundle, options) {
     this.schema = {};
     this.dimsUsed = {}; // dim name: value: true
     this._dimensionHierarchies = {};
-    this._processRawBundle(bundle, this.options);
+    this._processRawBundle(this._cloneObj(bundle), this.options);
 }
 Ycb.prototype = {
 
