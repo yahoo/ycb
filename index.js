@@ -4,8 +4,6 @@
  * See the accompanying LICENSE file for terms.
  */
 
-/*jslint anon:true, node:true, nomen:true*/
-
 'use strict';
 
 var VERSION = '1.0.2',
@@ -83,6 +81,7 @@ function replacer(base) {
 function Ycb(bundle, options) {
     this.options = options || {};
     this.dimensions = {};
+    this._dimensionOrder = [];
     this.settings = {};
     this.schema = {};
     this.dimsUsed = {}; // dim name: value: true
@@ -379,6 +378,7 @@ Ycb.prototype = {
             section = bundle[pos];
             if (section.dimensions) {
                 this.dimensions = section.dimensions;
+                this._calculateDimensionOrder();
                 this._calculateHierarchies();
             } else if (section.schema) {
                 this.schema = section.schema;
@@ -529,7 +529,7 @@ Ycb.prototype = {
             part,
             dimName,
             ctx = {};
-        for (p = 0; p < this.dimensions.length; p += 1) {
+        for (p = 0; p < this._dimensionOrder.length; p += 1) {
             part = parts[p];
             if (DEFAULT !== part) {
                 // Having more than one key in the dimensions structure is against
@@ -554,18 +554,26 @@ Ycb.prototype = {
             name,
             chains = {};
 
-        for (pos = 0; pos < this.dimensions.length; pos += 1) {
-            for (name in this.dimensions[pos]) {
-                if (this.dimensions[pos].hasOwnProperty(name)) {
-                    if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                        chains[name] = this._dimensionHierarchies[name][context[name]] || DEFAULT_LOOKUP;
-                    } else {
-                        chains[name] = DEFAULT_LOOKUP;
-                    }
-                }
+        for (pos = 0; pos < this._dimensionOrder.length; pos += 1) {
+            name = this._dimensionOrder[pos];
+            if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
+                chains[name] = this._dimensionHierarchies[name][context[name]] || DEFAULT_LOOKUP;
+            } else {
+                chains[name] = DEFAULT_LOOKUP;
             }
         }
         return chains;
+    },
+
+    _calculateDimensionOrder: function () {
+        var pos, name;
+        for (pos = 0; pos < this.dimensions.length; pos += 1) {
+            for (name in this.dimensions[pos]) {
+                if (this.dimensions[pos].hasOwnProperty(name)) {
+                    this._dimensionOrder.push(name);
+                }
+            }
+        }
     },
 
 
@@ -607,12 +615,10 @@ Ycb.prototype = {
     _calculateHierarchies: function () {
         var pos,
             name;
-        for (pos = 0; pos < this.dimensions.length; pos += 1) {
-            for (name in this.dimensions[pos]) {
-                if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionHierarchies[name] = this._calculateHierarchy(DEFAULT_LOOKUP, this.dimensions[pos][name]);
-                }
-            }
+
+        for (pos = 0; pos < this._dimensionOrder.length; pos += 1) {
+            name = this._dimensionOrder[pos];
+            this._dimensionHierarchies[name] = this._calculateHierarchy(DEFAULT_LOOKUP, this.dimensions[pos][name]);
         }
     },
 
