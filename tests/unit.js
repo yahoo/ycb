@@ -235,6 +235,14 @@ describe('ycb unit tests', function () {
             assert.equal('yahoo_bt_FR.png', ycb.settings['*/*/*/*/*/*/*/fr/*/*/bt'].logo);
             assert(undefined !== ycb.dimensions[7].region.us);
         });
+
+        it('should not break if there are no dimensions', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('simple-1.json')
+                .concat(readFixtureFile('simple-3.json'));
+            ycb = new libycb.Ycb(bundle);
+            assert.deepEqual({}, ycb._dimensionHierarchies);
+        });
     });
 
     describe('_applySubstitutions', function () {
