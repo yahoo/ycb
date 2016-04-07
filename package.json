@@ -14,9 +14,10 @@
   "main": "index",
   "scripts": {
     "cover": "istanbul cover --dir artifacts -- _mocha tests/unit --recursive--reporter spec",
+    "dev": "mocha tests/unit --recursive --reporter spec -w",
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "mocha tests/unit --reporter spec"
+    "test": "mocha tests/unit --recursive --reporter spec"
   },
   "engines": {
     "node": ">0.4",
