@@ -12,38 +12,14 @@ var VERSION = '1.0.2',
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
     SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
     DEFAULT_LOOKUP = [DEFAULT];
-
+var cloneDeep = require('./lib/cloneDeep');
+var mergeDeep = require('./lib/mergeDeep');
+var isA = require('./lib/isA');
+var isIterable = require('./lib/isIterable');
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
 
-function isA(item, constructor) {
-    return item && (item.constructor === constructor);
-}
-
-function isIterable(item) {
-    return isA(item, Object) || isA(item, Array);
-}
-
-function objectMerge(from, to) {
-    var key;
-    for (key in from) {
-        if (from.hasOwnProperty(key)) {
-            if (to.hasOwnProperty(key)) {
-                // Property in destination object set; update its value.
-                if (isA(from[key], Object)) {
-                    to[key] = objectMerge(from[key], to[key]);
-                } else {
-                    to[key] = from[key];
-                }
-            } else {
-                // Property in destination object not set; create it and set its value.
-                to[key] = from[key];
-            }
-        }
-    }
-    return to;
-}
 
 function extract(bag, key, def) {
     var keys,
@@ -86,7 +62,7 @@ function Ycb(bundle, options) {
     this.schema = {};
     this.dimsUsed = {}; // dim name: value: true
     this._dimensionHierarchies = {};
-    this._processRawBundle(this._cloneObj(bundle), this.options);
+    this._processRawBundle(cloneDeep(bundle), this.options);
 }
 Ycb.prototype = {
 
@@ -97,7 +73,7 @@ Ycb.prototype = {
      * @return {object} the dimensions
      */
     getDimensions: function () {
-        return this._cloneObj(this.dimensions);
+        return cloneDeep(this.dimensions);
     },
 
 
@@ -118,7 +94,7 @@ Ycb.prototype = {
             if (this.settings.hasOwnProperty(path)) {
                 context = this._getContextFromLookupPath(path);
                 // clone, so that no-one mutates us
-                if (!callback(context, this._cloneObj(this.settings[path]))) {
+                if (!callback(context, cloneDeep(this.settings[path]))) {
                     break;
                 }
             }
@@ -139,7 +115,7 @@ Ycb.prototype = {
             config = {};
 
         context = context || {};
-        options = objectMerge(this.options, options || {});
+        options = mergeDeep(this.options, options || {});
 
         lookupPaths = this._getLookupPaths(context, options);
 
@@ -159,7 +135,7 @@ Ycb.prototype = {
                     console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
                 }
                 // merge a copy so that we don't modify the source
-                config = objectMerge(this._cloneObj(this.settings[lookupPaths[path]]), config);
+                config = mergeDeep(this.settings[lookupPaths[path]], config);
             }
         }
 
@@ -208,7 +184,7 @@ Ycb.prototype = {
                     console.log('----USING---- ' + lookupPaths[path]);
                     console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
                 }
-                config.push(this._cloneObj(this.settings[lookupPaths[path]]));
+                config.push(cloneDeep(this.settings[lookupPaths[path]]));
             }
         }
         return config;
@@ -419,7 +395,7 @@ Ycb.prototype = {
                             this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
                         ));
                     }
-                    objectMerge(section, this.settings[key]);
+                    mergeDeep(section, this.settings[key]);
                 }
             }
         }
@@ -620,41 +596,6 @@ Ycb.prototype = {
             name = this._dimensionOrder[pos];
             this._dimensionHierarchies[name] = this._calculateHierarchy(DEFAULT_LOOKUP, this.dimensions[pos][name]);
         }
-    },
-
-
-    /**
-     * @private
-     * @method _cloneObj
-     * @param {object} o object to clone
-     * @return {object} a copy of the object
-     */
-    _cloneObj: function (o) {
-        var newO,
-            i;
-
-        if (typeof o !== 'object') {
-            return o;
-        }
-        if (!o) {
-            return o;
-        }
-
-        if ('[object Array]' === Object.prototype.toString.apply(o)) {
-            newO = [];
-            for (i = 0; i < o.length; i += 1) {
-                newO[i] = this._cloneObj(o[i]);
-            }
-            return newO;
-        }
-
-        newO = {};
-        for (i in o) {
-            if (o.hasOwnProperty(i)) {
-                newO[i] = this._cloneObj(o[i]);
-            }
-        }
-        return newO;
     }
 
 

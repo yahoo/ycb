@@ -8,11 +8,11 @@
 
 var libpath = require('path');
 var libfs = require('fs');
-var libycb = require('../index');
+var libycb = require('../../index');
 var assert = require('assert');
 
 function readFixtureFile(file){
-    var path = libpath.join(__dirname, 'fixtures' , file);
+    var path = libpath.join(__dirname, '..', 'fixtures' , file);
     var data = libfs.readFileSync(path, 'utf8');
     return JSON.parse(data);
 }
@@ -263,8 +263,8 @@ describe('ycb unit tests', function () {
         });
 
         it('should substitute correctly against subs-expected', function () {
-            var config = require('./fixtures/substitutions.json'),
-                expected = require('./fixtures/subs-expected.json'),
+            var config = require('./../fixtures/substitutions.json'),
+                expected = require('./../fixtures/subs-expected.json'),
                 ycb;
 
             ycb = new libycb.Ycb([]);
@@ -606,38 +606,6 @@ describe('ycb unit tests', function () {
             assert(ctxs[JSON.stringify({region:'ca',flavor:'att'})]);
             assert(ctxs[JSON.stringify({region:'gb',flavor:'bt'})]);
             assert(ctxs[JSON.stringify({region:'fr',flavor:'bt'})]);
-        });
-    });
-
-    describe('_cloneObj', function () {
-        it('should deeply clone the full object', function () {
-            var bundle, ycb;
-            bundle = readFixtureFile('dimensions.json')
-                .concat(readFixtureFile('simple-1.json'));
-            ycb = new libycb.Ycb(bundle);
-
-            var obj, copy;
-            obj = {
-                inner: {
-                    string: 'value',
-                    number: 1,
-                    fn: function() {}
-                },
-                list: ['a', 'b', 'c']
-            };
-            copy = ycb._cloneObj(obj);
-
-            assert.notEqual(obj, copy);
-
-            assert.notEqual(obj.inner, copy.inner);
-            assert.deepEqual(obj.inner, copy.inner);
-
-            assert.equal(obj.inner.string, copy.inner.string);
-            assert.equal(obj.inner.number, copy.inner.number);
-            assert.equal(obj.inner.fn, copy.inner.fn);
-
-            assert.notEqual(obj.list, copy.list);
-            assert.deepEqual(obj.list, copy.list);
         });
     });
 });
