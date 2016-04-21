@@ -103,6 +103,22 @@ describe('ycb unit tests', function () {
                 '*'
             ], list.region);
         });
+        it('should generate the lookup list for multi-value dimensions', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, list;
+            context = {
+                'bucket': ['101', '201']
+            };
+            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
+            assert.deepEqual([
+                '101',
+                '1xx',
+                '201',
+                '2xx',
+                '*'
+            ], list.bucket);
+        });
     });
 
     describe('_getLookupPath', function () {
@@ -194,6 +210,24 @@ describe('ycb unit tests', function () {
                 '*/*/*/*/*/*/fr_FR/*/*/*/*',
                 '*/*/*/*/*/*/fr_FR/gb/*/*/*',
                 '*/*/*/*/*/*/fr_FR/ir/*/*/*'
+            ];
+            assert.deepEqual(expected, paths);
+        });
+        it('should handle multi-value dimensions', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, paths, expected;
+            context = {
+                'bucket': ['101', '201']
+            };
+            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
+
+            expected = [
+                '*/*/*/*/*/*/*/*/*/*/*',
+                '*/*/*/*/*/*/*/*/*/2xx/*',
+                '*/*/*/*/*/*/*/*/*/201/*',
+                '*/*/*/*/*/*/*/*/*/1xx/*',
+                '*/*/*/*/*/*/*/*/*/101/*'
             ];
             assert.deepEqual(expected, paths);
         });
@@ -572,6 +606,44 @@ describe('ycb unit tests', function () {
             expected = readFixtureFile('substitutions.json');
 
             cmp(config, expected);
+        });
+
+        it('should handle multi-value dimensions', function () {
+            var ycb, bundle, config, expected;
+            bundle = readFixtureFile('buckets.json');
+            bundle.settings = ['master'];
+            bundle = readFixtureFile('dimensions.json').concat(bundle);
+            ycb = new libycb.Ycb(bundle);
+
+            config = ycb.read({});
+            assert.deepEqual(config, {
+                enableFeatureA: false,
+                enableFeatureB: false
+            });
+
+            config = ycb.read({
+                bucket: '101'
+            });
+            assert.deepEqual(config, {
+                enableFeatureA: true,
+                enableFeatureB: false
+            });
+
+            config = ycb.read({
+                bucket: '201'
+            });
+            assert.deepEqual(config, {
+                enableFeatureA: false,
+                enableFeatureB: true
+            });
+
+            config = ycb.read({
+                bucket: ['101', '201']
+            });
+            assert.deepEqual(config, {
+                enableFeatureA: true,
+                enableFeatureB: true
+            });
         });
     });
 

@@ -20,6 +20,17 @@ var isIterable = require('./lib/isIterable');
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
 
+function arrayReverseUnique(arr){
+    var u = {}, r = [];
+    for(var i = arr.length - 1; i >= 0; --i){
+        if(u.hasOwnProperty(arr[i])) {
+            continue;
+        }
+        r.unshift(arr[i]);
+        u[arr[i]] = true;
+    }
+    return r;
+}
 
 function extract(bag, key, def) {
     var keys,
@@ -532,10 +543,23 @@ Ycb.prototype = {
 
         for (pos = 0; pos < this._dimensionOrder.length; pos += 1) {
             name = this._dimensionOrder[pos];
-            if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][context[name]])) {
-                chains[name] = this._dimensionHierarchies[name][context[name]] || DEFAULT_LOOKUP;
+            var value = context[name];
+            if (isA(value, Array)) {
+                var lookup = [];
+                value.forEach(function (val) {
+                    if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][val])) {
+                        lookup = lookup.concat(this._dimensionHierarchies[name][val] || DEFAULT_LOOKUP);
+                    } else {
+                        lookup = lookup.concat(DEFAULT_LOOKUP);
+                    }
+                }, this);
+                chains[name] = arrayReverseUnique(lookup);
             } else {
-                chains[name] = DEFAULT_LOOKUP;
+                if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][value])) {
+                    chains[name] = this._dimensionHierarchies[name][value] || DEFAULT_LOOKUP;
+                } else {
+                    chains[name] = DEFAULT_LOOKUP;
+                }
             }
         }
         return chains;
