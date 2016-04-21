@@ -52,7 +52,16 @@
                 "jurisdiction": {}
             },
             {
-                "bucket": {}
+                "bucket": {
+                    "1xx": {
+                        "101": null,
+                        "102": null
+                    },
+                    "2xx": {
+                        "201": null,
+                        "202": null
+                    }
+                }
             },
             {
                 "flavor": {

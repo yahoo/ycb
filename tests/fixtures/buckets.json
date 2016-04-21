@@ -1,0 +1,18 @@
+[
+    {
+        "settings": ["master"],
+        "enableFeatureA": false,
+        "enableFeatureB": false,
+        "__ycb_source__": "tests/fixtures/buckets.json"
+    },
+    {
+        "settings": ["bucket:101"],
+        "enableFeatureA": true,
+        "__ycb_source__": "tests/fixtures/buckets.json"
+    },
+    {
+        "settings": ["bucket:201"],
+        "enableFeatureB": true,
+        "__ycb_source__": "tests/fixtures/buckets.json"
+    }
+]
