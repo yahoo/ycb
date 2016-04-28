@@ -109,7 +109,8 @@ var lookupList = createLookupList({
     environment: 'prod',
     device: 'smartphone'
 });
-/*
+```
+```js
 { 
     environment: ['prod', '*'], // inherits from master
     device: ['smartphone', 'mobile', '*'] // inherits from mobile and master
@@ -119,25 +120,21 @@ var lookupList = createLookupList({
 
 From this lookup list, we expand it to all the combinations of values in precedence order:
 
+`var lookupPaths = expandLookupList(lookupList);`
 ```js
-var lookupPaths = expandLookupList(lookupList);
-/*
 [ '*/*',
   '*/mobile',
   '*/smartphone',
   'prod/*',
   'prod/mobile' ]
-*/
 ```
 
 To optimize, we already know which dimension combinations are used in the configuration, so this can be reduced to:
 
 ```js
-/*
 [ '*/*',
   '*/smartphone',
   'prod/*' ]
-*/
 ```
 
 Now with this list we can simply merge settings using the list of lookup keys to get a single object:
@@ -146,7 +143,8 @@ Now with this list we can simply merge settings using the list of lookup keys to
 lookupPaths.reduce((config, key) => {
     return mergeDeep(ycb.settings[key], config);
 }, {})
-/*
+```
+```js
 {
     host: "example.com",
     prefix: 'm.'
