@@ -90,7 +90,7 @@ dimension values.
 
 #### During Read
 
-Let's take an example `read` call in go through the steps of how it gets merged into a single configuration.
+Let's take an example `read` call and go through the steps of how it gets merged into a single configuration object.
 
 ```js
 var config = ycb.read({
