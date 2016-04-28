@@ -117,7 +117,7 @@ var lookupList = createLookupList({
 }
 ```
 
-From this lookup list, we expand it to all the combinations of values in precedence order:
+From this lookup list, we expand it to all the combinations of values in reverse precedence order:
 
 `var lookupPaths = expandLookupList(lookupList);`
 ```js
