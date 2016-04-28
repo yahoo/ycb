@@ -115,7 +115,6 @@ var lookupList = createLookupList({
     environment: ['prod', '*'], // inherits from master
     device: ['smartphone', 'mobile', '*'] // inherits from mobile and master
 }
-*/
 ```
 
 From this lookup list, we expand it to all the combinations of values in precedence order:
@@ -149,7 +148,6 @@ lookupPaths.reduce((config, key) => {
     host: "example.com",
     prefix: 'm.'
 }
-*/
 ```
 
 ### License
