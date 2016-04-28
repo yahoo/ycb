@@ -68,7 +68,7 @@ Examples are provided in [the tests directory](https://github.com/yahoo/ycb/tree
 When you create a YCB instance, YCB will parse each section of your configuration and create a map of lookup
 keys to the dimension settings. 
 
-Lookup keys are a string that contains an ordered, comma-separated list of dimension values. In this case,
+Lookup keys are a string that contains an ordered, `/`-separated list of dimension values. In this case,
 there are only two dimensions: `environment` and `device`. `environment` is the first in the dimension list, so it 
 has precedence over `device`.
 
