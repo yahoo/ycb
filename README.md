@@ -72,6 +72,8 @@ Lookup keys are a string that contains an ordered, comma-separated list of dimen
 there are only two dimensions: `environment` and `device`. `environment` is the first in the dimension list, so it 
 has precedence over `device`.
 
+The value `*` is used to signify the `default` value for a dimension.
+
 Using these lookup key rules, the above config gets expanded into the following:
 
 ```js
