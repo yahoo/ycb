@@ -121,19 +121,32 @@ describe('ycb unit tests', function () {
         });
     });
 
-    describe('_getLookupPath', function () {
+    describe('_createSettingsLookups', function () {
         it('should generate the look up path for the section', function () {
             var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, path;
-            context = {
-                'region': 'ir',
-                'environment': 'preproduction',
-                'lang': 'fr_FR'
-            };
-            path = ycb._getLookupPath(context, {useAllDimensions: true});
+                ycb = new libycb.Ycb(dims);
+            var section1 = { section: 1 };
+            var section2 = { section: 2 };
+            var section3 = { section: 3};
+            var dimsUsed = {};
 
-            assert.equal('preproduction/*/*/*/*/*/fr_FR/ir/*/*/*', path);
+            ycb._createSettingsLookups(['region:fr'], section1, dimsUsed);
+            assert.equal(ycb.settings['*/*/*/*/*/*/*/fr/*/*/*'], section1);
+            assert(-1 !== dimsUsed.region.fr);
+
+            ycb._createSettingsLookups(['region:gb,ir'], section2, dimsUsed);
+            assert.equal(ycb.settings['*/*/*/*/*/*/*/gb/*/*/*'], section2);
+            assert(-1 !== dimsUsed.region.gb);
+            assert.equal(ycb.settings['*/*/*/*/*/*/*/ir/*/*/*'], section2);
+            assert(-1 !== dimsUsed.region.ir);
+
+            ycb._createSettingsLookups(['region:gb,ir', 'lang:en'], section3, dimsUsed);
+            assert.equal(ycb.settings['*/*/*/*/*/*/*/gb/*/*/*'], section2); // Not modified
+            assert.equal(ycb.settings['*/*/*/*/*/*/*/ir/*/*/*'], section2); // Not modified
+            assert.equal(ycb.settings['*/*/*/*/*/*/en/gb/*/*/*'], section3);
+            assert.equal(ycb.settings['*/*/*/*/*/*/en/ir/*/*/*'], section3);
+            assert(-1 !== dimsUsed.lang.en);
+
         });
     });
 
@@ -486,6 +499,30 @@ describe('ycb unit tests', function () {
             ycb = new libycb.Ycb(bundle);
             var config = ycb.read({
                 'lang': 'fr'
+            });
+            assert.deepEqual({
+                foo: 1,
+                bar: 2,
+                baz: 3,
+                oof: null,
+                rab: 0,
+                zab: false
+            }, config);
+
+            config = ycb.read({
+                'lang': 'es'
+            });
+            assert.deepEqual({
+                foo: 1,
+                bar: 2,
+                baz: 3,
+                oof: null,
+                rab: 0,
+                zab: false
+            }, config);
+
+            config = ycb.read({
+                'lang': ['es', 'fr']
             });
             assert.deepEqual({
                 foo: 1,

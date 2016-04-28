@@ -297,19 +297,27 @@ Ycb.prototype = {
      * @return {Array}
      */
     _getLookupPaths: function (context, options) {
-        var values = this._makeOrderedLookupList(context, options),
-            lookupList = Object.keys(values),
-            path = [],
-            paths = [],
+        var lookupList = this._makeOrderedLookupList(context, options);
+        return this._expandLookupList(lookupList, options);
+    },
+
+    /**
+     * Expands a lookupList into a list of string keys
+     * @private
+     * @param lookupList {Object}
+     * @returns {[String]}
+     */
+    _expandLookupList: function (lookupList) {
+        var dimensions = Object.keys(lookupList),
             pos,
-            current = lookupList.length - 1,
+            current = dimensions.length - 1,
             combination = [];
 
         // This is our combination that we will tumble over
-        for (pos = 0; pos < lookupList.length; pos += 1) {
+        for (pos = 0; pos < dimensions.length; pos += 1) {
             combination.push({
                 current: 0,
-                total: values[lookupList[pos]].length - 1
+                total: lookupList[dimensions[pos]].length - 1
             });
         }
 
@@ -331,15 +339,79 @@ Ycb.prototype = {
             return true;
         }
 
+        var paths = [];
         do {
-            path = [];
-            for (pos = 0; pos < lookupList.length; pos += 1) {
-                path.push(values[lookupList[pos]][combination[pos].current]);
+            var path = [];
+            for (pos = 0; pos < dimensions.length; pos += 1) {
+                path.push(lookupList[dimensions[pos]][combination[pos].current]);
             }
             paths.push(path.join(SEPARATOR));
         } while (tumble(combination, current));
 
         return paths.reverse();
+    },
+
+    /**
+     * Creates a settings cache that maps a lookup key to the settings section
+     * @private
+     * @param settings {array} The list of dimensions and values the section applies to
+     * @param section {object} The configuration values for the settings
+     * @param dimsUsed {object}
+     * @param options {object}
+     * @return {void}
+     */
+    _createSettingsLookups: function (settings, section, dimsUsed, options) {
+        var context = {};
+        for (var part = 0; part < settings.length; part += 1) {
+            var kv = settings[part].split(':');
+            var dim = kv[0];
+            var val = kv[1] ? kv[1].split(',') : kv[1];
+
+            if ('master' !== settings[0]) {
+                // Validate dimension name
+                if (!this._dimensionHierarchies.hasOwnProperty(dim)) {
+                    console.log('WARNING: invalid dimension "' + dim +
+                        '" in settings ' + JSON.stringify(settings));
+                    return;
+                }
+                dimsUsed[dim] = dimsUsed[dim] || [];
+                val.forEach(function (v) {
+                    // Validate dimension value
+                    if (!this._dimensionHierarchies[dim].hasOwnProperty(v)) {
+                        console.log('WARNING: invalid value "' + v + '" for dimension "' + dim +
+                            '" in settings ' + JSON.stringify(settings));
+                    } else {
+                        dimsUsed[dim].push(v);
+                    }
+                }, this);
+            }
+            context[dim] = val;
+        }
+
+        // Build the full context paths
+        var lookupList = {};
+        this._dimensionOrder.forEach(function (dim) {
+            lookupList[dim] = context[dim] || DEFAULT;
+        });
+        var keys = this._expandLookupList(lookupList, {
+            useAllDimensions: true
+        }, settings);
+
+        keys.forEach(function (key) {
+            // Add the section to the settings list with it's full key
+            if (!this.settings[key]) {
+                this.settings[key] = section;
+            } else {
+                if (options && options.debug) {
+                    console.log('Merging section ' + JSON.stringify(settings) + (
+                            section.__ycb_source__ ? (' from ' + section.__ycb_source__) : ''
+                        ) + (
+                            this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
+                        ));
+                }
+                mergeDeep(section, this.settings[key]);
+            }
+        }, this);
     },
 
 
@@ -353,11 +425,7 @@ Ycb.prototype = {
     _processRawBundle: function (bundle, options) {
         var pos,
             section,
-            part,
-            kv,
-            context,
             settings,
-            key,
             dimsUsed = {};
 
         // Extract each section from the bundle
@@ -370,44 +438,10 @@ Ycb.prototype = {
             } else if (section.schema) {
                 this.schema = section.schema;
             } else if (section.settings) {
-                context = {};
-                for (part = 0; part < section.settings.length; part += 1) {
-                    kv = section.settings[part].split(':');
-                    if ('master' !== section.settings[0]) {
-
-                        dimsUsed[kv[0]] = dimsUsed[kv[0]] || [];
-                        dimsUsed[kv[0]].push(kv[1]);
-                    }
-                    context[kv[0]] = kv[1];
-                }
                 settings = section.settings;
                 // Remove the settings key now we are done with it
                 delete section.settings;
-
-                // Build the full context path
-                key = this._getLookupPath(context, {
-                    useAllDimensions: true
-                }, settings);
-
-                if ('undefined' === typeof key) {
-                    // warning already reported
-                    continue;
-                }
-
-                // Add the section to the settings list with it's full key
-                // IMY Bug 5439377 configuration does not accept neither null nor false values?
-                if (!this.settings[key]) {
-                    this.settings[key] = section;
-                } else {
-                    if (options.debug) {
-                        console.log('Merging section ' + JSON.stringify(settings) + (
-                            section.__ycb_source__ ? (' from ' + section.__ycb_source__) : ''
-                        ) + (
-                            this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
-                        ));
-                    }
-                    mergeDeep(section, this.settings[key]);
-                }
+                this._createSettingsLookups(settings, section, dimsUsed, options);
             }
         }
 
@@ -437,70 +471,6 @@ Ycb.prototype = {
                 }
             }
         }
-    },
-
-
-    /**
-     * @private
-     * @method _getContextPath
-     * @param context {object} Key/Value list
-     * @param options {object}
-     * @param settings {object} the settings, for logging output
-     * @return {string}
-     */
-    _getLookupPath: function (context, options, settings) {
-        var lookupList = this._makeOrderedLookupList(context, options),
-            name,
-            list,
-            lookup = {},
-            item,
-            path = [];
-
-        // shortcut for master
-        // TODO: is this shortcut really needed?
-        if (context.hasOwnProperty('master')) {
-            for (name in lookupList) {
-                if (lookupList.hasOwnProperty(name)) {
-                    path.push(DEFAULT);
-                }
-            }
-            return path.join(SEPARATOR);
-        }
-
-        for (name in lookupList) {
-            if (lookupList.hasOwnProperty(name)) {
-                if (context[name]) {
-                    for (list = 0; list < lookupList[name].length; list += 1) {
-                        if (lookupList[name][list] === context[name]) {
-                            lookup[name] = lookupList[name][list];
-                        }
-                    }
-                }
-                if (!lookup[name]) {
-                    if (!context.hasOwnProperty(name)) {
-                        lookup[name] = DEFAULT;
-                    }
-                    else {
-                        console.log('WARNING: invalid value for dimension "' + name +
-                            '" in settings ' + JSON.stringify(settings));
-                        return;
-                    }
-                }
-            }
-        }
-        for (name in context) {
-            if (context.hasOwnProperty(name) && !lookupList.hasOwnProperty(name)) {
-                console.log('WARNING: invalid dimension "' + name +
-                    '" in settings ' + JSON.stringify(settings));
-                return;
-            }
-        }
-        for (item in lookup) {
-            if (lookup.hasOwnProperty(item)) {
-                path.push(lookup[item]);
-            }
-        }
-        return path.join(SEPARATOR);
     },
 
 
