@@ -10,7 +10,7 @@
         "__ycb_source__": "tests/fixtures/simple-4.json"
     },
     {
-        "settings": ["lang:fr"],
+        "settings": ["lang:fr,es"],
         "foo": 1,
         "bar": 2,
         "baz": 3,
