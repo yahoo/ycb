@@ -22,6 +22,8 @@ var configArray = [
                     test: null,
                     prod: null
                 },
+            },
+            {
                 device: {
                     desktop: null,
                     mobile: {
@@ -40,7 +42,7 @@ var configArray = [
     {
         settings: ["environment:dev"],
         host: "dev.example.com"
-    }
+    },
     {
         settings: ["environment:staging,test"],
         host: "stage.example.com"
