@@ -1,0 +1,27 @@
+[
+    {
+        "settings": ["master"],
+        "foo": null,
+        "bar": 0,
+        "baz": false,
+        "oof": 4,
+        "rab": 5,
+        "zab": 6,
+        "__ycb_source__": "tests/fixtures/simple-4.json"
+    },
+    {
+        "settings": ["lang:fr,es"],
+        "foo": 1,
+        "bar": 2,
+        "baz": 3,
+        "oof": null,
+        "rab": 0,
+        "zab": false,
+        "__ycb_source__": "tests/fixtures/simple-4.json"
+    },
+    {
+        "settings": ["lang:es"],
+        "foo": 3,
+        "__ycb_source__": "tests/fixtures/simple-4.json"
+    }
+]

@@ -409,7 +409,8 @@ Ycb.prototype = {
                             this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
                         ));
                 }
-                mergeDeep(section, this.settings[key]);
+                // Clone original settings so that we don't override shared settings
+                this.settings[key] = mergeDeep(section, cloneDeep(this.settings[key]));
             }
         }, this);
     },
