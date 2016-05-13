@@ -534,6 +534,34 @@ describe('ycb unit tests', function () {
             }, config);
         });
 
+        it('should not merge matched settings', function () {
+            var bundle,
+                ycb;
+
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('overridden-multisetting.json'));
+            ycb = new libycb.Ycb(bundle);
+            var config = ycb.read({
+                'lang': 'fr'
+            });
+            assert.equal(config.foo, 1, 'fr should be 1');
+
+            config = ycb.read({
+                'lang': 'es'
+            });
+            assert.equal(config.foo, 3, 'es should be 3');
+
+            config = ycb.read({
+                'lang': ['es', 'fr']
+            });
+            assert.equal(config.foo, 3, '[es,fr] should be 3');
+
+            config = ycb.read({
+                'lang': ['fr', 'es']
+            });
+            assert.equal(config.foo, 1, '[fr,es] should be 1');
+        });
+
         it('should not pollute master settings with dimension values', function () {
             var bundle,
                 ycb,
