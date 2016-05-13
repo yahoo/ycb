@@ -126,7 +126,7 @@ Ycb.prototype = {
             config = {};
 
         context = context || {};
-        options = mergeDeep(this.options, options || {});
+        options = mergeDeep(this.options, options || {}, true);
 
         lookupPaths = this._getLookupPaths(context, options);
 
@@ -410,7 +410,7 @@ Ycb.prototype = {
                         ));
                 }
                 // Clone original settings so that we don't override shared settings
-                this.settings[key] = mergeDeep(section, cloneDeep(this.settings[key]));
+                this.settings[key] = mergeDeep(section, this.settings[key], true);
             }
         }, this);
     },
