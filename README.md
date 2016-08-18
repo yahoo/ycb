@@ -85,7 +85,7 @@ ycb.settings = {
     'dev/*': { host: 'dev.example.com' },
     'staging/*': { host: 'stage.example.com' },
     'test/*': { host: 'stage.example.com' }, // this is actually the same object as `staging/*` to save memory
-    '*/mobile': { prefix: 'm.' }
+    '*/smartphone': { prefix: 'm.' }
 };
 ```
 
@@ -99,12 +99,12 @@ Let's take an example `read` call and go through the steps of how it gets merged
 ```js
 var config = ycb.read({
     environment: 'prod',
-    device: 'mobile'
+    device: 'smartphone'
 });
 ```
 
 The first step is creating a list of lookup keys that we can find in the settings cache. In this case, you may think 
-that we just need to lookup `prod/mobile`, but you will see that this key doesn't exist in our cache. We need to find
+that we just need to lookup `prod/smartphone`, but you will see that this key doesn't exist in our cache. We need to find
 the combinations of lookups that will satisfy all settings. Each dimension value has its own precedence hierarchy 
 that we create a lookup list for:
 
