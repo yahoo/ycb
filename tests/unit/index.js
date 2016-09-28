@@ -119,6 +119,18 @@ describe('ycb unit tests', function () {
                 '*'
             ], list.bucket);
         });
+        it('should generate default lookup when multi-value dimensions is an empty array', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, list;
+            context = {
+                'bucket': []
+            };
+            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
+            assert.deepEqual([
+                '*'
+            ], list.bucket);
+        });
     });
 
     describe('_createSettingsLookups', function () {
@@ -241,6 +253,20 @@ describe('ycb unit tests', function () {
                 '*/*/*/*/*/*/*/*/*/201/*',
                 '*/*/*/*/*/*/*/*/*/1xx/*',
                 '*/*/*/*/*/*/*/*/*/101/*'
+            ];
+            assert.deepEqual(expected, paths);
+        });
+        it('should handle multi-value dimensions with an empty array', function () {
+            var dims = readFixtureFile('dimensions.json'),
+                ycb = new libycb.Ycb(dims),
+                context, paths, expected;
+            context = {
+                'bucket': []
+            };
+            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
+
+            expected = [
+                '*/*/*/*/*/*/*/*/*/*/*'
             ];
             assert.deepEqual(expected, paths);
         });
