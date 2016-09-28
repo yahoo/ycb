@@ -517,14 +517,18 @@ Ycb.prototype = {
             var value = context[name];
             if (isA(value, Array)) {
                 var lookup = [];
-                value.forEach(function (val) {
-                    if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][val])) {
-                        lookup = lookup.concat(this._dimensionHierarchies[name][val] || DEFAULT_LOOKUP);
-                    } else {
-                        lookup = lookup.concat(DEFAULT_LOOKUP);
-                    }
-                }, this);
-                chains[name] = arrayReverseUnique(lookup);
+                if (value.length > 0) {
+                    value.forEach(function (val) {
+                        if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][val])) {
+                            lookup = lookup.concat(this._dimensionHierarchies[name][val] || DEFAULT_LOOKUP);
+                        } else {
+                            lookup = lookup.concat(DEFAULT_LOOKUP);
+                        }
+                    }, this);
+                    chains[name] = arrayReverseUnique(lookup);
+                } else {
+                    chains[name] = DEFAULT_LOOKUP;
+                }
             } else {
                 if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][value])) {
                     chains[name] = this._dimensionHierarchies[name][value] || DEFAULT_LOOKUP;
