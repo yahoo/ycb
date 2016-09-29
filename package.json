@@ -32,11 +32,5 @@
     "type": "git",
     "url": "git://github.com/yahoo/ycb.git"
   },
-  "bugs": "https://github.com/yahoo/ycb/issues",
-  "yahoo": {
-    "bugzilla": {
-      "product": "Mojito",
-      "component": "YCB"
-    }
-  }
+  "bugs": "https://github.com/yahoo/ycb/issues"
 }
