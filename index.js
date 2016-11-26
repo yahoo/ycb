@@ -451,6 +451,8 @@ Ycb.prototype = {
 
     _buildUsageMap: function (dimsUsed) {
         var i, j, k,
+            dimsHierName,
+            dimsUsedName,
             value,
             name,
             hierarchy;
@@ -460,11 +462,13 @@ Ycb.prototype = {
         for (name in dimsUsed) {
             if (dimsUsed.hasOwnProperty(name) && this._dimensionHierarchies.hasOwnProperty(name)) {
                 this.dimsUsed[name] = {};
-                for (i=0; i<dimsUsed[name].length; i += 1) {
-                    value = dimsUsed[name][i];
-                    for (hierarchy in this._dimensionHierarchies[name]) {
-                        if (this._dimensionHierarchies[name].hasOwnProperty(hierarchy)) {
-                            if (-1 !== this._dimensionHierarchies[name][hierarchy].indexOf(value)) {
+                dimsUsedName = dimsUsed[name];
+                for (i = 0; i < dimsUsedName.length; i += 1) {
+                    value = dimsUsedName[i];
+                    dimsHierName = this._dimensionHierarchies[name];
+                    for (hierarchy in dimsHierName) {
+                        if (dimsHierName.hasOwnProperty(hierarchy)) {
+                            if (-1 !== dimsHierName[hierarchy].indexOf(value)) {
                                 this.dimsUsed[name][hierarchy] = true;
                             }
                         }
@@ -648,6 +652,4 @@ module.exports = {
             opts = { debug: debug };
         return ycb.readNoMerge(context, opts);
     }
-
-
 };
