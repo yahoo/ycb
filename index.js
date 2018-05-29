@@ -44,7 +44,7 @@ function replacer(base) {
 }
 
 function omit(obj, omitKey) {
-    return Object.keys(obj).reduce((result, key) => {
+    return Object.keys(obj).reduce(function(result, key) {
         if(key !== omitKey) {
             result[key] = obj[key];
         }
@@ -84,12 +84,12 @@ Ycb.prototype = {
      */
     read: function(contextObj, options) {
         options = options ? mergeDeep(this.options, options, true) : this.options;
-        let context = this._parseContext(contextObj);
-        let subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
-        let collector;
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector;
         collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
         this._readHelper(this.tree, 0, context, collector, subKey);
-        if(collector['__ycb_source__']) {
+        if(collector.__ycb_source__) {
             return omit(collector, '__ycb_source__');
         }
         return collector;
@@ -109,11 +109,11 @@ Ycb.prototype = {
             mergeDeep(cur[subKey], collector);
             return;
         }
-        let value = context[depth];
+        var value = context[depth];
         if(value.constructor !== Array) {
             this._expand(cur, depth, context, collector, value, subKey);
         } else {
-            let i = value.length;
+            var i = value.length;
             while(i--) {
                 this._expand(cur, depth, context, collector, value[i], subKey);
             }
@@ -122,18 +122,18 @@ Ycb.prototype = {
 
     /**
      * Recurse to all children that apply to the given context.
-     * @param cur
-     * @param depth
-     * @param context
-     * @param collector
-     * @param value
-     * @param subKey
+     * @param cur {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param collector {object}
+     * @param value {number}
+     * @param subKey {string}
      * @private
      */
     _expand: function(cur, depth, context, collector, value, subKey) {
-        let keys = this.precedenceMap[value];
-        let n = keys.length;
-        for(let i=0; i<n; i++) {
+        var keys = this.precedenceMap[value];
+        var n = keys.length;
+        for(var i=0; i<n; i++) {
             if(cur[keys[i]] !== undefined) {
                 this._readHelper(cur[keys[i]], depth+1, context, collector, subKey);
             }
@@ -141,16 +141,16 @@ Ycb.prototype = {
     },
 
     /**
-     * Read the file.
+     * Read the configs for the given context and return them in order general to specific.
      * @method read
      * @param contextObj {object}
      * @param options {object}
-     * @return {object}
+     * @return {array}
      */
     readNoMerge: function(contextObj, options) {
-        let context = this._parseContext(contextObj);
-        let subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
-        let collector = this.masterDelta ? [this.masterDelta] : [];
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector = this.masterDelta ? [this.masterDelta] : [];
         this._readNoMergeHelper(this.tree, 0, context, collector, subKey);
         return cloneDeep(collector);
     },
@@ -158,9 +158,9 @@ Ycb.prototype = {
     /**
      * Recurse through the tree collecting configs that apply to the given context.
      * @param cur {object} the current node.
-     * @param depth {int} current depth in tree.
+     * @param depth {number} current depth in tree.
      * @param context {array} the context in internal format.
-     * @param collector {object} the array we push configs to.
+     * @param collector {array} the array we push configs to.
      * @param subKey {string} determines if substituted or non-substituted configs are used.
      * @private
      */
@@ -169,11 +169,11 @@ Ycb.prototype = {
             collector.push(cur[subKey]);
             return;
         }
-        let value = context[depth];
+        var value = context[depth];
         if(value.constructor !== Array) {
             this._expandNoMerge(cur, depth, context, collector, value, subKey);
         } else {
-            let i = value.length;
+            var i = value.length;
             while(i--) {
                 this._expandNoMerge(cur, depth, context, collector, value, subKey);
             }
@@ -182,18 +182,18 @@ Ycb.prototype = {
 
     /**
      * Recurse to all children that apply to the given context.
-     * @param cur
-     * @param depth
-     * @param context
-     * @param collector
-     * @param value
-     * @param subKey
+     * @param cur {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param collector {array}
+     * @param value {number}
+     * @param subKey {string}
      * @private
      */
     _expandNoMerge: function(cur, depth, context, collector, value, subKey) {
-        let keys = this.precedenceMap[value];
-        let n = keys.length;
-        for(let i=0; i<n; i++) {
+        var keys = this.precedenceMap[value];
+        var n = keys.length;
+        for(var i=0; i<n; i++) {
             if(cur[keys[i]] !== undefined) {
                 this._readNoMergeHelper(cur[keys[i]], depth+1, context, collector, subKey);
             }
@@ -203,23 +203,23 @@ Ycb.prototype = {
     /**
      * Converts a context object to equivalent array of numerical values.
      *
-     * @param contextObj
-     * @returns {int[]}
+     * @param contextObj {object}
+     * @returns {array}
      * @private
      */
     _parseContext: function(contextObj) {
         if(contextObj === undefined) {
             contextObj = {};
         }
-        let context = new Array(this.dimensionsList.length);
-        for(let i=0; i<this.dimensionsList.length; i++) {
-            let dimension = this.dimensionsList[i];
+        var context = new Array(this.dimensionsList.length);
+        for(var i=0; i<this.dimensionsList.length; i++) {
+            var dimension = this.dimensionsList[i];
             if(contextObj.hasOwnProperty(dimension)) {
-                let value = contextObj[dimension];
+                var value = contextObj[dimension];
                 if(value.constructor === Array) {
-                    let newValue = [];
-                    for(let j=0; j<value.length; j++) {
-                        let numValue = this.valueToNumber[dimension][value[j]];
+                    var newValue = [];
+                    for(var j=0; j<value.length; j++) {
+                        var numValue = this.valueToNumber[dimension][value[j]];
                         if(numValue !== undefined) {
                             newValue.push(numValue);
                         }
@@ -229,7 +229,7 @@ Ycb.prototype = {
                         continue;
                     }
                 } else {
-                    let numValue = this.valueToNumber[dimension][value];
+                    numValue = this.valueToNumber[dimension][value];
                     if(numValue !== undefined) {
                         context[i] = numValue;
                         continue;
@@ -243,12 +243,13 @@ Ycb.prototype = {
 
     /**
      * Convert internal num array context to context object.
-     * @param context
+     * @param context {array}
+     * @returns {object}
      * @private
      */
     _contextToObject: function(context) {
-        let contextObj = {};
-        for(let i=0; i<context.length; i++) {
+        var contextObj = {};
+        for(var i=0; i<context.length; i++) {
             if(context[i] !== '0') {
                 contextObj[this.dimensionsList[i]] = this.numberToValue[context[i]];
             }
@@ -260,24 +261,23 @@ Ycb.prototype = {
      * @private
      * @method _processRawBundle
      * @param config {object}
-     * @return
      */
     _processRawBundle: function(config) {
-        let dimCheckResult = this._checkDimensions(config);
-        let dimensionsObject = dimCheckResult[0];
-        let totalDimensions = dimCheckResult[1];
+        var dimCheckResult = this._checkDimensions(config);
+        var dimensionsObject = dimCheckResult[0];
+        var totalDimensions = dimCheckResult[1];
 
-        let settingsCheckResult = this._checkSettings(config, totalDimensions, dimensionsObject.length);
-        let usedDimensions = settingsCheckResult[0];
-        let usedValues = settingsCheckResult[1];
-        let contexts = settingsCheckResult[2];
+        var settingsCheckResult = this._checkSettings(config, totalDimensions, dimensionsObject.length);
+        var usedDimensions = settingsCheckResult[0];
+        var usedValues = settingsCheckResult[1];
+        var contexts = settingsCheckResult[2];
 
-        let activeDimensions = this._parseDimensions(dimensionsObject, usedDimensions, usedValues);
+        var activeDimensions = this._parseDimensions(dimensionsObject, usedDimensions, usedValues);
 
-        for(let configIndex=0; configIndex<config.length; configIndex++) {
-            let fullContext = contexts[configIndex];
+        for(var configIndex=0; configIndex<config.length; configIndex++) {
+            var fullContext = contexts[configIndex];
             if(fullContext !== undefined) {
-                let context = this._filterContext(fullContext, activeDimensions, usedValues, config[configIndex].settings);
+                var context = this._filterContext(fullContext, activeDimensions, usedValues, config[configIndex].settings);
                 if(context !== undefined) {
                     this._buildTreeHelper(this.tree, 0, context, this._buildDelta(config[configIndex]));
                 }
@@ -287,18 +287,18 @@ Ycb.prototype = {
 
     /**
      * Extract dimensions object and dimension -> number map
-     * @param config
-     * @returns {*[]}
+     * @param config {object}
+     * @returns {array}
      * @private
      */
     _checkDimensions: function(config) {
-        for(let i=0; i<config.length; i++) {
+        for(var i=0; i<config.length; i++) {
             if(config[i].dimensions) {
-                let dimensions = config[i].dimensions;
+                var dimensions = config[i].dimensions;
                 this.dimensions = dimensions;
-                let allDimensions = {};
-                for(let j=0; j<dimensions.length; j++) {
-                    let name;
+                var allDimensions = {};
+                for(var j=0; j<dimensions.length; j++) {
+                    var name;
                     for(name in dimensions[j]) {
                         allDimensions[name] = j;
                         break;
@@ -313,20 +313,20 @@ Ycb.prototype = {
     /**
      * Evaluate settings and determine which dimensions and values are used. Check for unknown dimensions.
      * Set the master config if it exist.
-     * @param config
-     * @param allDimensions
-     * @param height
-     * @returns {*[]}
+     * @param config {object}
+     * @param allDimensions {object}
+     * @param height {number}
+     * @returns {array}
      * @private
      */
     _checkSettings: function(config, allDimensions, height) {
-        let usedDimensions = {};
-        let usedValues = {};
-        let contexts = {};
+        var usedDimensions = {};
+        var usedValues = {};
+        var contexts = {};
         configLoop:
-            for(let i=0; i<config.length; i++) {
+            for(var i=0; i<config.length; i++) {
                 if (config[i].settings) {
-                    let setting = config[i].settings;
+                    var setting = config[i].settings;
                     if(setting.length === 0 ) {
                         continue;
                     }
@@ -338,14 +338,14 @@ Ycb.prototype = {
                         }
                         continue;
                     }
-                    let context = new Array(height);
-                    for(let q=0; q<height; q++) {
+                    var context = new Array(height);
+                    for(var q=0; q<height; q++) {
                         context[q] = DEFAULT;
                     }
-                    for(let j=0; j<setting.length; j++) {
-                        let kv = setting[j].split(':');
-                        let dim = kv[0];
-                        let index = allDimensions[dim];
+                    for(var j=0; j<setting.length; j++) {
+                        var kv = setting[j].split(':');
+                        var dim = kv[0];
+                        var index = allDimensions[dim];
                         if(index === undefined) {
                             console.log('WARNING: invalid dimension "' + dim +
                                 '" in settings ' + JSON.stringify(setting));
@@ -358,9 +358,9 @@ Ycb.prototype = {
                             usedValues[dim][kv[1]] = 1;
                             context[index] = kv[1];
                         } else {
-                            let vals = kv[1].split(',');
+                            var vals = kv[1].split(',');
                             context[index] = vals;
-                            for(let k=0; k<vals.length; k++) {
+                            for(var k=0; k<vals.length; k++) {
                                 usedValues[dim][vals[k]] = 1;
                             }
                         }
@@ -373,31 +373,31 @@ Ycb.prototype = {
 
     /**
      * Convert config to delta.
-     * @param config
-     * @returns {{subbed: object, unsubbed: object}}
+     * @param config {object}
+     * @returns {object}
      * @private
      */
     _buildDelta: function(config) {
         config = omit(config, 'settings');
-        let subbed = cloneDeep(config);
-        let subFlag = this._applySubstitutions(subbed, null, null);
-        let unsubbed = subFlag ? config : subbed;
+        var subbed = cloneDeep(config);
+        var subFlag = this._applySubstitutions(subbed, null, null);
+        var unsubbed = subFlag ? config : subbed;
         return {subbed:subbed, unsubbed:unsubbed};
     },
 
     /**
      * Evaluate dimensions and omit unused dimensions.
-     * @param dimensions
-     * @param usedDimensions
-     * @param usedValues
-     * @returns {int[]}
+     * @param dimensions {array}
+     * @param usedDimensions {object}
+     * @param usedValues {object}
+     * @returns {array}
      * @private
      */
     _parseDimensions: function(dimensions, usedDimensions, usedValues) {
-        let activeDimensions = new Array(dimensions.length);
+        var activeDimensions = new Array(dimensions.length);
         var valueCounter = 1;
-        for(let i=0; i<dimensions.length; i++) {
-            let dimensionName;
+        for(var i=0; i<dimensions.length; i++) {
+            var dimensionName;
             for(dimensionName in dimensions[i]){break}
             if(usedDimensions[dimensionName] === undefined) {
                 activeDimensions[i] = 0;
@@ -406,7 +406,7 @@ Ycb.prototype = {
             activeDimensions[i] = 1;
             this.dimensionsList.push(dimensionName);
             this.dimensionsToIndex[dimensionName] = i;
-            let labelCollector = {};
+            var labelCollector = {};
             valueCounter = this._dimensionWalk(dimensions[i][dimensionName], usedValues[dimensionName],
                 valueCounter, [0], this.precedenceMap, labelCollector, this.numberToValue);
             this.valueToNumber[dimensionName] = labelCollector;
@@ -417,19 +417,19 @@ Ycb.prototype = {
     /**
      * Traverse a dimension hierarchy, label dimension values, and fill the precedence map and dim <-> num maps.
      * Mark used dimension values.
-     * @param dimension
-     * @param used
-     * @param label
-     * @param path
-     * @param pathCollector
-     * @param valueToNumCollector
-     * @param numToValueCollector
-     * @returns {*}
+     * @param dimension {object}
+     * @param used {object}
+     * @param label {number}
+     * @param path {array}
+     * @param pathCollector {array}
+     * @param valueToNumCollector {object}
+     * @param numToValueCollector {array}
+     * @returns {number}
      * @private
      */
     _dimensionWalk: function(dimension, used, label, path, pathCollector, valueToNumCollector, numToValueCollector) {
         for(var key in dimension) {
-            let currentPath;
+            var currentPath;
             if(used[key]) {
                 used[key] = 2;
                 currentPath = path.concat(label);
@@ -451,28 +451,28 @@ Ycb.prototype = {
 
     /**
      * Convert config context and omit invalid dimension values.
-     * @param fullContext
-     * @param activeDimensions
-     * @param usedValues
-     * @param setting
-     * @returns
+     * @param fullContext {array}
+     * @param activeDimensions {array}
+     * @param usedValues {object}
+     * @param setting {object}
+     * @returns {array}
      * @private
      */
     _filterContext: function(fullContext, activeDimensions, usedValues, setting) {
-        let height = this.dimensionsList.length;
-        let newContext = new Array(height);
-        for(let i=0; i<height; i++) {
+        var height = this.dimensionsList.length;
+        var newContext = new Array(height);
+        for(var i=0; i<height; i++) {
             newContext[i] = 0;
         }
-        let activeIndex = 0;
-        for(let i=0; i<fullContext.length; i++) {
+        var activeIndex = 0;
+        for(i=0; i<fullContext.length; i++) {
             if(activeDimensions[i]) {
-                let dimensionName = this.dimensionsList[activeIndex];
-                let contextValue = fullContext[i];
+                var dimensionName = this.dimensionsList[activeIndex];
+                var contextValue = fullContext[i];
                 if(contextValue.constructor === Array) {
-                    let newValue = [];
-                    for(let k=0; k<contextValue.length; k++) {
-                        let valueChunk = contextValue[k];
+                    var newValue = [];
+                    for(var k=0; k<contextValue.length; k++) {
+                        var valueChunk = contextValue[k];
                         if(usedValues[dimensionName][valueChunk] === 2) {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
                         } else {
@@ -502,26 +502,27 @@ Ycb.prototype = {
 
     /**
      * Insert the given context and delta into the tree.
-     * @param root
-     * @param depth
-     * @param context
-     * @param delta
+     * @param root {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param delta {object}
      * @private
      */
     _buildTreeHelper: function(root, depth, context, delta) {
-        let currentValue = context[depth];
-        let isMulti = currentValue.constructor === Array;
+        var i;
+        var currentValue = context[depth];
+        var isMulti = currentValue.constructor === Array;
         if(depth === context.length-1) {
             if(isMulti) {
-                for(let i=0; i<currentValue.length; i++) {
-                    let curDelta = delta;
+                for(i=0; i<currentValue.length; i++) {
+                    var curDelta = delta;
                     if(root[currentValue[i]] !== undefined) {
                         curDelta = mergeDeep(delta, root[currentValue[i]], true);
                     }
                     root[currentValue[i]] = curDelta;
                 }
             } else {
-                let curDelta = delta;
+                curDelta = delta;
                 if(root[currentValue] !== undefined) {
                     curDelta = mergeDeep(delta, root[currentValue], true);
                 }
@@ -530,7 +531,7 @@ Ycb.prototype = {
             return;
         }
         if(isMulti){
-            for(let i=0; i<currentValue.length; i++) {
+            for(i=0; i<currentValue.length; i++) {
                 if(root[currentValue[i]] === undefined) {
                     root[currentValue[i]] = {};
                 }
@@ -552,7 +553,7 @@ Ycb.prototype = {
      * @param config {object}
      * @param base {object}
      * @param parent {object}
-     * @return void
+     * @return {boolean}
      */
     _applySubstitutions: function (config, base, parent) {
         var key,
@@ -561,7 +562,7 @@ Ycb.prototype = {
             item;
         base = base || config;
         parent = parent || {ref: config, key: null};
-        let subFlag = false;
+        var subFlag = false;
 
         for (key in config) {
             if (config.hasOwnProperty(key)) {
@@ -652,12 +653,11 @@ Ycb.prototype = {
 
     /**
      * Recursive helper for walking the config tree.
-     * @param cur
-     * @param depth
-     * @param context
-     * @param callback
-     * @param stop
-     * @returns {*}
+     * @param cur {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param callback {function}
+     * @param stop {array}
      * @private
      */
     _walkSettingsHelper: function(cur, depth, context, callback, stop) {
@@ -668,7 +668,7 @@ Ycb.prototype = {
             stop[0] = !callback(this._contextToObject(context), cloneDeep(cur));
             return stop[0];
         }
-        let key;
+        var key;
         for(key in cur) {
             if(this._walkSettingsHelper(cur[key], depth+1, context.concat(key), callback, stop)) {
                 return true;
@@ -709,9 +709,9 @@ module.exports = {
      */
     read: function (bundle, context, validate, debug) {
         var opts = {
-                validate: validate,
-                debug: debug
-            };
+            validate: validate,
+            debug: debug
+        };
         var ycb = new Ycb(bundle, opts);
         return ycb.read(context, opts);
     },
