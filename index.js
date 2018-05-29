@@ -8,7 +8,6 @@
 
 var VERSION = '1.0.2',
     DEFAULT = '*',
-    SEPARATOR = '/',
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
     SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
     DEFAULT_LOOKUP = [DEFAULT];
@@ -19,18 +18,6 @@ var isIterable = require('./lib/isIterable');
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
-
-function arrayReverseUnique(arr){
-    var u = {}, r = [];
-    for(var i = arr.length - 1; i >= 0; --i){
-        if(u.hasOwnProperty(arr[i])) {
-            continue;
-        }
-        r.unshift(arr[i]);
-        u[arr[i]] = true;
-    }
-    return r;
-}
 
 function extract(bag, key, def) {
     var keys,
@@ -79,19 +66,19 @@ function Ycb(bundle, options) {
     this.dimensionsList = [];
     this.dimensionsToIndex = {};
     this.valueToNumber = {};
-    this.numberToValue = ['*'];
+    this.numberToValue = DEFAULT_LOOKUP;
     this.precedenceMap = [[0]];
     this.tree = {};
     this.masterDelta = undefined;
     this.dimensions = [];
-    this._processRawBundle(cloneDeep(bundle), this.options);
+    this._processRawBundle(cloneDeep(bundle));
 }
 Ycb.prototype = {
 
     /**
      * Read the file.
      * @method read
-     * @param context {object}
+     * @param contextObj {object}
      * @param options {object}
      * @return {object}
      */
@@ -156,7 +143,7 @@ Ycb.prototype = {
     /**
      * Read the file.
      * @method read
-     * @param context {object}
+     * @param contextObj {object}
      * @param options {object}
      * @return {object}
      */
@@ -217,7 +204,7 @@ Ycb.prototype = {
      * Converts a context object to equivalent array of numerical values.
      *
      * @param contextObj
-     * @returns {any[]}
+     * @returns {int[]}
      * @private
      */
     _parseContext: function(contextObj) {
@@ -272,11 +259,10 @@ Ycb.prototype = {
     /**
      * @private
      * @method _processRawBundle
-     * @param bundle {object}
-     * @param options {object}
-     * @return {nothing}
+     * @param config {object}
+     * @return
      */
-    _processRawBundle: function(config, options) {
+    _processRawBundle: function(config) {
         let dimCheckResult = this._checkDimensions(config);
         let dimensionsObject = dimCheckResult[0];
         let totalDimensions = dimCheckResult[1];
@@ -312,7 +298,7 @@ Ycb.prototype = {
                 this.dimensions = dimensions;
                 let allDimensions = {};
                 for(let j=0; j<dimensions.length; j++) {
-                    let name
+                    let name;
                     for(name in dimensions[j]) {
                         allDimensions[name] = j;
                         break;
@@ -354,7 +340,7 @@ Ycb.prototype = {
                     }
                     let context = new Array(height);
                     for(let q=0; q<height; q++) {
-                        context[q] = '*';
+                        context[q] = DEFAULT;
                     }
                     for(let j=0; j<setting.length; j++) {
                         let kv = setting[j].split(':');
@@ -394,7 +380,7 @@ Ycb.prototype = {
     _buildDelta: function(config) {
         config = omit(config, 'settings');
         let subbed = cloneDeep(config);
-        let subFlag = this._applySubstitutions(subbed);
+        let subFlag = this._applySubstitutions(subbed, null, null);
         let unsubbed = subFlag ? config : subbed;
         return {subbed:subbed, unsubbed:unsubbed};
     },
@@ -404,7 +390,7 @@ Ycb.prototype = {
      * @param dimensions
      * @param usedDimensions
      * @param usedValues
-     * @returns {any[]}
+     * @returns {int[]}
      * @private
      */
     _parseDimensions: function(dimensions, usedDimensions, usedValues) {
@@ -469,7 +455,7 @@ Ycb.prototype = {
      * @param activeDimensions
      * @param usedValues
      * @param setting
-     * @returns {any[]}
+     * @returns
      * @private
      */
     _filterContext: function(fullContext, activeDimensions, usedValues, setting) {
@@ -502,7 +488,7 @@ Ycb.prototype = {
                 } else {
                     if(usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
-                    } else if(contextValue !== '*') {
+                    } else if(contextValue !== DEFAULT) {
                         console.log('WARNING: invalid value "' + contextValue +
                             '" in settings ' + JSON.stringify(setting));
                         return;
@@ -722,11 +708,11 @@ module.exports = {
      * @return {object}
      */
     read: function (bundle, context, validate, debug) {
-        var ycb = new Ycb(bundle),
-            opts = {
+        var opts = {
                 validate: validate,
                 debug: debug
             };
+        var ycb = new Ycb(bundle, opts);
         return ycb.read(context, opts);
     },
 
@@ -741,8 +727,8 @@ module.exports = {
      * @return {array of objects}
      */
     readNoMerge: function (bundle, context, validate, debug) {
-        var ycb = new Ycb(bundle),
-            opts = { debug: debug };
+        var opts = { debug: debug };
+        var ycb = new Ycb(bundle, opts);
         return ycb.readNoMerge(context, opts);
     }
 };
