@@ -150,7 +150,7 @@ Ycb.prototype = {
     readNoMerge: function(contextObj, options) {
         var context = this._parseContext(contextObj);
         var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
-        var collector = this.masterDelta ? [this.masterDelta] : [];
+        var collector = this.masterDelta ? [this.masterDelta[subKey]] : [];
         this._readNoMergeHelper(this.tree, 0, context, collector, subKey);
         return cloneDeep(collector);
     },
