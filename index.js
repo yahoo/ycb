@@ -175,7 +175,7 @@ Ycb.prototype = {
         } else {
             var i = value.length;
             while(i--) {
-                this._expandNoMerge(cur, depth, context, collector, value, subKey);
+                this._expandNoMerge(cur, depth, context, collector, value[i], subKey);
             }
         }
     },
