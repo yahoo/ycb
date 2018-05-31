@@ -477,8 +477,7 @@ Ycb.prototype = {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
                         } else {
                             console.log('WARNING: invalid value "' + valueChunk + '" for dimension "' +
-                                this.dimensionsList[activeIndex] +
-                                '" in settings ' + JSON.stringify(setting));
+                                dimensionName + '" in settings ' + JSON.stringify(setting));
                         }
                     }
                     if(newValue.length === 0) {
@@ -489,8 +488,8 @@ Ycb.prototype = {
                     if(usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
                     } else if(contextValue !== DEFAULT) {
-                        console.log('WARNING: invalid value "' + contextValue +
-                            '" in settings ' + JSON.stringify(setting));
+                        console.log('WARNING: invalid value "' + contextValue + '" for dimension "' +
+                            dimensionName + '" in settings ' + JSON.stringify(setting));
                         return;
                     }
                 }
