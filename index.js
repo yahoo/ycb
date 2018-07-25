@@ -111,31 +111,25 @@ Ycb.prototype = {
         }
         var value = context[depth];
         if(value.constructor !== Array) {
-            this._expand(cur, depth, context, collector, value, subKey);
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur[keys[j]] !== undefined) {
+                    this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                }
+            }
         } else {
+            var seen = {};
             var i = value.length;
             while(i--) {
-                this._expand(cur, depth, context, collector, value[i], subKey);
-            }
-        }
-    },
-
-    /**
-     * Recurse to all children that apply to the given context.
-     * @param cur {object}
-     * @param depth {number}
-     * @param context {array}
-     * @param collector {object}
-     * @param value {number}
-     * @param subKey {string}
-     * @private
-     */
-    _expand: function(cur, depth, context, collector, value, subKey) {
-        var keys = this.precedenceMap[value];
-        var n = keys.length;
-        for(var i=0; i<n; i++) {
-            if(cur[keys[i]] !== undefined) {
-                this._readHelper(cur[keys[i]], depth+1, context, collector, subKey);
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
+                        this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                        seen[keys[j]] = true;
+                    }
+                }
             }
         }
     },
@@ -171,31 +165,25 @@ Ycb.prototype = {
         }
         var value = context[depth];
         if(value.constructor !== Array) {
-            this._expandNoMerge(cur, depth, context, collector, value, subKey);
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur[keys[j]] !== undefined) {
+                    this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                }
+            }
         } else {
+            var seen = {};
             var i = value.length;
             while(i--) {
-                this._expandNoMerge(cur, depth, context, collector, value[i], subKey);
-            }
-        }
-    },
-
-    /**
-     * Recurse to all children that apply to the given context.
-     * @param cur {object}
-     * @param depth {number}
-     * @param context {array}
-     * @param collector {array}
-     * @param value {number}
-     * @param subKey {string}
-     * @private
-     */
-    _expandNoMerge: function(cur, depth, context, collector, value, subKey) {
-        var keys = this.precedenceMap[value];
-        var n = keys.length;
-        for(var i=0; i<n; i++) {
-            if(cur[keys[i]] !== undefined) {
-                this._readNoMergeHelper(cur[keys[i]], depth+1, context, collector, subKey);
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
+                        this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                        seen[keys[j]] = true;
+                    }
+                }
             }
         }
     },
