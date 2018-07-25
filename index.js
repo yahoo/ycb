@@ -64,7 +64,6 @@ function omit(obj, omitKey) {
 function Ycb(bundle, options) {
     this.options = options || {};
     this.dimensionsList = [];
-    this.dimensionsToIndex = {};
     this.valueToNumber = {};
     this.numberToValue = DEFAULT_LOOKUP;
     this.precedenceMap = [[0]];
@@ -86,8 +85,7 @@ Ycb.prototype = {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
         var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
-        var collector;
-        collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
+        var collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
         this._readHelper(this.tree, 0, context, collector, subKey);
         if(collector.__ycb_source__) {
             return omit(collector, '__ycb_source__');
@@ -393,7 +391,6 @@ Ycb.prototype = {
             }
             activeDimensions[i] = 1;
             this.dimensionsList.push(dimensionName);
-            this.dimensionsToIndex[dimensionName] = i;
             var labelCollector = {};
             valueCounter = this._dimensionWalk(dimensions[i][dimensionName], usedValues[dimensionName],
                 valueCounter, [0], this.precedenceMap, labelCollector, this.numberToValue);
@@ -465,8 +462,7 @@ Ycb.prototype = {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
                         } else {
                             console.log('WARNING: invalid value "' + valueChunk + '" for dimension "' +
-                                this.dimensionsList[activeIndex] +
-                                '" in settings ' + JSON.stringify(setting));
+                                dimensionName + '" in settings ' + JSON.stringify(setting));
                         }
                     }
                     if(newValue.length === 0) {
@@ -477,8 +473,8 @@ Ycb.prototype = {
                     if(usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
                     } else if(contextValue !== DEFAULT) {
-                        console.log('WARNING: invalid value "' + contextValue +
-                            '" in settings ' + JSON.stringify(setting));
+                        console.log('WARNING: invalid value "' + contextValue + '" for dimension "' +
+                            dimensionName + '" in settings ' + JSON.stringify(setting));
                         return;
                     }
                 }
