@@ -15,8 +15,6 @@ var cloneDeep = require('./lib/cloneDeep');
 var mergeDeep = require('./lib/mergeDeep');
 var isA = require('./lib/isA');
 var isIterable = require('./lib/isIterable');
-var _ = require('lodash');
-
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
