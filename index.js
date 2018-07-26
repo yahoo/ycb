@@ -15,6 +15,8 @@ var cloneDeep = require('./lib/cloneDeep');
 var mergeDeep = require('./lib/mergeDeep');
 var isA = require('./lib/isA');
 var isIterable = require('./lib/isIterable');
+var _ = require('lodash');
+
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
@@ -104,7 +106,7 @@ Ycb.prototype = {
      */
     _readHelper: function(cur, depth, context, collector, subKey) {
         if(depth === context.length) {
-            mergeDeep(cur[subKey], collector);
+            mergeDeep(cur[subKey], collector, false);
             return;
         }
         var value = context[depth];
