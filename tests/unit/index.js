@@ -49,226 +49,17 @@ describe('ycb unit tests', function () {
         assert(libycb.version === '1.0.2');
     });
 
-    describe('_calculateHierarchy', function () {
-        it('should generate lookup paths', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                flat = ycb._calculateHierarchy(['*'], dims[0].dimensions[6].lang);
-
-            assert.deepEqual(['en', '*'], flat.en);
-            assert.deepEqual(['en_CA', 'en', '*'], flat.en_CA);
-            assert.deepEqual(['fr', '*'], flat.fr);
-            assert.deepEqual(['fr_CA', 'fr_FR', 'fr', '*'], flat.fr_CA);
-        });
-    });
-
-    describe('_calculateHierarchies', function () {
-        it('should generate lookup paths', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                flat = ycb._dimensionHierarchies;
-
-
-            assert.deepEqual(['en', '*'], flat.lang.en);
-            assert.deepEqual(['en_CA', 'en', '*'], flat.lang.en_CA);
-            assert.deepEqual(['fr', '*'], flat.lang.fr);
-            assert.deepEqual(['fr_CA', 'fr_FR', 'fr', '*'], flat.lang.fr_CA);
-        });
-    });
-
-    describe('_makeOrderedLookupList', function () {
-        it('should generate the lookup list', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, list;
-            context = {
-                'region': 'ir',
-                'environment': 'preproduction',
-                'lang': 'fr_CA'
-            };
-            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
-            assert.deepEqual([
-                'preproduction',
-                '*'
-            ], list.environment);
-            assert.deepEqual([
-                'fr_CA',
-                'fr_FR',
-                'fr',
-                '*'
-            ], list.lang);
-            assert.deepEqual([
-                'ir',
-                'gb',
-                '*'
-            ], list.region);
-        });
-        it('should generate the lookup list for multi-value dimensions', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, list;
-            context = {
-                'bucket': ['101', '201']
-            };
-            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
-            assert.deepEqual([
-                '101',
-                '1xx',
-                '201',
-                '2xx',
-                '*'
-            ], list.bucket);
-        });
-        it('should generate default lookup when multi-value dimensions is an empty array', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, list;
-            context = {
-                'bucket': []
-            };
-            list = ycb._makeOrderedLookupList(context, {useAllDimensions: true});
-            assert.deepEqual([
-                '*'
-            ], list.bucket);
-        });
-    });
-
-    describe('_createSettingsLookups', function () {
-        it('should generate the look up path for the section', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims);
-            var section1 = { section: 1 };
-            var section2 = { section: 2 };
-            var section3 = { section: 3};
-            var dimsUsed = {};
-
-            ycb._createSettingsLookups(['region:fr'], section1, dimsUsed);
-            assert.equal(ycb.settings['*/*/*/*/*/*/*/fr/*/*/*'], section1);
-            assert(-1 !== dimsUsed.region.fr);
-
-            ycb._createSettingsLookups(['region:gb,ir'], section2, dimsUsed);
-            assert.equal(ycb.settings['*/*/*/*/*/*/*/gb/*/*/*'], section2);
-            assert(-1 !== dimsUsed.region.gb);
-            assert.equal(ycb.settings['*/*/*/*/*/*/*/ir/*/*/*'], section2);
-            assert(-1 !== dimsUsed.region.ir);
-
-            ycb._createSettingsLookups(['region:gb,ir', 'lang:en'], section3, dimsUsed);
-            assert.equal(ycb.settings['*/*/*/*/*/*/*/gb/*/*/*'], section2); // Not modified
-            assert.equal(ycb.settings['*/*/*/*/*/*/*/ir/*/*/*'], section2); // Not modified
-            assert.equal(ycb.settings['*/*/*/*/*/*/en/gb/*/*/*'], section3);
-            assert.equal(ycb.settings['*/*/*/*/*/*/en/ir/*/*/*'], section3);
-            assert(-1 !== dimsUsed.lang.en);
-
-        });
-    });
-
-    describe('_getLookupPaths', function () {
-        it('should generate the full list of lookup paths', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, paths, expected;
-            context = {
-                'region': 'ir',
-                'environment': 'preproduction',
-                'lang': 'fr_FR'
-            };
-            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
-
-            expected = [
-                '*/*/*/*/*/*/*/*/*/*/*',
-                '*/*/*/*/*/*/*/gb/*/*/*',
-                '*/*/*/*/*/*/*/ir/*/*/*',
-                '*/*/*/*/*/*/fr/*/*/*/*',
-                '*/*/*/*/*/*/fr/gb/*/*/*',
-                '*/*/*/*/*/*/fr/ir/*/*/*',
-                '*/*/*/*/*/*/fr_FR/*/*/*/*',
-                '*/*/*/*/*/*/fr_FR/gb/*/*/*',
-                '*/*/*/*/*/*/fr_FR/ir/*/*/*',
-                'preproduction/*/*/*/*/*/*/*/*/*/*',
-                'preproduction/*/*/*/*/*/*/gb/*/*/*',
-                'preproduction/*/*/*/*/*/*/ir/*/*/*',
-                'preproduction/*/*/*/*/*/fr/*/*/*/*',
-                'preproduction/*/*/*/*/*/fr/gb/*/*/*',
-                'preproduction/*/*/*/*/*/fr/ir/*/*/*',
-                'preproduction/*/*/*/*/*/fr_FR/*/*/*/*',
-                'preproduction/*/*/*/*/*/fr_FR/gb/*/*/*',
-                'preproduction/*/*/*/*/*/fr_FR/ir/*/*/*'
-            ];
-            assert.deepEqual(expected, paths);
-        });
-
-        it('should skip unused dimensions', function () {
+    describe('_parseContext', function () {
+        it('context objects should be parsed', function () {
             var bundle, ycb;
             bundle = readFixtureFile('dimensions.json')
                 .concat(readFixtureFile('simple-1.json'))
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
-
-            assert.equal(3, Object.keys(ycb.dimsUsed).length);
-            assert(undefined !==  ycb.dimsUsed.region);
-            assert.equal(4, Object.keys(ycb.dimsUsed.region).length);
-            assert(ycb.dimsUsed.region.ca);
-            assert(ycb.dimsUsed.region.gb);
-            assert(ycb.dimsUsed.region.fr);
-            assert(ycb.dimsUsed.region.ir);
-            assert.equal(3, Object.keys(ycb.dimsUsed.lang).length);
-            assert(ycb.dimsUsed.lang.fr);
-            assert(ycb.dimsUsed.lang.fr_FR);
-            assert(ycb.dimsUsed.lang.fr_CA);
-            assert.equal(2, Object.keys(ycb.dimsUsed.flavor).length);
-            assert(ycb.dimsUsed.flavor.att);
-            assert(ycb.dimsUsed.flavor.bt);
-
-            var context = {
-                'region': 'ir',
-                'environment': 'preproduction',
-                'lang': 'fr_FR'
-            };
-            var paths = ycb._getLookupPaths(context, {});
-            var expected = [
-                '*/*/*/*/*/*/*/*/*/*/*',
-                '*/*/*/*/*/*/*/gb/*/*/*',
-                '*/*/*/*/*/*/*/ir/*/*/*',
-                '*/*/*/*/*/*/fr/*/*/*/*',
-                '*/*/*/*/*/*/fr/gb/*/*/*',
-                '*/*/*/*/*/*/fr/ir/*/*/*',
-                '*/*/*/*/*/*/fr_FR/*/*/*/*',
-                '*/*/*/*/*/*/fr_FR/gb/*/*/*',
-                '*/*/*/*/*/*/fr_FR/ir/*/*/*'
-            ];
-            assert.deepEqual(expected, paths);
-        });
-        it('should handle multi-value dimensions', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, paths, expected;
-            context = {
-                'bucket': ['101', '201']
-            };
-            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
-
-            expected = [
-                '*/*/*/*/*/*/*/*/*/*/*',
-                '*/*/*/*/*/*/*/*/*/2xx/*',
-                '*/*/*/*/*/*/*/*/*/201/*',
-                '*/*/*/*/*/*/*/*/*/1xx/*',
-                '*/*/*/*/*/*/*/*/*/101/*'
-            ];
-            assert.deepEqual(expected, paths);
-        });
-        it('should handle multi-value dimensions with an empty array', function () {
-            var dims = readFixtureFile('dimensions.json'),
-                ycb = new libycb.Ycb(dims),
-                context, paths, expected;
-            context = {
-                'bucket': []
-            };
-            paths = ycb._getLookupPaths(context, {useAllDimensions: true});
-
-            expected = [
-                '*/*/*/*/*/*/*/*/*/*/*'
-            ];
-            assert.deepEqual(expected, paths);
+            cmp([0,0,0], ycb._parseContext({}));
+            cmp([0,7,0], ycb._parseContext({region:'fr'}));
+            cmp([0,6,9], ycb._parseContext({flavor:'bt', region:'ir'}));
+            cmp([2,7,8], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
         });
     });
 
@@ -279,7 +70,7 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-1.json')[0]);
             ycb = new libycb.Ycb(bundle);
 
-            assert.equal('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
+            assert.equal('YRB_YAHOO', ycb.read({}).title_key);
             assert(undefined !== ycb.dimensions[7].region.us);
         });
 
@@ -290,9 +81,8 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-2.json'));
             ycb = new libycb.Ycb(bundle);
 
-            assert.equal('YRB_YAHOO_2nd', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
-            assert.equal('yahoo.png', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].logo1);
-            assert.equal('tests/fixtures/simple-2.json', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].__ycb_source__);
+            assert.equal('YRB_YAHOO_2nd', ycb.read({}).title_key);
+            assert.equal('yahoo.png', ycb.read({}).logo1);
             assert(undefined !== ycb.dimensions[7].region.us);
         });
 
@@ -303,9 +93,9 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
 
-            assert.equal('YRB_YAHOO', ycb.settings['*/*/*/*/*/*/*/*/*/*/*'].title_key);
-            assert.equal('http://fr.yahoo.com', ycb.settings['*/*/*/*/*/*/*/fr/*/*/*'].links.home);
-            assert.equal('yahoo_bt_FR.png', ycb.settings['*/*/*/*/*/*/*/fr/*/*/bt'].logo);
+            assert.equal('YRB_YAHOO', ycb.read({}).title_key);
+            assert.equal('http://fr.yahoo.com', ycb.read({region:'fr'}).links.home);
+            assert.equal('yahoo_bt_FR.png', ycb.read({region:'fr', flavor:'bt'}).logo);
             assert(undefined !== ycb.dimensions[7].region.us);
         });
 
@@ -314,7 +104,7 @@ describe('ycb unit tests', function () {
             bundle = readFixtureFile('simple-1.json')
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
-            assert.deepEqual({}, ycb._dimensionHierarchies);
+            assert.equal('http://www.yahoo.com', ycb.read({region:'fr'}).links.home);
         });
     });
 
@@ -323,8 +113,9 @@ describe('ycb unit tests', function () {
             var config, ycb;
             config = readFixtureFile('substitutions.json');
             ycb = new libycb.Ycb([]);
-            ycb._applySubstitutions(config);
+            var subFlag = ycb._applySubstitutions(config);
 
+            assert(subFlag);
             assert(config.key0.key4 === 'The value of key0.key2 is value2');
             assert(config.key5.key4 === 'The value of key0.key2 is value2');
             assert(config.key6.key7.key8.key4 === 'The value of key0.key2 is value2');
@@ -680,7 +471,6 @@ describe('ycb unit tests', function () {
                 applySubstitutions: true
             });
             expected = readFixtureFile('subs-expected.json');
-
             cmp(config, expected);
         });
 

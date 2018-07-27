@@ -8,7 +8,6 @@
 
 var VERSION = '1.0.2',
     DEFAULT = '*',
-    SEPARATOR = '/',
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
     SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
     DEFAULT_LOOKUP = [DEFAULT];
@@ -19,18 +18,6 @@ var isIterable = require('./lib/isIterable');
 
 //---------------------------------------------------------------
 // UTILITY FUNCTIONS
-
-function arrayReverseUnique(arr){
-    var u = {}, r = [];
-    for(var i = arr.length - 1; i >= 0; --i){
-        if(u.hasOwnProperty(arr[i])) {
-            continue;
-        }
-        r.unshift(arr[i]);
-        u[arr[i]] = true;
-    }
-    return r;
-}
 
 function extract(bag, key, def) {
     var keys,
@@ -56,6 +43,15 @@ function replacer(base) {
     };
 }
 
+function omit(obj, omitKey) {
+    return Object.keys(obj).reduce(function(result, key) {
+        if(key !== omitKey) {
+            result[key] = obj[key];
+        }
+        return result;
+    }, {});
+}
+
 //---------------------------------------------------------------
 // OBJECT ORIENTED INTERFACE
 
@@ -67,140 +63,471 @@ function replacer(base) {
  */
 function Ycb(bundle, options) {
     this.options = options || {};
-    this.dimensions = {};
-    this._dimensionOrder = [];
-    this.settings = {};
-    this.schema = {};
-    this.dimsUsed = {}; // dim name: value: true
-    this._dimensionHierarchies = {};
-    this._processRawBundle(cloneDeep(bundle), this.options);
+    this.dimensionsList = [];
+    this.valueToNumber = {};
+    this.numberToValue = DEFAULT_LOOKUP;
+    this.precedenceMap = [[0]];
+    this.tree = {};
+    this.masterDelta = undefined;
+    this.dimensions = [];
+    this._processRawBundle(cloneDeep(bundle));
 }
 Ycb.prototype = {
-
-
-    /**
-     * Returns the dimensions in the YCB file.
-     * @method getDimensions
-     * @return {object} the dimensions
-     */
-    getDimensions: function () {
-        return cloneDeep(this.dimensions);
-    },
-
-
-    /**
-     * Iterates over all the setting sections in the YCB file, calling the
-     * callback for each section.
-     * @method walkSettings
-     * @param callback {function(settings, config)}
-     * @param callback.settings {object} the condition under which section will be used
-     * @param callback.config {object} the configuration in the section
-     * @param callback.return {boolean} if the callback returns false, then walking is stopped
-     * @return {nothing} results returned via callback
-     */
-    walkSettings: function (callback) {
-        var path,
-            context;
-        for (path in this.settings) {
-            if (this.settings.hasOwnProperty(path)) {
-                context = this._getContextFromLookupPath(path);
-                // clone, so that no-one mutates us
-                if (!callback(context, cloneDeep(this.settings[path]))) {
-                    break;
-                }
-            }
-        }
-    },
-
 
     /**
      * Read the file.
      * @method read
-     * @param context {object}
+     * @param contextObj {object}
      * @param options {object}
      * @return {object}
      */
-    read: function (context, options) {
-        var lookupPaths,
-            path,
-            config = {};
-
-        context = context || {};
-        options = mergeDeep(this.options, options || {}, true);
-
-        lookupPaths = this._getLookupPaths(context, options);
-
-        if (options.debug) {
-            console.log(JSON.stringify(context, null, 4));
-            console.log(JSON.stringify(this.dimensions, null, 4));
-            console.log(JSON.stringify(this.settings, null, 4));
-            console.log(JSON.stringify(this.schema, null, 4));
-            console.log(JSON.stringify(lookupPaths, null, 4));
+    read: function(contextObj, options) {
+        options = options ? mergeDeep(this.options, options, true) : this.options;
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
+        this._readHelper(this.tree, 0, context, collector, subKey);
+        if(collector.__ycb_source__) {
+            return omit(collector, '__ycb_source__');
         }
-
-        // Now we simply merge each matching settings section we find into the config
-        for (path = 0; path < lookupPaths.length; path += 1) {
-            if (this.settings[lookupPaths[path]]) {
-                if (options.debug) {
-                    console.log('----USING---- ' + lookupPaths[path]);
-                    console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
-                }
-                // merge a copy so that we don't modify the source
-                config = mergeDeep(this.settings[lookupPaths[path]], config);
-            }
-        }
-
-        if (options.applySubstitutions !== false) {
-            this._applySubstitutions(config);
-        }
-
-        if (options.validate) {
-            console.log('The YCB option "validate" is not implemented yet.');
-        }
-        delete config.__ycb_source__;
-        return config;
+        return collector;
     },
-
 
     /**
-     * Like read(), but doesn't merge the found sections.
-     * Also, doesn't do substitutions.
-     *
-     * @method readNoMerge
-     * @param context {object}
-     * @param options {object}
-     * @return {array of objects}
+     * Recurse through the tree merging configs that apply to the given context.
+     * @param cur {object} the current node.
+     * @param depth {int} current depth in tree.
+     * @param context {array} the context in internal format.
+     * @param collector {object} the config we merge onto.
+     * @param subKey {string} determines if substituted or non-substituted configs are used.
+     * @private
      */
-    readNoMerge: function (context, options) {
-        var lookupPaths,
-            path,
-            config = [];
-
-        context = context || {};
-
-        lookupPaths = this._getLookupPaths(context, options);
-
-        if (options.debug) {
-            console.log(JSON.stringify(context, null, 4));
-            console.log(JSON.stringify(this.dimensions, null, 4));
-            console.log(JSON.stringify(this.settings, null, 4));
-            console.log(JSON.stringify(this.schema, null, 4));
-            console.log(JSON.stringify(lookupPaths, null, 4));
+    _readHelper: function(cur, depth, context, collector, subKey) {
+        if(depth === context.length) {
+            mergeDeep(cur[subKey], collector, false);
+            return;
         }
-
-        // Now we simply merge each matching settings section we find into the config
-        for (path = 0; path < lookupPaths.length; path += 1) {
-            if (this.settings[lookupPaths[path]]) {
-                if (options.debug) {
-                    console.log('----USING---- ' + lookupPaths[path]);
-                    console.log(JSON.stringify(this.settings[lookupPaths[path]], null, 4));
+        var value = context[depth];
+        if(value.constructor !== Array) {
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur[keys[j]] !== undefined) {
+                    this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
                 }
-                config.push(cloneDeep(this.settings[lookupPaths[path]]));
+            }
+        } else {
+            var seen = {};
+            var i = value.length;
+            while(i--) {
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
+                        this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                        seen[keys[j]] = true;
+                    }
+                }
             }
         }
-        return config;
     },
 
+    /**
+     * Read the configs for the given context and return them in order general to specific.
+     * @method read
+     * @param contextObj {object}
+     * @param options {object}
+     * @return {array}
+     */
+    readNoMerge: function(contextObj, options) {
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector = this.masterDelta ? [this.masterDelta[subKey]] : [];
+        this._readNoMergeHelper(this.tree, 0, context, collector, subKey);
+        return cloneDeep(collector);
+    },
+
+    /**
+     * Recurse through the tree collecting configs that apply to the given context.
+     * @param cur {object} the current node.
+     * @param depth {number} current depth in tree.
+     * @param context {array} the context in internal format.
+     * @param collector {array} the array we push configs to.
+     * @param subKey {string} determines if substituted or non-substituted configs are used.
+     * @private
+     */
+    _readNoMergeHelper: function(cur, depth, context, collector, subKey) {
+        if(depth === context.length) {
+            collector.push(cur[subKey]);
+            return;
+        }
+        var value = context[depth];
+        if(value.constructor !== Array) {
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur[keys[j]] !== undefined) {
+                    this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                }
+            }
+        } else {
+            var seen = {};
+            var i = value.length;
+            while(i--) {
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
+                        this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                        seen[keys[j]] = true;
+                    }
+                }
+            }
+        }
+    },
+
+    /**
+     * Converts a context object to equivalent array of numerical values.
+     *
+     * @param contextObj {object}
+     * @returns {array}
+     * @private
+     */
+    _parseContext: function(contextObj) {
+        if(contextObj === undefined) {
+            contextObj = {};
+        }
+        var context = new Array(this.dimensionsList.length);
+        for(var i=0; i<this.dimensionsList.length; i++) {
+            var dimension = this.dimensionsList[i];
+            if(contextObj.hasOwnProperty(dimension)) {
+                var value = contextObj[dimension];
+                if(value.constructor === Array) {
+                    var newValue = [];
+                    for(var j=0; j<value.length; j++) {
+                        var numValue = this.valueToNumber[dimension][value[j]];
+                        if(numValue !== undefined) {
+                            newValue.push(numValue);
+                        }
+                    }
+                    if(newValue.length) {
+                        context[i] = newValue;
+                        continue;
+                    }
+                } else {
+                    numValue = this.valueToNumber[dimension][value];
+                    if(numValue !== undefined) {
+                        context[i] = numValue;
+                        continue;
+                    }
+                }
+            }
+            context[i] = 0;
+        }
+        return context;
+    },
+
+    /**
+     * Convert internal num array context to context object.
+     * @param context {array}
+     * @returns {object}
+     * @private
+     */
+    _contextToObject: function(context) {
+        var contextObj = {};
+        for(var i=0; i<context.length; i++) {
+            if(context[i] !== '0') {
+                contextObj[this.dimensionsList[i]] = this.numberToValue[context[i]];
+            }
+        }
+        return contextObj;
+    },
+
+    /**
+     * @private
+     * @method _processRawBundle
+     * @param config {object}
+     */
+    _processRawBundle: function(config) {
+        var dimCheckResult = this._checkDimensions(config);
+        var dimensionsObject = dimCheckResult[0];
+        var totalDimensions = dimCheckResult[1];
+
+        var settingsCheckResult = this._checkSettings(config, totalDimensions, dimensionsObject.length);
+        var usedDimensions = settingsCheckResult[0];
+        var usedValues = settingsCheckResult[1];
+        var contexts = settingsCheckResult[2];
+
+        var activeDimensions = this._parseDimensions(dimensionsObject, usedDimensions, usedValues);
+
+        for(var configIndex=0; configIndex<config.length; configIndex++) {
+            var fullContext = contexts[configIndex];
+            if(fullContext !== undefined) {
+                var context = this._filterContext(fullContext, activeDimensions, usedValues, config[configIndex].settings);
+                if(context !== undefined) {
+                    this._buildTreeHelper(this.tree, 0, context, this._buildDelta(config[configIndex]));
+                }
+            }
+        }
+    },
+
+    /**
+     * Extract dimensions object and dimension -> number map
+     * @param config {object}
+     * @returns {array}
+     * @private
+     */
+    _checkDimensions: function(config) {
+        for(var i=0; i<config.length; i++) {
+            if(config[i].dimensions) {
+                var dimensions = config[i].dimensions;
+                this.dimensions = dimensions;
+                var allDimensions = {};
+                for(var j=0; j<dimensions.length; j++) {
+                    var name;
+                    for(name in dimensions[j]) {
+                        allDimensions[name] = j;
+                        break;
+                    }
+                }
+                return [dimensions, allDimensions];
+            }
+        }
+        return [[], {}];
+    },
+
+    /**
+     * Evaluate settings and determine which dimensions and values are used. Check for unknown dimensions.
+     * Set the master config if it exist.
+     * @param config {object}
+     * @param allDimensions {object}
+     * @param height {number}
+     * @returns {array}
+     * @private
+     */
+    _checkSettings: function(config, allDimensions, height) {
+        var usedDimensions = {};
+        var usedValues = {};
+        var contexts = {};
+        configLoop:
+            for(var i=0; i<config.length; i++) {
+                if (config[i].settings) {
+                    var setting = config[i].settings;
+                    if(setting.length === 0 ) {
+                        continue;
+                    }
+                    if(setting[0] === 'master') {
+                        if(this.masterDelta !== undefined) {
+                            this.masterDelta = mergeDeep(this._buildDelta(config[i]), this.masterDelta, true);
+                        } else {
+                            this.masterDelta = this._buildDelta(config[i]);
+                        }
+                        continue;
+                    }
+                    var context = new Array(height);
+                    for(var q=0; q<height; q++) {
+                        context[q] = DEFAULT;
+                    }
+                    for(var j=0; j<setting.length; j++) {
+                        var kv = setting[j].split(':');
+                        var dim = kv[0];
+                        var index = allDimensions[dim];
+                        if(index === undefined) {
+                            console.log('WARNING: invalid dimension "' + dim +
+                                '" in settings ' + JSON.stringify(setting));
+                            continue configLoop;
+                        }
+                        usedDimensions[dim] = 1;
+                        usedValues[dim] = usedValues[dim] || {};
+
+                        if(kv[1].indexOf(',') === -1) {
+                            usedValues[dim][kv[1]] = 1;
+                            context[index] = kv[1];
+                        } else {
+                            var vals = kv[1].split(',');
+                            context[index] = vals;
+                            for(var k=0; k<vals.length; k++) {
+                                usedValues[dim][vals[k]] = 1;
+                            }
+                        }
+                    }
+                    contexts[i] = context;
+                }
+            }
+        return [usedDimensions, usedValues, contexts];
+    },
+
+    /**
+     * Convert config to delta.
+     * @param config {object}
+     * @returns {object}
+     * @private
+     */
+    _buildDelta: function(config) {
+        config = omit(config, 'settings');
+        var subbed = cloneDeep(config);
+        var subFlag = this._applySubstitutions(subbed, null, null);
+        var unsubbed = subFlag ? config : subbed;
+        return {subbed:subbed, unsubbed:unsubbed};
+    },
+
+    /**
+     * Evaluate dimensions and omit unused dimensions.
+     * @param dimensions {array}
+     * @param usedDimensions {object}
+     * @param usedValues {object}
+     * @returns {array}
+     * @private
+     */
+    _parseDimensions: function(dimensions, usedDimensions, usedValues) {
+        var activeDimensions = new Array(dimensions.length);
+        var valueCounter = 1;
+        for(var i=0; i<dimensions.length; i++) {
+            var dimensionName;
+            for(dimensionName in dimensions[i]){break}
+            if(usedDimensions[dimensionName] === undefined) {
+                activeDimensions[i] = 0;
+                continue;
+            }
+            activeDimensions[i] = 1;
+            this.dimensionsList.push(dimensionName);
+            var labelCollector = {};
+            valueCounter = this._dimensionWalk(dimensions[i][dimensionName], usedValues[dimensionName],
+                valueCounter, [0], this.precedenceMap, labelCollector, this.numberToValue);
+            this.valueToNumber[dimensionName] = labelCollector;
+        }
+        return activeDimensions;
+    },
+
+    /**
+     * Traverse a dimension hierarchy, label dimension values, and fill the precedence map and dim <-> num maps.
+     * Mark used dimension values.
+     * @param dimension {object}
+     * @param used {object}
+     * @param label {number}
+     * @param path {array}
+     * @param pathCollector {array}
+     * @param valueToNumCollector {object}
+     * @param numToValueCollector {array}
+     * @returns {number}
+     * @private
+     */
+    _dimensionWalk: function(dimension, used, label, path, pathCollector, valueToNumCollector, numToValueCollector) {
+        for(var key in dimension) {
+            var currentPath;
+            if(used[key]) {
+                used[key] = 2;
+                currentPath = path.concat(label);
+            } else {
+                currentPath = path;
+            }
+            if(currentPath.length > 1) {
+                pathCollector.push(currentPath);
+                numToValueCollector.push(key);
+                valueToNumCollector[key] = label++;
+            }
+            if(dimension[key] !== null) {
+                label = this._dimensionWalk(dimension[key], used, label, currentPath,
+                    pathCollector, valueToNumCollector, numToValueCollector);
+            }
+        }
+        return label;
+    },
+
+    /**
+     * Convert config context and omit invalid dimension values.
+     * @param fullContext {array}
+     * @param activeDimensions {array}
+     * @param usedValues {object}
+     * @param setting {object}
+     * @returns {array}
+     * @private
+     */
+    _filterContext: function(fullContext, activeDimensions, usedValues, setting) {
+        var height = this.dimensionsList.length;
+        var newContext = new Array(height);
+        for(var i=0; i<height; i++) {
+            newContext[i] = 0;
+        }
+        var activeIndex = 0;
+        for(i=0; i<fullContext.length; i++) {
+            if(activeDimensions[i]) {
+                var dimensionName = this.dimensionsList[activeIndex];
+                var contextValue = fullContext[i];
+                if(contextValue.constructor === Array) {
+                    var newValue = [];
+                    for(var k=0; k<contextValue.length; k++) {
+                        var valueChunk = contextValue[k];
+                        if(usedValues[dimensionName][valueChunk] === 2) {
+                            newValue.push(this.valueToNumber[dimensionName][valueChunk]);
+                        } else {
+                            console.log('WARNING: invalid value "' + valueChunk + '" for dimension "' +
+                                dimensionName + '" in settings ' + JSON.stringify(setting));
+                        }
+                    }
+                    if(newValue.length === 0) {
+                        return;
+                    }
+                    newContext[activeIndex] = newValue;
+                } else {
+                    if(usedValues[dimensionName][contextValue] === 2) {
+                        newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
+                    } else if(contextValue !== DEFAULT) {
+                        console.log('WARNING: invalid value "' + contextValue + '" for dimension "' +
+                            dimensionName + '" in settings ' + JSON.stringify(setting));
+                        return;
+                    }
+                }
+                activeIndex++;
+            }
+        }
+        return newContext;
+    },
+
+    /**
+     * Insert the given context and delta into the tree.
+     * @param root {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param delta {object}
+     * @private
+     */
+    _buildTreeHelper: function(root, depth, context, delta) {
+        var i;
+        var currentValue = context[depth];
+        var isMulti = currentValue.constructor === Array;
+        if(depth === context.length-1) {
+            if(isMulti) {
+                for(i=0; i<currentValue.length; i++) {
+                    var curDelta = delta;
+                    if(root[currentValue[i]] !== undefined) {
+                        curDelta = mergeDeep(delta, root[currentValue[i]], true);
+                    }
+                    root[currentValue[i]] = curDelta;
+                }
+            } else {
+                curDelta = delta;
+                if(root[currentValue] !== undefined) {
+                    curDelta = mergeDeep(delta, root[currentValue], true);
+                }
+                root[currentValue] = curDelta;
+            }
+            return;
+        }
+        if(isMulti){
+            for(i=0; i<currentValue.length; i++) {
+                if(root[currentValue[i]] === undefined) {
+                    root[currentValue[i]] = {};
+                }
+                this._buildTreeHelper(root[currentValue[i]], depth+1, context, delta);
+            }
+        } else {
+            if(root[currentValue] === undefined) {
+                root[currentValue] = {};
+            }
+            this._buildTreeHelper(root[currentValue], depth+1, context, delta);
+        }
+    },
 
     /**
      * This is a first pass at hairball of a function.
@@ -210,16 +537,16 @@ Ycb.prototype = {
      * @param config {object}
      * @param base {object}
      * @param parent {object}
-     * @return void
+     * @return {boolean}
      */
     _applySubstitutions: function (config, base, parent) {
         var key,
             sub,
             find,
             item;
-
         base = base || config;
         parent = parent || {ref: config, key: null};
+        var subFlag = false;
 
         for (key in config) {
             if (config.hasOwnProperty(key)) {
@@ -228,12 +555,13 @@ Ycb.prototype = {
                 if (isIterable(config[key])) {
                     // parent param {ref: config, key: key} is a recursion
                     // pointer that needed only when replacing "keys"
-                    this._applySubstitutions(config[key], base, {ref: config, key: key});
+                    subFlag = this._applySubstitutions(config[key], base, {ref: config, key: key}) || subFlag;
 
                 } else {
                     // Test if the key is a "substitution" key
                     sub = SUBMATCH.exec(key);
                     if (sub && (sub[0] === key)) {
+                        subFlag = true;
                         // Pull out the key to "find"
                         find = extract(base, sub[1], null);
 
@@ -258,6 +586,7 @@ Ycb.prototype = {
                         }
 
                     } else if (SUBMATCH.test(config[key])) {
+                        subFlag = true;
                         // Test if the value is a "substitution" value
                         // We have a match so lets use it
                         sub = SUBMATCH.exec(config[key]);
@@ -286,318 +615,58 @@ Ycb.prototype = {
                 }
             }
         }
-    },
-
-
-    /**
-     * @private
-     * @method _getLookupPaths
-     * @param context {object} Key/Value list
-     * @param options {object} runtime options
-     * @return {Array}
-     */
-    _getLookupPaths: function (context, options) {
-        var lookupList = this._makeOrderedLookupList(context, options);
-        return this._expandLookupList(lookupList, options);
+        return subFlag;
     },
 
     /**
-     * Expands a lookupList into a list of string keys
-     * @private
-     * @param lookupList {Object}
-     * @returns {[String]}
+     * Iterates over all the setting sections in the YCB file, calling the
+     * callback for each section.
+     * @method walkSettings
+     * @param callback {function(settings, config)}
+     * @param callback.settings {object} the condition under which section will be used
+     * @param callback.config {object} the configuration in the section
+     * @param callback.return {boolean} if the callback returns false, then walking is stopped
+     * @return {nothing} results returned via callback
      */
-    _expandLookupList: function (lookupList) {
-        var dimensions = Object.keys(lookupList),
-            pos,
-            current = dimensions.length - 1,
-            combination = [];
-
-        // This is our combination that we will tumble over
-        for (pos = 0; pos < dimensions.length; pos += 1) {
-            combination.push({
-                current: 0,
-                total: lookupList[dimensions[pos]].length - 1
-            });
+    walkSettings: function (callback) {
+        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta))) {
+            return undefined;
         }
+        this._walkSettingsHelper(this.tree, 0, [], callback, [false]);
+    },
 
-        function tumble(combination, location) {
-            // If the location is not found return
-            if (!combination[location]) {
-                return false;
-            }
-
-            // Move along to the next item
-            combination[location].current += 1;
-
-            // If the next item is not found move to the prev location
-            if (combination[location].current > combination[location].total) {
-                combination[location].current = 0;
-                return tumble(combination, location - 1);
-            }
-
+    /**
+     * Recursive helper for walking the config tree.
+     * @param cur {object}
+     * @param depth {number}
+     * @param context {array}
+     * @param callback {function}
+     * @param stop {array}
+     * @private
+     */
+    _walkSettingsHelper: function(cur, depth, context, callback, stop) {
+        if(stop[0]) {
             return true;
         }
-
-        var paths = [];
-        do {
-            var path = [];
-            for (pos = 0; pos < dimensions.length; pos += 1) {
-                path.push(lookupList[dimensions[pos]][combination[pos].current]);
+        if(depth === this.dimensionsList.length) {
+            stop[0] = !callback(this._contextToObject(context), cloneDeep(cur));
+            return stop[0];
+        }
+        var key;
+        for(key in cur) {
+            if(this._walkSettingsHelper(cur[key], depth+1, context.concat(key), callback, stop)) {
+                return true;
             }
-            paths.push(path.join(SEPARATOR));
-        } while (tumble(combination, current));
-
-        return paths.reverse();
+        }
     },
 
     /**
-     * Creates a settings cache that maps a lookup key to the settings section
-     * @private
-     * @param settings {array} The list of dimensions and values the section applies to
-     * @param section {object} The configuration values for the settings
-     * @param dimsUsed {object}
-     * @param options {object}
-     * @return {void}
+     * Return clone of the dimensions object.
+     * @returns {array}
      */
-    _createSettingsLookups: function (settings, section, dimsUsed, options) {
-        var context = {};
-        for (var part = 0; part < settings.length; part += 1) {
-            var kv = settings[part].split(':');
-            var dim = kv[0];
-            var val = kv[1] ? kv[1].split(',') : kv[1];
-
-            if ('master' !== settings[0]) {
-                // Validate dimension name
-                if (!this._dimensionHierarchies.hasOwnProperty(dim)) {
-                    console.log('WARNING: invalid dimension "' + dim +
-                        '" in settings ' + JSON.stringify(settings));
-                    return;
-                }
-                dimsUsed[dim] = dimsUsed[dim] || [];
-                val.forEach(function (v) {
-                    // Validate dimension value
-                    if (!this._dimensionHierarchies[dim].hasOwnProperty(v)) {
-                        console.log('WARNING: invalid value "' + v + '" for dimension "' + dim +
-                            '" in settings ' + JSON.stringify(settings));
-                    } else {
-                        dimsUsed[dim].push(v);
-                    }
-                }, this);
-            }
-            context[dim] = val;
-        }
-
-        // Build the full context paths
-        var lookupList = {};
-        this._dimensionOrder.forEach(function (dim) {
-            lookupList[dim] = context[dim] || DEFAULT;
-        });
-        var keys = this._expandLookupList(lookupList, {
-            useAllDimensions: true
-        }, settings);
-
-        keys.forEach(function (key) {
-            // Add the section to the settings list with it's full key
-            if (!this.settings[key]) {
-                this.settings[key] = section;
-            } else {
-                if (options && options.debug) {
-                    console.log('Merging section ' + JSON.stringify(settings) + (
-                            section.__ycb_source__ ? (' from ' + section.__ycb_source__) : ''
-                        ) + (
-                            this.settings[key] ? (' onto ' + this.settings[key].__ycb_source__) : ''
-                        ));
-                }
-                // Clone original settings so that we don't override shared settings
-                this.settings[key] = mergeDeep(section, this.settings[key], true);
-            }
-        }, this);
-    },
-
-
-    /**
-     * @private
-     * @method _processRawBundle
-     * @param bundle {object}
-     * @param options {object}
-     * @return {nothing}
-     */
-    _processRawBundle: function (bundle, options) {
-        var pos,
-            section,
-            settings,
-            dimsUsed = {};
-
-        // Extract each section from the bundle
-        for (pos = 0; pos < bundle.length; pos += 1) {
-            section = bundle[pos];
-            if (section.dimensions) {
-                this.dimensions = section.dimensions;
-                this._calculateDimensionOrder();
-                this._calculateHierarchies();
-            } else if (section.schema) {
-                this.schema = section.schema;
-            } else if (section.settings) {
-                settings = section.settings;
-                // Remove the settings key now we are done with it
-                delete section.settings;
-                this._createSettingsLookups(settings, section, dimsUsed, options);
-            }
-        }
-
-        this._buildUsageMap(dimsUsed);
-    },
-
-    _buildUsageMap: function (dimsUsed) {
-        var i, j, k,
-            value,
-            name,
-            hierarchy;
-
-        // Assemble map of all dimensions used including ancestry
-        this.dimsUsed = {};
-        for (name in dimsUsed) {
-            if (dimsUsed.hasOwnProperty(name) && this._dimensionHierarchies.hasOwnProperty(name)) {
-                this.dimsUsed[name] = {};
-                for (i=0; i<dimsUsed[name].length; i += 1) {
-                    value = dimsUsed[name][i];
-                    for (hierarchy in this._dimensionHierarchies[name]) {
-                        if (this._dimensionHierarchies[name].hasOwnProperty(hierarchy)) {
-                            if (-1 !== this._dimensionHierarchies[name][hierarchy].indexOf(value)) {
-                                this.dimsUsed[name][hierarchy] = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    },
-
-
-    /**
-     * @private
-     * @method _getContextFromLookupPath
-     * @param path {string} the path
-     * @return {object} the corresponding context (really a partial context)
-     */
-    _getContextFromLookupPath: function (path) {
-        var parts = path.split(SEPARATOR),
-            p,
-            part,
-            dimName,
-            ctx = {};
-        for (p = 0; p < this._dimensionOrder.length; p += 1) {
-            part = parts[p];
-            if (DEFAULT !== part) {
-                // Having more than one key in the dimensions structure is against
-                // the YCB spec.
-                dimName = Object.keys(this.dimensions[p])[0];
-                ctx[dimName] = part;
-            }
-        }
-        return ctx;
-    },
-
-
-    /**
-     * @private
-     * @method _makeOrderedLookupList
-     * @param context {object} Key/Value list
-     * @param options {object}
-     * @return {object} list of lists
-     */
-    _makeOrderedLookupList: function (context, options) {
-        var pos,
-            name,
-            chains = {};
-
-        for (pos = 0; pos < this._dimensionOrder.length; pos += 1) {
-            name = this._dimensionOrder[pos];
-            var value = context[name];
-            if (isA(value, Array)) {
-                var lookup = [];
-                if (value.length > 0) {
-                    value.forEach(function (val) {
-                        if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][val])) {
-                            lookup = lookup.concat(this._dimensionHierarchies[name][val] || DEFAULT_LOOKUP);
-                        } else {
-                            lookup = lookup.concat(DEFAULT_LOOKUP);
-                        }
-                    }, this);
-                    chains[name] = arrayReverseUnique(lookup);
-                } else {
-                    chains[name] = DEFAULT_LOOKUP;
-                }
-            } else {
-                if (options.useAllDimensions || (this.dimsUsed[name] && this.dimsUsed[name][value])) {
-                    chains[name] = this._dimensionHierarchies[name][value] || DEFAULT_LOOKUP;
-                } else {
-                    chains[name] = DEFAULT_LOOKUP;
-                }
-            }
-        }
-        return chains;
-    },
-
-    _calculateDimensionOrder: function () {
-        var pos, name;
-        for (pos = 0; pos < this.dimensions.length; pos += 1) {
-            for (name in this.dimensions[pos]) {
-                if (this.dimensions[pos].hasOwnProperty(name)) {
-                    this._dimensionOrder.push(name);
-                }
-            }
-        }
-    },
-
-
-    /**
-     * @private
-     * @method _calculateHierarchy
-     * @param parents {array}
-     * @param dimension {object} A single YCB dimension structured object
-     * @param build {string}
-     * @return {object} k/v map
-     */
-    _calculateHierarchy: function (parents, dimension, build) {
-        var key,
-            newParents,
-            nextDimension;
-
-        build = build || {};
-        if (typeof dimension === 'object') {
-            for (key in dimension) {
-                if (dimension.hasOwnProperty(key)) {
-                    nextDimension = dimension[key];
-                    newParents = ([key].concat(parents));
-                    build[key] = newParents;
-                    if (typeof nextDimension === 'object') {
-                        this._calculateHierarchy(newParents, nextDimension, build);
-                    }
-                }
-            }
-        }
-        return build;
-    },
-
-
-    /**
-     * @private
-     * @method _calculateHierarchies
-     * @return {nothing}
-     */
-    _calculateHierarchies: function () {
-        var pos,
-            name;
-
-        for (pos = 0; pos < this._dimensionOrder.length; pos += 1) {
-            name = this._dimensionOrder[pos];
-            this._dimensionHierarchies[name] = this._calculateHierarchy(DEFAULT_LOOKUP, this.dimensions[pos][name]);
-        }
+    getDimensions: function() {
+        return cloneDeep(this.dimensions);
     }
-
-
 };
 
 
@@ -612,7 +681,6 @@ module.exports = {
     // object-oriented interface
     Ycb: Ycb,
 
-
     /*
      * Processes an Object representing a YCB 2.0 Bundle as defined in the spec.
      *
@@ -624,14 +692,13 @@ module.exports = {
      * @return {object}
      */
     read: function (bundle, context, validate, debug) {
-        var ycb = new Ycb(bundle),
-            opts = {
-                validate: validate,
-                debug: debug
-            };
+        var opts = {
+            validate: validate,
+            debug: debug
+        };
+        var ycb = new Ycb(bundle, opts);
         return ycb.read(context, opts);
     },
-
 
     /*
      * Like read(), but doesn't merge the found sections.
@@ -644,10 +711,8 @@ module.exports = {
      * @return {array of objects}
      */
     readNoMerge: function (bundle, context, validate, debug) {
-        var ycb = new Ycb(bundle),
-            opts = { debug: debug };
+        var opts = { debug: debug };
+        var ycb = new Ycb(bundle, opts);
         return ycb.readNoMerge(context, opts);
     }
-
-
 };
