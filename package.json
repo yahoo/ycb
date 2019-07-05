@@ -13,7 +13,7 @@
   "dependencies": {},
   "main": "index",
   "scripts": {
-    "cover": "istanbul cover --dir artifacts -- _mocha tests/unit --recursive--reporter spec",
+    "cover": "nyc npm run test",
     "dev": "mocha tests/unit --recursive --reporter spec -w",
     "lint": "eslint .",
     "pretest": "npm run lint",
@@ -24,9 +24,9 @@
     "npm": ">1.0"
   },
   "devDependencies": {
-    "eslint": "^2.2.0",
-    "istanbul": "^0.4.2",
-    "mocha": "^2.0.1"
+    "eslint": "^6.0.1",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1"
   },
   "repository": {
     "type": "git",

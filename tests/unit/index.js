@@ -490,7 +490,7 @@ describe('ycb unit tests', function () {
         });
 
         it('should handle multi-value dimensions', function () {
-            var ycb, bundle, config, expected;
+            var ycb, bundle, config;
             bundle = readFixtureFile('buckets.json');
             bundle.settings = ['master'];
             bundle = readFixtureFile('dimensions.json').concat(bundle);

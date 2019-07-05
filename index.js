@@ -310,50 +310,50 @@ Ycb.prototype = {
         var usedValues = {};
         var contexts = {};
         configLoop:
-            for(var i=0; i<config.length; i++) {
-                if (config[i].settings) {
-                    var setting = config[i].settings;
-                    if(setting.length === 0 ) {
-                        continue;
-                    }
-                    if(setting[0] === 'master') {
-                        if(this.masterDelta !== undefined) {
-                            this.masterDelta = mergeDeep(this._buildDelta(config[i]), this.masterDelta, true);
-                        } else {
-                            this.masterDelta = this._buildDelta(config[i]);
-                        }
-                        continue;
-                    }
-                    var context = new Array(height);
-                    for(var q=0; q<height; q++) {
-                        context[q] = DEFAULT;
-                    }
-                    for(var j=0; j<setting.length; j++) {
-                        var kv = setting[j].split(':');
-                        var dim = kv[0];
-                        var index = allDimensions[dim];
-                        if(index === undefined) {
-                            console.log('WARNING: invalid dimension "' + dim +
-                                '" in settings ' + JSON.stringify(setting));
-                            continue configLoop;
-                        }
-                        usedDimensions[dim] = 1;
-                        usedValues[dim] = usedValues[dim] || {};
-
-                        if(kv[1].indexOf(',') === -1) {
-                            usedValues[dim][kv[1]] = 1;
-                            context[index] = kv[1];
-                        } else {
-                            var vals = kv[1].split(',');
-                            context[index] = vals;
-                            for(var k=0; k<vals.length; k++) {
-                                usedValues[dim][vals[k]] = 1;
-                            }
-                        }
-                    }
-                    contexts[i] = context;
+        for(var i=0; i<config.length; i++) {
+            if (config[i].settings) {
+                var setting = config[i].settings;
+                if(setting.length === 0 ) {
+                    continue;
                 }
+                if(setting[0] === 'master') {
+                    if(this.masterDelta !== undefined) {
+                        this.masterDelta = mergeDeep(this._buildDelta(config[i]), this.masterDelta, true);
+                    } else {
+                        this.masterDelta = this._buildDelta(config[i]);
+                    }
+                    continue;
+                }
+                var context = new Array(height);
+                for(var q=0; q<height; q++) {
+                    context[q] = DEFAULT;
+                }
+                for(var j=0; j<setting.length; j++) {
+                    var kv = setting[j].split(':');
+                    var dim = kv[0];
+                    var index = allDimensions[dim];
+                    if(index === undefined) {
+                        console.log('WARNING: invalid dimension "' + dim +
+                                '" in settings ' + JSON.stringify(setting));
+                        continue configLoop;
+                    }
+                    usedDimensions[dim] = 1;
+                    usedValues[dim] = usedValues[dim] || {};
+
+                    if(kv[1].indexOf(',') === -1) {
+                        usedValues[dim][kv[1]] = 1;
+                        context[index] = kv[1];
+                    } else {
+                        var vals = kv[1].split(',');
+                        context[index] = vals;
+                        for(var k=0; k<vals.length; k++) {
+                            usedValues[dim][vals[k]] = 1;
+                        }
+                    }
+                }
+                contexts[i] = context;
             }
+        }
         return [usedDimensions, usedValues, contexts];
     },
 
