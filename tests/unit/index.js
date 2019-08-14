@@ -61,6 +61,14 @@ describe('ycb unit tests', function () {
             cmp([0,6,9], ycb._parseContext({flavor:'bt', region:'ir'}));
             cmp([2,7,8], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
         });
+        it('should handle an undefined context value', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            ycb = new libycb.Ycb(bundle);
+            cmp([0, 0, 0], ycb._parseContext({ region: undefined }));
+        });
     });
 
     describe('_processRawBundle', function () {
