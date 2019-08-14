@@ -108,7 +108,7 @@ Ycb.prototype = {
             return;
         }
         var value = context[depth];
-        if(value.constructor !== Array) {
+        if(!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
             for(var j=0; j<n; j++) {
@@ -162,7 +162,7 @@ Ycb.prototype = {
             return;
         }
         var value = context[depth];
-        if(value.constructor !== Array) {
+        if(!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
             for(var j=0; j<n; j++) {
@@ -202,7 +202,7 @@ Ycb.prototype = {
             var dimension = this.dimensionsList[i];
             if(contextObj.hasOwnProperty(dimension)) {
                 var value = contextObj[dimension];
-                if(value.constructor === Array) {
+                if(Array.isArray(value)) {
                     var newValue = [];
                     for(var j=0; j<value.length; j++) {
                         var numValue = this.valueToNumber[dimension][value[j]];
@@ -454,7 +454,7 @@ Ycb.prototype = {
             if(activeDimensions[i]) {
                 var dimensionName = this.dimensionsList[activeIndex];
                 var contextValue = fullContext[i];
-                if(contextValue.constructor === Array) {
+                if(Array.isArray(contextValue)) {
                     var newValue = [];
                     for(var k=0; k<contextValue.length; k++) {
                         var valueChunk = contextValue[k];
@@ -495,7 +495,7 @@ Ycb.prototype = {
     _buildTreeHelper: function(root, depth, context, delta) {
         var i;
         var currentValue = context[depth];
-        var isMulti = currentValue.constructor === Array;
+        var isMulti = Array.isArray(currentValue);
         if(depth === context.length-1) {
             if(isMulti) {
                 for(i=0; i<currentValue.length; i++) {
