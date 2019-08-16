@@ -430,7 +430,7 @@ Ycb.prototype = {
     _contextToObject: function(context) {
         var contextObj = {};
         for(var i=0; i<context.length; i++) {
-            if(context[i] !== '0') {
+            if(context[i] !== 0) {
                 contextObj[this.dimensionsList[i]] = this.numberToValue[context[i]];
             }
         }
@@ -1030,9 +1030,8 @@ Ycb.prototype = {
             stop[0] = !callback(this._contextToObject(context), cloneDeep(cur));
             return stop[0];
         }
-        var key;
-        for(key in cur) {
-            if(this._walkSettingsHelper(cur[key], depth+1, context.concat(key), callback, stop)) {
+        for(var [key, value] of  cur) {
+            if(this._walkSettingsHelper(value, depth+1, context.concat(key), callback, stop)) {
                 return true;
             }
         }
