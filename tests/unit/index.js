@@ -569,4 +569,20 @@ describe('ycb unit tests', function () {
             assert(ctxs[JSON.stringify({region:'fr',flavor:'bt'})]);
         });
     });
+
+    describe('generatedReadTest', function () {
+        it('should match old output', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('large-bundle.json');
+            ycb = new libycb.Ycb(bundle);
+            var tests = readFixtureFile('generated-reads.json');
+            for(var i=0; i<tests.length; i++) {
+                var test = tests[i];
+                var merged = ycb.read(test.ctx, {});
+                var unmerged = ycb.readNoMerge(test.ctx, {});
+                cmp(merged, test.merged, 'Merged config does not match expected for config ' + i);
+                cmp(unmerged, test.unmerged, 'Unmerged config does not match expected for config ' + i);
+            }
+        });
+    });
 });
