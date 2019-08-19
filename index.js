@@ -303,6 +303,7 @@ Ycb.prototype = {
         if(ret < soonest) {
             soonest = ret;
         }
+        collector = cloneDeep(collector); //clone before we may add cache info to result
         if(soonest !== SENTINEL_TIME && options.cacheInfo === true) {
             if(collector.length > 0) {
                 collector[0][EXPIRATION_KEY] = soonest;
@@ -312,7 +313,7 @@ Ycb.prototype = {
                 collector.push(o);
             }
         }
-        return cloneDeep(collector);
+        return collector;
     },
 
     /**

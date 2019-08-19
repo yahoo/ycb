@@ -585,4 +585,75 @@ describe('ycb unit tests', function () {
             }
         });
     });
+
+    //get applicable intervals and next change time
+    function intervalHelper(intervals, time) {
+        var applicable = [];
+        var next = Number.POSITIVE_INFINITY;
+        for(var i=0; i<intervals.length; i++) {
+            var interval = intervals[i];
+            var valid = true;
+            if(interval.start) {
+                valid = valid && interval.start <= time;
+                if(interval.start > time && interval.start < next) {
+                    next = interval.start;
+                }
+            }
+            if(interval.end) {
+                valid = valid && interval.end >= time;
+                if(valid && interval.end < next) {
+                    next = interval.end+1;
+                }
+            }
+            if(valid) {
+                applicable.push(interval.name);
+            }
+        }
+        next = next === Number.POSITIVE_INFINITY ? undefined : next;
+        return {configs: applicable, next: next};
+    }
+
+    describe('timeReadTest', function () {
+        it('scheduled configs should match timestamp', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('time-test.json');
+            var intervals = [];
+            var minTime = Number.POSITIVE_INFINITY;
+            var maxTime = 0;
+            bundle.forEach((config) => {
+                if(config.settings) {
+                    var name = config.name;
+                    var interval = config.intervals[name];
+                    if(interval.start || interval.end) {
+                        if(interval.start && interval.start < minTime) {
+                            minTime = interval.start;
+                        }
+                        if(interval.end && interval.end > maxTime) {
+                            maxTime = interval.end;
+                        }
+                        interval = {start: interval.start, end: interval.end, name:name};
+                        intervals.push(interval);
+                    }
+                }
+            });
+            var context = {environment: 'prod', device: 'smartphone'};
+            ycb = new libycb.Ycb(bundle, {});
+            for(var t=minTime-2; t<maxTime+2; t++) {
+                var ret = intervalHelper(intervals, t);
+                var valid = ret.configs;
+                var next = ret.next;
+                var config = ycb.readTimeAware(context, t, {cacheInfo:true});
+                var unmerged = ycb.readNoMergeTimeAware(context, t, {cacheInfo:true});
+                assert(Object.keys(config.intervals).length === valid.length, 'Number of valid configs should be equal');
+                assert(unmerged.length === valid.length, 'Number of unmerged configs should be equal');
+                valid.forEach((name) => {
+                    assert(config.intervals[name] !== undefined, 'Config ' + name + ' should be valid');
+                });
+                assert(next === config[libycb.expirationKey], t + ' Config cache info should give next change time');
+                if(next) {
+                    assert(next === unmerged[0][libycb.expirationKey], t + ' Unmerged cache info should give next change time');
+                }
+            }
+        });
+    });
 });
