@@ -577,7 +577,7 @@ describe('ycb unit tests', function () {
                 assert.equal(expectedKey, ycb.getCacheKey(context));
             })
         }
-        it('should correctly read simple config with dimensions and extra settings', function () {
+        it('should map equivalent contexts to same key', function () {
             var bundle;
             bundle = readFixtureFile('dimensions.json')
                 .concat(readFixtureFile('simple-1.json'))
