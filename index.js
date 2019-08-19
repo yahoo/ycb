@@ -801,9 +801,13 @@ Ycb.prototype = {
                 currentPath = path;
             }
             if(currentPath.length > 1) {
-                pathCollector.push(currentPath);
-                numToValueCollector.push(key);
-                valueToNumCollector[key] = label++;
+                var ancestor = currentPath[currentPath.length-1];
+                valueToNumCollector[key] = ancestor;
+                if(label === ancestor) {
+                    pathCollector.push(currentPath);
+                    numToValueCollector.push(key);
+                    label++;
+                }
             }
             if(dimension[key] !== null) {
                 label = this._dimensionWalk(dimension[key], used, label, currentPath,

@@ -57,9 +57,9 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
             cmp([0,0,0], ycb._parseContext({}));
-            cmp([0,7,0], ycb._parseContext({region:'fr'}));
-            cmp([0,6,9], ycb._parseContext({flavor:'bt', region:'ir'}));
-            cmp([2,7,8], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
+            cmp([0,4,0], ycb._parseContext({region:'fr'}));
+            cmp([0,3,6], ycb._parseContext({flavor:'bt', region:'ir'}));
+            cmp([1,4,5], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
         });
         it('should handle an undefined context value', function () {
             var bundle, ycb;
@@ -567,6 +567,26 @@ describe('ycb unit tests', function () {
             assert(ctxs[JSON.stringify({region:'ca',flavor:'att'})]);
             assert(ctxs[JSON.stringify({region:'gb',flavor:'bt'})]);
             assert(ctxs[JSON.stringify({region:'fr',flavor:'bt'})]);
+        });
+    });
+
+    describe('getCacheKey', function () {
+        function cacheKeyChecker(ycb, set) {
+            var expectedKey = set.expect;
+            set.contexts.forEach((context) => {
+                assert.equal(expectedKey, ycb.getCacheKey(context));
+            })
+        }
+        it('should correctly read simple config with dimensions and extra settings', function () {
+            var bundle;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            var ycb = new libycb.Ycb(bundle, {});
+            cacheKeyChecker(ycb, {expect:'[0,0,0]', contexts: [{}, {lang:'en'}, {region:'xanadu'}, {bucket:'101'}]});
+            cacheKeyChecker(ycb, {expect:'[0,4,0]', contexts: [{region:'fr'},{region:'fr', bucket:'101'}]});
+            cacheKeyChecker(ycb, {expect:'[0,3,0]', contexts: [{region:'gb'}, {region: 'ir'}]});
+            cacheKeyChecker(ycb, {expect:'[1,0,0]', contexts: [{lang:'fr'}, {lang:'fr_FR'}, {lang:'fr_CA'}]});
         });
     });
 
