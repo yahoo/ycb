@@ -6,6 +6,7 @@
 
 /*globals describe,it*/
 
+var util = require('util');
 var libpath = require('path');
 var libfs = require('fs');
 var libycb = require('../../index');
@@ -16,7 +17,6 @@ function readFixtureFile(file){
     var data = libfs.readFileSync(path, 'utf8');
     return JSON.parse(data);
 }
-
 
 function cmp(x, y, msg) {
     var i;
@@ -107,11 +107,52 @@ describe('ycb unit tests', function () {
             assert(undefined !== ycb.dimensions[7].region.us);
         });
 
+        it('should not break if there are bad configs', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('bad-configs.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            var logHistory = [];
+            var oldLog = console.log;
+            console.log = function(...args) {
+                logHistory.push(util.format(...args));
+            }
+            ycb = new libycb.Ycb(bundle);
+            console.log = oldLog;
+            assert.equal(logHistory[0], 'WARNING: config[2] has non-object config. []','warning log should match');
+            assert.equal(logHistory[1], 'WARNING: config[3] has non-object config. null', 'warning log should match');
+            assert.equal(logHistory[2], 'WARNING: config[4] has non-object config. true', 'warning log should match');
+            assert.equal(logHistory[3], 'WARNING: config[5] has no valid settings field. {}', 'warning log should match');
+            assert.equal(logHistory[4], 'WARNING: config[6] has no valid settings field. {"foo":"bar"}', 'warning log should match');
+            assert.equal(logHistory[5], 'WARNING: config[7] has empty config. ["environment:production"]', 'warning log should match');
+            assert.equal(logHistory[6], 'WARNING: config[8] has no valid settings field. {"settings":null}', 'warning log should match');
+            assert.equal(logHistory[7], 'WARNING: config[9] has empty settings array.', 'warning log should match');
+            assert.equal(logHistory[8], 'WARNING: config[10] has master setting with additional dimensions. ["master","lang:fr"]', 'warning log should match');
+            assert.equal(logHistory[9], 'WARNING: config[11] has invalid setting master. ["lang:fr","master"]', 'warning log should match');
+            assert.equal(logHistory[10], 'WARNING: config[13] has invalid dimension blah. ["blah:fr"]', 'warning log should match');
+            assert.equal(logHistory[11], 'WARNING: config[14] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[12], 'WARNING: config[14] has empty schedule. {"dimensions":["master"],"schedule":{}}', 'warning log should match');
+            assert.equal(logHistory[13], 'WARNING: config[15] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[14], 'WARNING: config[15] has invalid start date. {"start":"bad"}', 'warning log should match');
+            assert.equal(logHistory[15], 'WARNING: config[16] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[16], 'WARNING: config[16] has invalid end date. {"end":"bad"}', 'warning log should match');
+            assert.equal(logHistory[17], 'WARNING: config[12] has invalid value barbar for dimension lang. {"dimensions":["lang:barbar"]}', 'warning log should match');
+
+            var count = 0;
+            ycb.walkSettings(function() {
+                count++;
+                return true;
+            });
+            assert.equal(count, 10, 'the valid empty config should be included');
+        });
+
         it('should not break if there are no dimensions', function () {
             var bundle, ycb;
             bundle = readFixtureFile('simple-1.json')
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
+
             assert.equal('http://www.yahoo.com', ycb.read({region:'fr'}).links.home);
         });
     });
@@ -553,15 +594,18 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
             var ctxs = {};
-            ycb.walkSettings(function(settings) {
-                ctxs[JSON.stringify(settings)] = true;
+            ycb.walkSettings(function(settings, config) {
+                ctxs[JSON.stringify(settings)] = config;
                 return true;
             });
+            bundle.forEach((config) => {
+                delete config.settings;
+            });
             assert.equal(9, Object.keys(ctxs).length);
-            assert(ctxs['{}']);
+            cmp(ctxs['{}'], bundle[1], 'walked config does not match');
+            cmp(ctxs[JSON.stringify({lang:'fr'})], bundle[4], 'walked config does not match');
             assert(ctxs[JSON.stringify({region:'ca'})]);
             assert(ctxs[JSON.stringify({region:'gb'})]);
-            assert(ctxs[JSON.stringify({lang:'fr'})]);
             assert(ctxs[JSON.stringify({region:'fr'})]);
             assert(ctxs[JSON.stringify({flavor:'att'})]);
             assert(ctxs[JSON.stringify({region:'ca',flavor:'att'})]);

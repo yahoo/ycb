@@ -54,6 +54,14 @@ function omit(obj, omitKey) {
     }, {});
 }
 
+function logBundleWarning(index, message, value) {
+    if(value === undefined) {
+        console.log('WARNING: config[%d] has %s.', index, message);
+    } else {
+        console.log('WARNING: config[%d] has %s. %s', index, message, value);
+    }
+}
+
 //---------------------------------------------------------------
 // OBJECT ORIENTED INTERFACE
 
@@ -448,8 +456,6 @@ Ycb.prototype = {
         var dimensionsObject = dimCheckResult[0];
         var totalDimensions = dimCheckResult[1];
 
-        this._convertSettings(config);
-
         var settingsCheckResult = this._checkSettings(config, totalDimensions, dimensionsObject.length);
         var usedDimensions = settingsCheckResult[0];
         var usedValues = settingsCheckResult[1];
@@ -461,7 +467,7 @@ Ycb.prototype = {
         for(var configIndex=0; configIndex<config.length; configIndex++) {
             var fullContext = contexts[configIndex];
             if(fullContext !== undefined) {
-                var context = this._filterContext(fullContext, activeDimensions, usedValues, config[configIndex].settings);
+                var context = this._filterContext(configIndex, fullContext, activeDimensions, usedValues, config[configIndex].settings);
                 if(context !== undefined) {
                     var delta = this._buildDelta(config[configIndex], intervals[configIndex]);
                     this._buildTreeHelper(this.tree, 0, context, delta);
@@ -495,15 +501,6 @@ Ycb.prototype = {
         return [[], {}];
     },
 
-    _convertSettings: function(config) {
-        for(var i=0; i<config.length; i++) {
-            var configObj = config[i];
-            if(configObj.settings && configObj.settings.constructor !== Object) {
-                configObj.settings = {dimensions: configObj.settings};
-            }
-        }
-    },
-
     /**
      * Evaluate settings and determine which dimensions and values are used. Check for unknown dimensions.
      * Set the master config if it exist.
@@ -520,91 +517,104 @@ Ycb.prototype = {
         var intervals = {};
         configLoop:
         for(var i=0; i<config.length; i++) {
-            if (config[i].settings) {
-                var setting = config[i].settings;
-                var settingDimensions = setting.dimensions;
-                var settingSchedule = setting.schedule;
-                var configObj = config[i];
-                var interval = undefined;
-                if(!Array.isArray(settingDimensions)) {
-                    console.log('WARNING: non-array settings ' + JSON.stringify(settingDimensions));
-                    continue;
-                }
-                if(settingDimensions.length === 0 ) {
-                    console.log('WARNING: empty settings at index ' + i);
-                    continue;
-                }
-                if(settingSchedule !== undefined) {
-                    interval = {start: 0, end: SENTINEL_TIME};
-                    if(settingSchedule.start === undefined && settingSchedule.end === undefined){
-                        console.log('WARNING: empty schedule ' + JSON.stringify(settingSchedule));
-                        continue;
-                    }
-                    if(settingSchedule.start !== undefined) {
-                        var startDate = new Date(settingSchedule.start);
-                        if(isNaN(startDate)) {
-                            console.log('WARNING: invalid start date ' + JSON.stringify(settingSchedule));
-                            continue;
-                        }
-                        interval.start = startDate.getTime();
-                    }
-                    if(settingSchedule.end !== undefined) {
-                        var endDate = new Date(settingSchedule.end);
-                        if(isNaN(endDate)) {
-                            console.log('WARNING: invalid end date ' + JSON.stringify(settingSchedule));
-                            continue;
-                        }
-                        interval.end = endDate.getTime();
-                    }
-                    intervals[i] = interval;
-                }
-                if(settingDimensions[0] === 'master') {
-                    if(settingDimensions.length > 1) {
-                        console.log('WARNING: master setting has more dimensions ' + JSON.stringify(settingDimensions));
-                        continue;
-                    }
-                    if(this.masterDelta !== undefined) {
-                        var delta = this._buildDelta(configObj, interval);
-                        this.masterDelta = this._combineDeltas(delta, this.masterDelta);
-                    } else {
-                        this.masterDelta = this._buildDelta(configObj, interval);
-                    }
-                    continue;
-                }
-                var context = new Array(height);
-                for(var q=0; q<height; q++) {
-                    context[q] = DEFAULT;
-                }
-                for(var j=0; j<settingDimensions.length; j++) {
-                    var kv = settingDimensions[j].split(':');
-                    if(kv.length !== 2) {
-                        console.log('WARNING: invalid setting "' + settingDimensions[j] +
-                            '" in settings ' + JSON.stringify(settingDimensions));
-                        continue configLoop;
-                    }
-                    var dim = kv[0];
-                    var index = allDimensions[dim];
-                    if(index === undefined) {
-                        console.log('WARNING: invalid dimension "' + dim +
-                            '" in settings ' + JSON.stringify(settingDimensions));
-                        continue configLoop;
-                    }
-                    usedDimensions[dim] = 1;
-                    usedValues[dim] = usedValues[dim] || {};
-
-                    if(kv[1].indexOf(',') === -1) {
-                        usedValues[dim][kv[1]] = 1;
-                        context[index] = kv[1];
-                    } else {
-                        var vals = kv[1].split(',');
-                        context[index] = vals;
-                        for(var k=0; k<vals.length; k++) {
-                            usedValues[dim][vals[k]] = 1;
-                        }
-                    }
-                }
-                contexts[i] = context;
+            var configObj = config[i];
+            if(!configObj || configObj.constructor !== Object) {
+                logBundleWarning(i, 'non-object config', JSON.stringify(configObj));
+                continue;
             }
+            if(!configObj.settings) {
+                if(!configObj.dimensions) {
+                    logBundleWarning(i, 'no valid settings field', JSON.stringify(configObj));
+                }
+                continue;
+            }
+            if(Array.isArray(configObj.settings)) { //convert old style settings to new style
+                configObj.settings = {dimensions: configObj.settings};
+            }
+            var setting = config[i].settings;
+
+            var settingDimensions = setting.dimensions;
+            var settingSchedule = setting.schedule;
+            var interval = undefined;
+            if(Object.keys(config[i]).length === 1) { //Don't skip as empty configs are valid and appear on tree walk
+                logBundleWarning(i, 'empty config', JSON.stringify(settingDimensions));
+            }
+            if(!Array.isArray(settingDimensions)) {
+                logBundleWarning(i, 'non-array settings', JSON.stringify(settingDimensions));
+                continue;
+            }
+            if(settingDimensions.length === 0 ) {
+                logBundleWarning(i, 'empty settings array');
+                continue;
+            }
+            if(settingSchedule !== undefined) {
+                interval = {start: 0, end: SENTINEL_TIME};
+                if(settingSchedule.start === undefined && settingSchedule.end === undefined){
+                    logBundleWarning(i, 'empty schedule', JSON.stringify(setting));
+                    continue;
+                }
+                if(settingSchedule.start !== undefined) {
+                    var startDate = new Date(settingSchedule.start);
+                    if(isNaN(startDate)) {
+                        logBundleWarning(i, 'invalid start date', JSON.stringify(settingSchedule));
+                        continue;
+                    }
+                    interval.start = startDate.getTime();
+                }
+                if(settingSchedule.end !== undefined) {
+                    var endDate = new Date(settingSchedule.end);
+                    if(isNaN(endDate)) {
+                        logBundleWarning(i, 'invalid end date', JSON.stringify(settingSchedule));
+                        continue;
+                    }
+                    interval.end = endDate.getTime();
+                }
+                intervals[i] = interval;
+            }
+            if(settingDimensions[0] === 'master') {
+                if(settingDimensions.length > 1) {
+                    logBundleWarning(i, 'master setting with additional dimensions', JSON.stringify(settingDimensions));
+                    continue;
+                }
+                if(this.masterDelta !== undefined) {
+                    var delta = this._buildDelta(configObj, interval);
+                    this.masterDelta = this._combineDeltas(delta, this.masterDelta);
+                } else {
+                    this.masterDelta = this._buildDelta(configObj, interval);
+                }
+                continue;
+            }
+            var context = new Array(height);
+            for(var q=0; q<height; q++) {
+                context[q] = DEFAULT;
+            }
+            for(var j=0; j<settingDimensions.length; j++) {
+                var kv = settingDimensions[j].split(':');
+                if(kv.length !== 2) {
+                    logBundleWarning(i, 'invalid setting ' + settingDimensions[j], JSON.stringify(settingDimensions));
+                    continue configLoop;
+                }
+                var dim = kv[0];
+                var index = allDimensions[dim];
+                if(index === undefined) {
+                    logBundleWarning(i, 'invalid dimension ' + dim, JSON.stringify(settingDimensions));
+                    continue configLoop;
+                }
+                usedDimensions[dim] = 1;
+                usedValues[dim] = usedValues[dim] || {};
+
+                if(kv[1].indexOf(',') === -1) {
+                    usedValues[dim][kv[1]] = 1;
+                    context[index] = kv[1];
+                } else {
+                    var vals = kv[1].split(',');
+                    context[index] = vals;
+                    for(var k=0; k<vals.length; k++) {
+                        usedValues[dim][vals[k]] = 1;
+                    }
+                }
+            }
+            contexts[i] = context;
         }
         return [usedDimensions, usedValues, contexts, intervals];
     },
@@ -826,7 +836,7 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _filterContext: function(fullContext, activeDimensions, usedValues, setting) {
+    _filterContext: function(configIndex, fullContext, activeDimensions, usedValues, setting) {
         var height = this.dimensionsList.length;
         var newContext = new Array(height);
         for(var i=0; i<height; i++) {
@@ -844,8 +854,8 @@ Ycb.prototype = {
                         if(usedValues[dimensionName][valueChunk] === 2) {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
                         } else {
-                            console.log('WARNING: invalid value "' + valueChunk + '" for dimension "' +
-                                dimensionName + '" in settings ' + JSON.stringify(setting));
+                            logBundleWarning(configIndex, 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
+                                JSON.stringify(setting));
                         }
                     }
                     if(newValue.length === 0) {
@@ -856,8 +866,8 @@ Ycb.prototype = {
                     if(usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
                     } else if(contextValue !== DEFAULT) {
-                        console.log('WARNING: invalid value "' + contextValue + '" for dimension "' +
-                            dimensionName + '" in settings ' + JSON.stringify(setting));
+                        logBundleWarning(configIndex, 'invalid value ' + contextValue + ' for dimension ' + dimensionName,
+                            JSON.stringify(setting));
                         return;
                     }
                 }
@@ -1012,7 +1022,7 @@ Ycb.prototype = {
      * @return {nothing} results returned via callback
      */
     walkSettings: function (callback) {
-        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta))) {
+        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta.subbed))) {
             return undefined;
         }
         this._walkSettingsHelper(this.tree, 0, [], callback, [false]);
@@ -1032,7 +1042,7 @@ Ycb.prototype = {
             return true;
         }
         if(depth === this.dimensionsList.length) {
-            stop[0] = !callback(this._contextToObject(context), cloneDeep(cur));
+            stop[0] = !callback(this._contextToObject(context), cloneDeep(cur.subbed));
             return stop[0];
         }
         for(var [key, value] of  cur) {
