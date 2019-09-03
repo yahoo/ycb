@@ -636,6 +636,16 @@ Ycb.prototype = {
         return {subbed:subbed, unsubbed:unsubbed};
     },
 
+    /**
+     * Build schedule object from config and interval.
+     * Schedule object may contain multiple intervals after being combined later, these
+     * are stored as arrays of starts/ends and configs.
+     * @param subbed {object}
+     * @param unsubbed {object}
+     * @param interval {object}
+     * @returns {object}
+     * @private
+     */
     _buildSchedule: function(subbed, unsubbed, interval) {
         return {starts:[interval.start], ends:[interval.end], subbed:[subbed], unsubbed:[unsubbed]};
     },
@@ -704,6 +714,14 @@ Ycb.prototype = {
         return combined;
     },
 
+    /**
+     * Add the ith interval and config from schedule "from" to schedule "to".
+     * Modifies "to" schedule.
+     * @param from {object}
+     * @param to {object}
+     * @param i {number}
+     * @private
+     */
     _pushScheduleComponents: function(from, to, i) {
         to.starts.push(from.starts[i]);
         to.ends.push(from.ends[i]);
@@ -740,6 +758,15 @@ Ycb.prototype = {
         return soonest;
     },
 
+    /**
+     * Append any valid scheduled configs for time to collector.
+     * @param schedules {object}
+     * @param time {number}
+     * @param collector {array}
+     * @param subKey {string}
+     * @returns {object}
+     * @private
+     */
     _readScheduledNoMerge: function(schedules, time, collector, subKey) {
         var soonest = SENTINEL_TIME;
         var i = 0;
