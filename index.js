@@ -518,7 +518,7 @@ Ycb.prototype = {
         configLoop:
         for(var i=0; i<config.length; i++) {
             var configObj = config[i];
-            if(!configObj || configObj.constructor !== Object) {
+            if(!isA(configObj, Object)) {
                 logBundleWarning(i, 'non-object config', JSON.stringify(configObj));
                 continue;
             }
