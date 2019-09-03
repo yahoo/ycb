@@ -157,6 +157,63 @@ describe('ycb unit tests', function () {
         });
     });
 
+    describe('_combineDeltas', function () {
+        it('should not duplicate references', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({foo:'bar'});
+            var delta2 = ycb._buildDelta({a:'b'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            assert.equal(combined.subbed, combined.unsubbed);
+        });
+        it('should handle combining with scheduled config', function () {
+            var ycb = new libycb.Ycb({});
+            var delta = ycb._buildDelta({foo:'bar'});
+            var scheduledDelta = ycb._buildDelta({'a':1}, {start:10, end:11000});
+            var combined = ycb._combineDeltas(delta, scheduledDelta);
+            assert.equal(scheduledDelta.schedules, combined.schedules);
+            assert.equal(delta.subbed, combined.subbed);
+            assert.equal(combined.subbed, combined.unsubbed);
+        });
+        it('should handle combining schedules', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({'a':1}, {start:10, end:11000});
+            var delta2 = ycb._buildDelta({'b':2}, {start:50, end:999});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            console.log(combined);
+            cmp([10,50], combined.schedules.starts);
+            cmp([11000,999], combined.schedules.ends);
+            assert.equal(combined.schedules.subbed[0], combined.schedules.unsubbed[0]);
+            assert.equal(undefined, combined.subbed);
+        });
+        it('should handle combining mixed deltas', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._combineDeltas(ycb._buildDelta({'a':1}, {start:10, end:1100}),ycb._buildDelta({a:'b'}));
+            var delta2 = ycb._combineDeltas(ycb._buildDelta({'a':1}, {start:5, end:2000}),ycb._buildDelta({c:'d'}));
+            var combined = ycb._combineDeltas(delta1, delta2);
+            assert.equal(combined.subbed, combined.unsubbed);
+            cmp({a:'b',c:'d'}, combined.subbed);
+            cmp([5,10], combined.schedules.starts);
+            cmp([2000,1100], combined.schedules.ends);
+        });
+        it('should handle subs', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({a: '!',b: '$$a$$'});
+            var delta2 = ycb._buildDelta({c:'c'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            cmp({c:'c',a:'!',b:'!'}, combined.subbed);
+            cmp({c:'c',a:'!',b:'$$a$$'}, combined.unsubbed);
+            assert.equal(false, combined.subbed === combined.unsubbed);
+        });
+        it('should handle scheduled subs', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({a: '!',b: '$$a$$'}, {start:10, end:1100});
+            var delta2 = ycb._buildDelta({c:'c'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            cmp({a:'!',b:'!'}, combined.schedules.subbed[0]);
+            cmp({a:'!',b:'$$a$$'}, combined.schedules.unsubbed[0]);
+        });
+    });
+
     describe('_applySubstitutions', function () {
         it('should substitute keys', function () {
             var config, ycb;
