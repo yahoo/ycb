@@ -576,7 +576,7 @@ Ycb.prototype = {
                     logBundleWarning(i, 'master setting with additional dimensions', JSON.stringify(settingDimensions));
                     continue;
                 }
-                if(this.masterDelta !== undefined) {
+                if(this.masterDelta !== undefined) { //if master delta has been set than combine with existing one
                     var delta = this._buildDelta(configObj, interval);
                     this.masterDelta = this._combineDeltas(delta, this.masterDelta);
                 } else {
@@ -584,6 +584,7 @@ Ycb.prototype = {
                 }
                 continue;
             }
+            //initialize context array with default values to be filled with any values specified in config
             var context = new Array(height);
             for(var q=0; q<height; q++) {
                 context[q] = DEFAULT;
