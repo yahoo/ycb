@@ -179,7 +179,6 @@ describe('ycb unit tests', function () {
             var delta1 = ycb._buildDelta({'a':1}, {start:10, end:11000});
             var delta2 = ycb._buildDelta({'b':2}, {start:50, end:999});
             var combined = ycb._combineDeltas(delta1, delta2);
-            console.log(combined);
             cmp([10,50], combined.schedules.starts);
             cmp([11000,999], combined.schedules.ends);
             assert.equal(combined.schedules.subbed[0], combined.schedules.unsubbed[0]);
