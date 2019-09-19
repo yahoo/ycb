@@ -6,6 +6,7 @@
 
 /*globals describe,it*/
 
+var util = require('util');
 var libpath = require('path');
 var libfs = require('fs');
 var libycb = require('../../index');
@@ -16,7 +17,6 @@ function readFixtureFile(file){
     var data = libfs.readFileSync(path, 'utf8');
     return JSON.parse(data);
 }
-
 
 function cmp(x, y, msg) {
     var i;
@@ -57,9 +57,9 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
             cmp([0,0,0], ycb._parseContext({}));
-            cmp([0,7,0], ycb._parseContext({region:'fr'}));
-            cmp([0,6,9], ycb._parseContext({flavor:'bt', region:'ir'}));
-            cmp([2,7,8], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
+            cmp([0,4,0], ycb._parseContext({region:'fr'}));
+            cmp([0,3,6], ycb._parseContext({flavor:'bt', region:'ir'}));
+            cmp([1,4,5], ycb._parseContext({lang:'fr_FR', region:'fr', flavor:'att'}));
         });
         it('should handle an undefined context value', function () {
             var bundle, ycb;
@@ -107,12 +107,109 @@ describe('ycb unit tests', function () {
             assert(undefined !== ycb.dimensions[7].region.us);
         });
 
+        it('should not break if there are bad configs', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('bad-configs.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            var logHistory = [];
+            var oldLog = console.log;
+            console.log = function(...args) {
+                logHistory.push(util.format(...args));
+            }
+            ycb = new libycb.Ycb(bundle);
+            console.log = oldLog;
+            assert.equal(logHistory[0], 'WARNING: config[2] has non-object config. []','warning log should match');
+            assert.equal(logHistory[1], 'WARNING: config[3] has non-object config. null', 'warning log should match');
+            assert.equal(logHistory[2], 'WARNING: config[4] has non-object config. true', 'warning log should match');
+            assert.equal(logHistory[3], 'WARNING: config[5] has no valid settings field. {}', 'warning log should match');
+            assert.equal(logHistory[4], 'WARNING: config[6] has no valid settings field. {"foo":"bar"}', 'warning log should match');
+            assert.equal(logHistory[5], 'WARNING: config[7] has empty config. ["environment:production"]', 'warning log should match');
+            assert.equal(logHistory[6], 'WARNING: config[8] has no valid settings field. {"settings":null}', 'warning log should match');
+            assert.equal(logHistory[7], 'WARNING: config[9] has empty settings array.', 'warning log should match');
+            assert.equal(logHistory[8], 'WARNING: config[10] has master setting with additional dimensions. ["master","lang:fr"]', 'warning log should match');
+            assert.equal(logHistory[9], 'WARNING: config[11] has invalid setting master. ["lang:fr","master"]', 'warning log should match');
+            assert.equal(logHistory[10], 'WARNING: config[13] has invalid dimension blah. ["blah:fr"]', 'warning log should match');
+            assert.equal(logHistory[11], 'WARNING: config[14] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[12], 'WARNING: config[14] has empty schedule. {"dimensions":["master"],"schedule":{}}', 'warning log should match');
+            assert.equal(logHistory[13], 'WARNING: config[15] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[14], 'WARNING: config[15] has invalid start date. {"start":"bad"}', 'warning log should match');
+            assert.equal(logHistory[15], 'WARNING: config[16] has empty config. ["master"]', 'warning log should match');
+            assert.equal(logHistory[16], 'WARNING: config[16] has invalid end date. {"end":"bad"}', 'warning log should match');
+            assert.equal(logHistory[17], 'WARNING: config[12] has invalid value barbar for dimension lang. {"dimensions":["lang:barbar"]}', 'warning log should match');
+
+            var count = 0;
+            ycb.walkSettings(function() {
+                count++;
+                return true;
+            });
+            assert.equal(count, 10, 'the valid empty config should be included');
+        });
+
         it('should not break if there are no dimensions', function () {
             var bundle, ycb;
             bundle = readFixtureFile('simple-1.json')
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
+
             assert.equal('http://www.yahoo.com', ycb.read({region:'fr'}).links.home);
+        });
+    });
+
+    describe('_combineDeltas', function () {
+        it('should not duplicate references', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({foo:'bar'});
+            var delta2 = ycb._buildDelta({a:'b'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            assert.equal(combined.subbed, combined.unsubbed);
+        });
+        it('should handle combining with scheduled config', function () {
+            var ycb = new libycb.Ycb({});
+            var delta = ycb._buildDelta({foo:'bar'});
+            var scheduledDelta = ycb._buildDelta({'a':1}, {start:10, end:11000});
+            var combined = ycb._combineDeltas(delta, scheduledDelta);
+            assert.equal(scheduledDelta.schedules, combined.schedules);
+            assert.equal(delta.subbed, combined.subbed);
+            assert.equal(combined.subbed, combined.unsubbed);
+        });
+        it('should handle combining schedules', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({'a':1}, {start:10, end:11000});
+            var delta2 = ycb._buildDelta({'b':2}, {start:50, end:999});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            cmp([10,50], combined.schedules.starts);
+            cmp([11000,999], combined.schedules.ends);
+            assert.equal(combined.schedules.subbed[0], combined.schedules.unsubbed[0]);
+            assert.equal(undefined, combined.subbed);
+        });
+        it('should handle combining mixed deltas', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._combineDeltas(ycb._buildDelta({'a':1}, {start:10, end:1100}),ycb._buildDelta({a:'b'}));
+            var delta2 = ycb._combineDeltas(ycb._buildDelta({'a':1}, {start:5, end:2000}),ycb._buildDelta({c:'d'}));
+            var combined = ycb._combineDeltas(delta1, delta2);
+            assert.equal(combined.subbed, combined.unsubbed);
+            cmp({a:'b',c:'d'}, combined.subbed);
+            cmp([5,10], combined.schedules.starts);
+            cmp([2000,1100], combined.schedules.ends);
+        });
+        it('should handle subs', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({a: '!',b: '$$a$$'});
+            var delta2 = ycb._buildDelta({c:'c'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            cmp({c:'c',a:'!',b:'!'}, combined.subbed);
+            cmp({c:'c',a:'!',b:'$$a$$'}, combined.unsubbed);
+            assert.equal(false, combined.subbed === combined.unsubbed);
+        });
+        it('should handle scheduled subs', function () {
+            var ycb = new libycb.Ycb({});
+            var delta1 = ycb._buildDelta({a: '!',b: '$$a$$'}, {start:10, end:1100});
+            var delta2 = ycb._buildDelta({c:'c'});
+            var combined = ycb._combineDeltas(delta1, delta2);
+            cmp({a:'!',b:'!'}, combined.schedules.subbed[0]);
+            cmp({a:'!',b:'$$a$$'}, combined.schedules.unsubbed[0]);
         });
     });
 
@@ -553,20 +650,130 @@ describe('ycb unit tests', function () {
                 .concat(readFixtureFile('simple-3.json'));
             ycb = new libycb.Ycb(bundle);
             var ctxs = {};
-            ycb.walkSettings(function(settings) {
-                ctxs[JSON.stringify(settings)] = true;
+            ycb.walkSettings(function(settings, config) {
+                ctxs[JSON.stringify(settings)] = config;
                 return true;
             });
+            bundle.forEach((config) => {
+                delete config.settings;
+            });
             assert.equal(9, Object.keys(ctxs).length);
-            assert(ctxs['{}']);
+            cmp(ctxs['{}'], bundle[1], 'walked config does not match');
+            cmp(ctxs[JSON.stringify({lang:'fr'})], bundle[4], 'walked config does not match');
             assert(ctxs[JSON.stringify({region:'ca'})]);
             assert(ctxs[JSON.stringify({region:'gb'})]);
-            assert(ctxs[JSON.stringify({lang:'fr'})]);
             assert(ctxs[JSON.stringify({region:'fr'})]);
             assert(ctxs[JSON.stringify({flavor:'att'})]);
             assert(ctxs[JSON.stringify({region:'ca',flavor:'att'})]);
             assert(ctxs[JSON.stringify({region:'gb',flavor:'bt'})]);
             assert(ctxs[JSON.stringify({region:'fr',flavor:'bt'})]);
+        });
+    });
+
+    describe('getCacheKey', function () {
+        function cacheKeyChecker(ycb, set) {
+            var expectedKey = set.expect;
+            set.contexts.forEach((context) => {
+                assert.equal(expectedKey, ycb.getCacheKey(context));
+            })
+        }
+        it('should map equivalent contexts to same key', function () {
+            var bundle;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            var ycb = new libycb.Ycb(bundle, {});
+            cacheKeyChecker(ycb, {expect:'[0,0,0]', contexts: [{}, {lang:'en'}, {region:'xanadu'}, {bucket:'101'}]});
+            cacheKeyChecker(ycb, {expect:'[0,4,0]', contexts: [{region:'fr'},{region:'fr', bucket:'101'}]});
+            cacheKeyChecker(ycb, {expect:'[0,3,0]', contexts: [{region:'gb'}, {region: 'ir'}]});
+            cacheKeyChecker(ycb, {expect:'[1,0,0]', contexts: [{lang:'fr'}, {lang:'fr_FR'}, {lang:'fr_CA'}]});
+        });
+    });
+
+    describe('generatedReadTest', function () {
+        it('should match old output', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('large-bundle.json');
+            ycb = new libycb.Ycb(bundle);
+            var tests = readFixtureFile('generated-reads.json');
+            for(var i=0; i<tests.length; i++) {
+                var test = tests[i];
+                var merged = ycb.read(test.ctx, {});
+                var unmerged = ycb.readNoMerge(test.ctx, {});
+                cmp(merged, test.merged, 'Merged config does not match expected for config ' + i);
+                cmp(unmerged, test.unmerged, 'Unmerged config does not match expected for config ' + i);
+            }
+        });
+    });
+
+    //get applicable intervals and next change time
+    function intervalHelper(intervals, time) {
+        var applicable = [];
+        var next = Number.POSITIVE_INFINITY;
+        for(var i=0; i<intervals.length; i++) {
+            var interval = intervals[i];
+            var valid = true;
+            if(interval.start) {
+                valid = valid && interval.start <= time;
+                if(interval.start > time && interval.start < next) {
+                    next = interval.start;
+                }
+            }
+            if(interval.end) {
+                valid = valid && interval.end >= time;
+                if(valid && interval.end < next) {
+                    next = interval.end+1;
+                }
+            }
+            if(valid) {
+                applicable.push(interval.name);
+            }
+        }
+        next = next === Number.POSITIVE_INFINITY ? undefined : next;
+        return {configs: applicable, next: next};
+    }
+
+    describe('timeReadTest', function () {
+        it('scheduled configs should match timestamp', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('time-test.json');
+            var intervals = [];
+            var minTime = Number.POSITIVE_INFINITY;
+            var maxTime = 0;
+            bundle.forEach((config) => {
+                if(config.settings) {
+                    var name = config.name;
+                    var interval = config.intervals[name];
+                    if(interval.start || interval.end) {
+                        if(interval.start && interval.start < minTime) {
+                            minTime = interval.start;
+                        }
+                        if(interval.end && interval.end > maxTime) {
+                            maxTime = interval.end;
+                        }
+                        interval = {start: interval.start, end: interval.end, name:name};
+                        intervals.push(interval);
+                    }
+                }
+            });
+            var context = {environment: 'prod', device: 'smartphone'};
+            ycb = new libycb.Ycb(bundle, {});
+            for(var t=minTime-2; t<maxTime+2; t++) {
+                var ret = intervalHelper(intervals, t);
+                var valid = ret.configs;
+                var next = ret.next;
+                var config = ycb.readTimeAware(context, t, {cacheInfo:true});
+                var unmerged = ycb.readNoMergeTimeAware(context, t, {cacheInfo:true});
+                assert(Object.keys(config.intervals).length === valid.length, 'Number of valid configs should be equal');
+                assert(unmerged.length === valid.length, 'Number of unmerged configs should be equal');
+                valid.forEach((name) => {
+                    assert(config.intervals[name] !== undefined, 'Config ' + name + ' should be valid');
+                });
+                assert(next === config[libycb.expirationKey], t + ' Config cache info should give next change time');
+                if(next) {
+                    assert(next === unmerged[0][libycb.expirationKey], t + ' Unmerged cache info should give next change time');
+                }
+            }
         });
     });
 });

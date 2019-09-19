@@ -58,101 +58,75 @@ var computedConfig = ycbObj.read({ environment: 'dev' });
 
 console.log(computedConfig.host); // dev.example.com
 ```
+### Scheduling Changes
+We can schedule configuration changes ahead of time by defining an interval along with a config and using the time aware read method. For example the following program
+```
+var YCB = require('ycb');
+var configArray = [
+    {
+        dimensions: [
+            {
+                environment: {
+                    dev: null,
+                    staging: null,
+                    test: null,
+                    prod: null
+                },
+            },
+            {
+                region: {
+                    us: null,
+                    ca: null
+                }
+            }
+        ]
+    },
+    {
+        settings: ["master"],
+        host: "example.com"
+    },
+    {
+        settings: {
+            dimensions: ["region:us"]
+        },
+        logo: "logo.png"
+    },
+    {
+        settings: {
+            dimensions: ["region:us"],
+            schedule: {
+                start: "2019-11-28T00:04:00Z",
+                end: "2019-11-29T00:04:00Z"
+            }
+        },
+        logo: "thanksgiving-logo.png"
+    }
+];
 
+var ycbObj = new YCB.Ycb(configArray, {cacheInfo:true});
+var config1 = ycbObj.readTimeAware({region:'us'}, 0);
+var config2 = ycbObj.readTimeAware({region:'us'}, 1574899440000);
+var config3 = ycbObj.readTimeAware({region:'us'}, 1574985840001);
+console.log(config1);
+console.log(config2);
+console.log(config3);
+```
+will print
+```
+{ host: 'example.com',
+  logo: 'logo.png',
+  __ycb_expires_at__: 1574899440000 }
+{ host: 'example.com',
+  logo: 'thanksgiving-logo.png',
+  __ycb_expires_at__: 1574985840001 }
+{ host: 'example.com', logo: 'logo.png' }
+```
+These intervals are closed and either `start` or `end` may be omitted to define a one sided interval.
+
+To support proper cache expiration one may set the `cacheInfo` option, in which case the next time the config will change is added to the returned object.
 ### Examples
 
 Examples are provided in [the tests directory](https://github.com/yahoo/ycb/tree/master/tests).
-
-### How does YCB work?
-
-#### During Instantiation
-
-When you create a YCB instance, YCB will parse each section of your configuration and create a map of lookup
-keys to the dimension settings. 
-
-Lookup keys are a string that contains an ordered, `/`-separated list of dimension values. In this case,
-there are only two dimensions: `environment` and `device`. `environment` is the first in the dimension list, so it 
-has precedence over `device`.
-
-The value `*` is used to signify the `default` value for a dimension.
-
-Using these lookup key rules, the above config gets expanded into the following:
-
-```js
-ycb.settings = {
-    // the all '*' key always contains the master settings
-    '*/*': { host: 'example.com' },
-    'dev/*': { host: 'dev.example.com' },
-    'staging/*': { host: 'stage.example.com' },
-    'test/*': { host: 'stage.example.com' }, // this is actually the same object as `staging/*` to save memory
-    '*/smartphone': { prefix: 'm.' }
-};
-```
-
-Creating this list during instantiation allows use to do complex lookups relatively easy with any combination of 
-dimension values.
-
-#### During Read
-
-Let's take an example `read` call and go through the steps of how it gets merged into a single configuration object.
-
-```js
-var config = ycb.read({
-    environment: 'prod',
-    device: 'smartphone'
-});
-```
-
-The first step is creating a list of lookup keys that we can find in the settings cache. In this case, you may think 
-that we just need to lookup `prod/smartphone`, but you will see that this key doesn't exist in our cache. We need to find
-the combinations of lookups that will satisfy all settings. Each dimension value has its own precedence hierarchy 
-that we create a lookup list for:
-
-```js
-var lookupList = createLookupList({
-    environment: 'prod',
-    device: 'smartphone'
-});
-```
-```js
-{ 
-    environment: ['prod', '*'], // inherits from master
-    device: ['smartphone', 'mobile', '*'] // inherits from mobile and master
-}
-```
-
-From this lookup list, we expand it to all the combinations of values in reverse precedence order:
-
-`var lookupPaths = expandLookupList(lookupList);`
-```js
-[ '*/*',
-  '*/mobile',
-  '*/smartphone',
-  'prod/*',
-  'prod/mobile' ]
-```
-
-To optimize, we already know which dimension combinations are used in the configuration, so this can be reduced to:
-
-```js
-[ '*/*',
-  '*/smartphone',
-  'prod/*' ]
-```
-
-Now with this list we can simply merge settings using the list of lookup keys to get a single object:
-
-```js
-lookupPaths.reduce((config, key) => {
-    return mergeDeep(ycb.settings[key], config);
-}, {})
-```
-```js
-{
-    host: "example.com",
-    prefix: 'm.'
-}
-```
 
 ### License
 

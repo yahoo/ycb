@@ -8,6 +8,8 @@
 
 var VERSION = '1.0.2',
     DEFAULT = '*',
+    EXPIRATION_KEY = '__ycb_expires_at__',
+    SENTINEL_TIME = Number.POSITIVE_INFINITY,
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
     SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
     DEFAULT_LOOKUP = [DEFAULT];
@@ -52,6 +54,14 @@ function omit(obj, omitKey) {
     }, {});
 }
 
+function logBundleWarning(index, message, value) {
+    if(value === undefined) {
+        console.log('WARNING: config[%d] has %s.', index, message);
+    } else {
+        console.log('WARNING: config[%d] has %s. %s', index, message, value);
+    }
+}
+
 //---------------------------------------------------------------
 // OBJECT ORIENTED INTERFACE
 
@@ -67,7 +77,7 @@ function Ycb(bundle, options) {
     this.valueToNumber = {};
     this.numberToValue = DEFAULT_LOOKUP;
     this.precedenceMap = [[0]];
-    this.tree = {};
+    this.tree = new Map();
     this.masterDelta = undefined;
     this.dimensions = [];
     this._processRawBundle(cloneDeep(bundle));
@@ -112,8 +122,8 @@ Ycb.prototype = {
             var keys = this.precedenceMap[value];
             var n = keys.length;
             for(var j=0; j<n; j++) {
-                if(cur[keys[j]] !== undefined) {
-                    this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                if(cur.has(keys[j])) {
+                    this._readHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
                 }
             }
         } else {
@@ -123,13 +133,100 @@ Ycb.prototype = {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
                 for(j=0; j<n; j++) {
-                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
-                        this._readHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        this._readHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
                         seen[keys[j]] = true;
                     }
                 }
             }
         }
+    },
+
+    /**
+     * Read the configs for the given context and time and merge them in order general to specific.
+     * Scheduled configs with equivalent contexts are merged by starting time.
+     * @method read
+     * @param contextObj {object}
+     * @param time {number} time in milliseconds
+     * @param options {object}
+     * @return {array}
+     */
+    readTimeAware: function(contextObj, time, options) {
+        options = options ? mergeDeep(this.options, options, true) : this.options;
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector = {};
+        var soonest = SENTINEL_TIME;
+        if(this.masterDelta) {
+            if(this.masterDelta[subKey]) {
+                collector = cloneDeep(this.masterDelta[subKey]);
+            }
+            if(this.masterDelta.schedules) {
+                soonest = this._readScheduled(this.masterDelta.schedules, time, collector, subKey);
+            }
+        }
+        var ret = this._readTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
+        if(ret < soonest) {
+            soonest = ret;
+        }
+        if(soonest !== SENTINEL_TIME && options.cacheInfo === true) {
+            collector[EXPIRATION_KEY] = soonest;
+        }
+        return collector;
+    },
+
+    /**
+     * Recurse through the tree merging configs that apply to the given context.
+     * @param cur {object} the current node.
+     * @param depth {number} current depth in tree.
+     * @param context {array} the context in internal format.
+     * @param time {number} milliseconds
+     * @param collector {object} the config we build
+     * @param subKey {string} determines if substituted or non-substituted configs are used.
+     * @private
+     */
+    _readTimeAwareHelper: function(cur, depth, context, time, collector, subKey) {
+        var soonest = SENTINEL_TIME;
+        var ret;
+        if(depth === context.length) {
+            if(cur[subKey]) {
+                mergeDeep(cur[subKey], collector, false);
+            }
+            if(cur.schedules) {
+                soonest = this._readScheduled(cur.schedules, time, collector, subKey);
+            }
+            return soonest;
+        }
+        var value = context[depth];
+        if(!Array.isArray(value)) {
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur.has(keys[j])) {
+                    ret = this._readTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                    if(ret < soonest) {
+                        soonest = ret;
+                    }
+                }
+            }
+        } else {
+            var seen = {};
+            var i = value.length;
+            while(i--) {
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        ret = this._readTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                        seen[keys[j]] = true;
+                        if(ret < soonest) {
+                            soonest = ret;
+                        }
+                    }
+                }
+            }
+        }
+        return soonest;
     },
 
     /**
@@ -140,6 +237,7 @@ Ycb.prototype = {
      * @return {array}
      */
     readNoMerge: function(contextObj, options) {
+        options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
         var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
         var collector = this.masterDelta ? [this.masterDelta[subKey]] : [];
@@ -166,8 +264,8 @@ Ycb.prototype = {
             var keys = this.precedenceMap[value];
             var n = keys.length;
             for(var j=0; j<n; j++) {
-                if(cur[keys[j]] !== undefined) {
-                    this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                if(cur.has(keys[j])) {
+                    this._readNoMergeHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
                 }
             }
         } else {
@@ -177,13 +275,118 @@ Ycb.prototype = {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
                 for(j=0; j<n; j++) {
-                    if(cur[keys[j]] !== undefined && seen[keys[j]] === undefined) {
-                        this._readNoMergeHelper(cur[keys[j]], depth+1, context, collector, subKey);
+                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        this._readNoMergeHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
                         seen[keys[j]] = true;
                     }
                 }
             }
         }
+    },
+
+    /**
+     * Read the configs for the given context and time and return them in order general to specific.
+     * Scheduled configs with equivalent contexts are ordered by starting time.
+     * @method read
+     * @param contextObj {object}
+     * @param time {number} time in milliseconds
+     * @param options {object}
+     * @return {array}
+     */
+    readNoMergeTimeAware: function(contextObj, time, options) {
+        options = options ? mergeDeep(this.options, options, true) : this.options;
+        var context = this._parseContext(contextObj);
+        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var collector = [];
+        var soonest = SENTINEL_TIME;
+        if(this.masterDelta) {
+            if(this.masterDelta[subKey]) {
+                collector = [this.masterDelta[subKey]];
+            }
+            if(this.masterDelta.schedules) {
+                soonest = this._readScheduledNoMerge(this.masterDelta.schedules, time, collector, subKey);
+            }
+        }
+        var ret = this._readNoMergeTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
+        if(ret < soonest) {
+            soonest = ret;
+        }
+        collector = cloneDeep(collector); //clone before we may add cache info to result
+        if(soonest !== SENTINEL_TIME && options.cacheInfo === true) {
+            if(collector.length > 0) {
+                collector[0][EXPIRATION_KEY] = soonest;
+            } else {
+                var o = {};
+                o[EXPIRATION_KEY] = soonest;
+                collector.push(o);
+            }
+        }
+        return collector;
+    },
+
+    /**
+     * Recurse through the tree collecting configs that apply to the given context.
+     * @param cur {object} the current node.
+     * @param depth {number} current depth in tree.
+     * @param context {array} the context in internal format.
+     * @param time {number} milliseconds
+     * @param collector {array} the array we push configs to.
+     * @param subKey {string} determines if substituted or non-substituted configs are used.
+     * @private
+     */
+    _readNoMergeTimeAwareHelper: function(cur, depth, context, time, collector, subKey) {
+        var soonest = SENTINEL_TIME;
+        var ret;
+        if(depth === context.length) {
+            if(cur[subKey]) {
+                collector.push(cur[subKey]);
+            }
+            if(cur.schedules) {
+                soonest = this._readScheduledNoMerge(cur.schedules, time, collector, subKey);
+            }
+            return soonest;
+        }
+        var value = context[depth];
+        if(!Array.isArray(value)) {
+            var keys = this.precedenceMap[value];
+            var n = keys.length;
+            for(var j=0; j<n; j++) {
+                if(cur.has(keys[j])) {
+                    ret = this._readNoMergeTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                    if(ret < soonest) {
+                        soonest = ret;
+                    }
+                }
+            }
+        } else {
+            var seen = {};
+            var i = value.length;
+            while(i--) {
+                keys = this.precedenceMap[value[i]];
+                n = keys.length;
+                for(j=0; j<n; j++) {
+                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        ret = this._readNoMergeTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                        seen[keys[j]] = true;
+                        if(ret < soonest) {
+                            soonest = ret;
+                        }
+                    }
+                }
+            }
+        }
+        return soonest;
+    },
+
+    /**
+     * Converts a context object into a string that can be used as a cache key.
+     * Two contexts may only have equal cache keys if they return the same configs when calling read.
+     * @param contextObj {object}
+     * @returns {string}
+     * @private
+     */
+    getCacheKey: function(contextObj) {
+        return JSON.stringify(this._parseContext(contextObj));
     },
 
     /**
@@ -236,7 +439,7 @@ Ycb.prototype = {
     _contextToObject: function(context) {
         var contextObj = {};
         for(var i=0; i<context.length; i++) {
-            if(context[i] !== '0') {
+            if(context[i] !== 0) {
                 contextObj[this.dimensionsList[i]] = this.numberToValue[context[i]];
             }
         }
@@ -257,15 +460,17 @@ Ycb.prototype = {
         var usedDimensions = settingsCheckResult[0];
         var usedValues = settingsCheckResult[1];
         var contexts = settingsCheckResult[2];
+        var intervals = settingsCheckResult[3];
 
         var activeDimensions = this._parseDimensions(dimensionsObject, usedDimensions, usedValues);
 
         for(var configIndex=0; configIndex<config.length; configIndex++) {
             var fullContext = contexts[configIndex];
             if(fullContext !== undefined) {
-                var context = this._filterContext(fullContext, activeDimensions, usedValues, config[configIndex].settings);
+                var context = this._filterContext(configIndex, fullContext, activeDimensions, usedValues, config[configIndex].settings);
                 if(context !== undefined) {
-                    this._buildTreeHelper(this.tree, 0, context, this._buildDelta(config[configIndex]));
+                    var delta = this._buildDelta(config[configIndex], intervals[configIndex]);
+                    this._buildTreeHelper(this.tree, 0, context, delta);
                 }
             }
         }
@@ -309,52 +514,110 @@ Ycb.prototype = {
         var usedDimensions = {};
         var usedValues = {};
         var contexts = {};
+        var intervals = {};
         configLoop:
         for(var i=0; i<config.length; i++) {
-            if (config[i].settings) {
-                var setting = config[i].settings;
-                if(setting.length === 0 ) {
-                    continue;
-                }
-                if(setting[0] === 'master') {
-                    if(this.masterDelta !== undefined) {
-                        this.masterDelta = mergeDeep(this._buildDelta(config[i]), this.masterDelta, true);
-                    } else {
-                        this.masterDelta = this._buildDelta(config[i]);
-                    }
-                    continue;
-                }
-                var context = new Array(height);
-                for(var q=0; q<height; q++) {
-                    context[q] = DEFAULT;
-                }
-                for(var j=0; j<setting.length; j++) {
-                    var kv = setting[j].split(':');
-                    var dim = kv[0];
-                    var index = allDimensions[dim];
-                    if(index === undefined) {
-                        console.log('WARNING: invalid dimension "' + dim +
-                                '" in settings ' + JSON.stringify(setting));
-                        continue configLoop;
-                    }
-                    usedDimensions[dim] = 1;
-                    usedValues[dim] = usedValues[dim] || {};
-
-                    if(kv[1].indexOf(',') === -1) {
-                        usedValues[dim][kv[1]] = 1;
-                        context[index] = kv[1];
-                    } else {
-                        var vals = kv[1].split(',');
-                        context[index] = vals;
-                        for(var k=0; k<vals.length; k++) {
-                            usedValues[dim][vals[k]] = 1;
-                        }
-                    }
-                }
-                contexts[i] = context;
+            var configObj = config[i];
+            if(!isA(configObj, Object)) {
+                logBundleWarning(i, 'non-object config', JSON.stringify(configObj));
+                continue;
             }
+            if(!configObj.settings) {
+                if(!configObj.dimensions) {
+                    logBundleWarning(i, 'no valid settings field', JSON.stringify(configObj));
+                }
+                continue;
+            }
+            if(Array.isArray(configObj.settings)) { //convert old style settings to new style
+                configObj.settings = {dimensions: configObj.settings};
+            }
+            var setting = config[i].settings;
+
+            var settingDimensions = setting.dimensions;
+            var settingSchedule = setting.schedule;
+            var interval = undefined;
+            if(Object.keys(config[i]).length === 1) { //Don't skip as empty configs are valid and appear on tree walk
+                logBundleWarning(i, 'empty config', JSON.stringify(settingDimensions));
+            }
+            if(!Array.isArray(settingDimensions)) {
+                logBundleWarning(i, 'non-array settings', JSON.stringify(settingDimensions));
+                continue;
+            }
+            if(settingDimensions.length === 0 ) {
+                logBundleWarning(i, 'empty settings array');
+                continue;
+            }
+            if(settingSchedule !== undefined) {
+                interval = {start: 0, end: SENTINEL_TIME};
+                if(settingSchedule.start === undefined && settingSchedule.end === undefined){
+                    logBundleWarning(i, 'empty schedule', JSON.stringify(setting));
+                    continue;
+                }
+                if(settingSchedule.start !== undefined) {
+                    var startDate = new Date(settingSchedule.start);
+                    if(isNaN(startDate)) {
+                        logBundleWarning(i, 'invalid start date', JSON.stringify(settingSchedule));
+                        continue;
+                    }
+                    interval.start = startDate.getTime();
+                }
+                if(settingSchedule.end !== undefined) {
+                    var endDate = new Date(settingSchedule.end);
+                    if(isNaN(endDate)) {
+                        logBundleWarning(i, 'invalid end date', JSON.stringify(settingSchedule));
+                        continue;
+                    }
+                    interval.end = endDate.getTime();
+                }
+                intervals[i] = interval;
+            }
+            if(settingDimensions[0] === 'master') {
+                if(settingDimensions.length > 1) {
+                    logBundleWarning(i, 'master setting with additional dimensions', JSON.stringify(settingDimensions));
+                    continue;
+                }
+                if(this.masterDelta !== undefined) { //if master delta has been set than combine with existing one
+                    var delta = this._buildDelta(configObj, interval);
+                    this.masterDelta = this._combineDeltas(delta, this.masterDelta);
+                } else {
+                    this.masterDelta = this._buildDelta(configObj, interval);
+                }
+                continue;
+            }
+            //initialize context array with default values to be filled with any values specified in config
+            var context = new Array(height);
+            for(var q=0; q<height; q++) {
+                context[q] = DEFAULT;
+            }
+            for(var j=0; j<settingDimensions.length; j++) {
+                var kv = settingDimensions[j].split(':');
+                if(kv.length !== 2) {
+                    logBundleWarning(i, 'invalid setting ' + settingDimensions[j], JSON.stringify(settingDimensions));
+                    continue configLoop;
+                }
+                var dim = kv[0];
+                var index = allDimensions[dim];
+                if(index === undefined) {
+                    logBundleWarning(i, 'invalid dimension ' + dim, JSON.stringify(settingDimensions));
+                    continue configLoop;
+                }
+                usedDimensions[dim] = 1;
+                usedValues[dim] = usedValues[dim] || {};
+
+                if(kv[1].indexOf(',') === -1) {
+                    usedValues[dim][kv[1]] = 1;
+                    context[index] = kv[1];
+                } else {
+                    var vals = kv[1].split(',');
+                    context[index] = vals;
+                    for(var k=0; k<vals.length; k++) {
+                        usedValues[dim][vals[k]] = 1;
+                    }
+                }
+            }
+            contexts[i] = context;
         }
-        return [usedDimensions, usedValues, contexts];
+        return [usedDimensions, usedValues, contexts, intervals];
     },
 
     /**
@@ -363,12 +626,166 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _buildDelta: function(config) {
+    _buildDelta: function(config, interval) {
         config = omit(config, 'settings');
         var subbed = cloneDeep(config);
         var subFlag = this._applySubstitutions(subbed, null, null);
         var unsubbed = subFlag ? config : subbed;
+        if(interval) {
+            return {schedules: this._buildSchedule(subbed, unsubbed, interval)};
+        }
         return {subbed:subbed, unsubbed:unsubbed};
+    },
+
+    /**
+     * Build schedule object from config and interval.
+     * Schedule object may contain multiple intervals after being combined later, these
+     * are stored as arrays of starts/ends and configs.
+     * @param subbed {object}
+     * @param unsubbed {object}
+     * @param interval {object}
+     * @returns {object}
+     * @private
+     */
+    _buildSchedule: function(subbed, unsubbed, interval) {
+        return {starts:[interval.start], ends:[interval.end], subbed:[subbed], unsubbed:[unsubbed]};
+    },
+
+    /**
+     * Combine two delta objects and return combination, top onto bottom.
+     * @param top {object}
+     * @param bottom {object}
+     * @returns {object}
+     * @private
+     */
+    _combineDeltas: function(top, bottom) {
+        var combinedDelta = {};
+        if(top.schedules || bottom.schedules) {
+            if(top.schedules === undefined) {
+                combinedDelta.schedules = bottom.schedules;
+            } else if(bottom.schedules === undefined) {
+                combinedDelta.schedules = top.schedules;
+            } else {
+                combinedDelta.schedules = this._combineSchedules(top.schedules, bottom.schedules);
+            }
+        }
+        if(top.subbed || bottom.subbed) {
+            if(top.subbed === undefined) {
+                combinedDelta.subbed = bottom.subbed;
+                combinedDelta.unsubbed = bottom.unsubbed;
+            } else if(bottom.subbed === undefined) {
+                combinedDelta.subbed = top.subbed;
+                combinedDelta.unsubbed = top.unsubbed;
+            } else if (top.subbed === top.unsubbed && bottom.subbed === bottom.unsubbed) {
+                var combined = mergeDeep(top.subbed, bottom.subbed, true);
+                combinedDelta.subbed = combined;
+                combinedDelta.unsubbed = combined;
+            } else {
+                combinedDelta.subbed = mergeDeep(top.subbed, bottom.subbed, true);
+                combinedDelta.unsubbed = mergeDeep(top.unsubbed, bottom.unsubbed, true);
+            }
+        }
+        return combinedDelta;
+    },
+
+    /**
+     * Combine two schedule objects and return combination.
+     * @param s1 {object}
+     * @param s2 {object}
+     * @returns {object}
+     * @private
+     */
+    _combineSchedules: function(s1, s2) {
+        var combined = {starts:[], ends:[], subbed:[], unsubbed:[]};
+        var i = 0;
+        var j = 0;
+        while(i<s1.starts.length && j<s2.starts.length) {
+            if(s1.starts[i] <= s2.starts[j]) {
+                this._pushScheduleComponents(s1, combined, i++);
+            } else {
+                this._pushScheduleComponents(s2, combined, j++);
+            }
+        }
+        while(i<s1.starts.length) {
+            this._pushScheduleComponents(s1, combined, i++);
+        }
+        while(j<s2.starts.length) {
+            this._pushScheduleComponents(s2, combined, j++);
+        }
+        return combined;
+    },
+
+    /**
+     * Add the ith interval and config from schedule "from" to schedule "to".
+     * Modifies "to" schedule.
+     * @param from {object}
+     * @param to {object}
+     * @param i {number}
+     * @private
+     */
+    _pushScheduleComponents: function(from, to, i) {
+        to.starts.push(from.starts[i]);
+        to.ends.push(from.ends[i]);
+        to.subbed.push(from.subbed[i]);
+        to.unsubbed.push(from.unsubbed[i]);
+    },
+
+    /**
+     * Apply any valid scheduled configs for time to collector.
+     * @param schedules {object}
+     * @param time {number}
+     * @param collector {object}
+     * @param subKey {string}
+     * @returns {object}
+     * @private
+     */
+    _readScheduled: function(schedules, time, collector, subKey) {
+        var soonest = SENTINEL_TIME;
+        var i = 0;
+        var n = schedules.starts.length;
+        while(i < n && schedules.starts[i] <= time){
+            if(time <= schedules.ends[i]) {
+                mergeDeep(schedules[subKey][i], collector, false);
+                if(schedules.ends[i] < soonest) {
+                    soonest = schedules.ends[i];
+                }
+            }
+            i++;
+        }
+        soonest++;
+        if(i < n && schedules.starts[i] < soonest) {
+            soonest = schedules.starts[i];
+        }
+        return soonest;
+    },
+
+    /**
+     * Append any valid scheduled configs for time to collector.
+     * @param schedules {object}
+     * @param time {number}
+     * @param collector {array}
+     * @param subKey {string}
+     * @returns {object}
+     * @private
+     */
+    _readScheduledNoMerge: function(schedules, time, collector, subKey) {
+        var soonest = SENTINEL_TIME;
+        var i = 0;
+        var n = schedules.starts.length;
+        while(i < n && schedules.starts[i] <= time){
+            if(time <= schedules.ends[i]) {
+                collector.push(schedules[subKey][i]);
+                if(schedules.ends[i] < soonest) {
+                    soonest = schedules.ends[i];
+                }
+            }
+            i++;
+        }
+        soonest++;
+        if(i < n && schedules.starts[i] < soonest) {
+            soonest = schedules.starts[i];
+        }
+        return soonest;
     },
 
     /**
@@ -422,9 +839,13 @@ Ycb.prototype = {
                 currentPath = path;
             }
             if(currentPath.length > 1) {
-                pathCollector.push(currentPath);
-                numToValueCollector.push(key);
-                valueToNumCollector[key] = label++;
+                var ancestor = currentPath[currentPath.length-1];
+                valueToNumCollector[key] = ancestor;
+                if(label === ancestor) {
+                    pathCollector.push(currentPath);
+                    numToValueCollector.push(key);
+                    label++;
+                }
             }
             if(dimension[key] !== null) {
                 label = this._dimensionWalk(dimension[key], used, label, currentPath,
@@ -443,7 +864,7 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _filterContext: function(fullContext, activeDimensions, usedValues, setting) {
+    _filterContext: function(configIndex, fullContext, activeDimensions, usedValues, setting) {
         var height = this.dimensionsList.length;
         var newContext = new Array(height);
         for(var i=0; i<height; i++) {
@@ -461,8 +882,8 @@ Ycb.prototype = {
                         if(usedValues[dimensionName][valueChunk] === 2) {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
                         } else {
-                            console.log('WARNING: invalid value "' + valueChunk + '" for dimension "' +
-                                dimensionName + '" in settings ' + JSON.stringify(setting));
+                            logBundleWarning(configIndex, 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
+                                JSON.stringify(setting));
                         }
                     }
                     if(newValue.length === 0) {
@@ -473,8 +894,8 @@ Ycb.prototype = {
                     if(usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
                     } else if(contextValue !== DEFAULT) {
-                        console.log('WARNING: invalid value "' + contextValue + '" for dimension "' +
-                            dimensionName + '" in settings ' + JSON.stringify(setting));
+                        logBundleWarning(configIndex, 'invalid value ' + contextValue + ' for dimension ' + dimensionName,
+                            JSON.stringify(setting));
                         return;
                     }
                 }
@@ -500,32 +921,32 @@ Ycb.prototype = {
             if(isMulti) {
                 for(i=0; i<currentValue.length; i++) {
                     var curDelta = delta;
-                    if(root[currentValue[i]] !== undefined) {
-                        curDelta = mergeDeep(delta, root[currentValue[i]], true);
+                    if(root.has(currentValue[i])) {
+                        curDelta = this._combineDeltas(delta, root.get(currentValue[i]));
                     }
-                    root[currentValue[i]] = curDelta;
+                    root.set(currentValue[i], curDelta);
                 }
             } else {
                 curDelta = delta;
-                if(root[currentValue] !== undefined) {
-                    curDelta = mergeDeep(delta, root[currentValue], true);
+                if(root.has(currentValue)) {
+                    curDelta = this._combineDeltas(delta, root.get(currentValue));
                 }
-                root[currentValue] = curDelta;
+                root.set(currentValue, curDelta);
             }
             return;
         }
         if(isMulti){
             for(i=0; i<currentValue.length; i++) {
-                if(root[currentValue[i]] === undefined) {
-                    root[currentValue[i]] = {};
+                if(!root.has(currentValue[i])) {
+                    root.set(currentValue[i], new Map());
                 }
-                this._buildTreeHelper(root[currentValue[i]], depth+1, context, delta);
+                this._buildTreeHelper(root.get(currentValue[i]), depth+1, context, delta);
             }
         } else {
-            if(root[currentValue] === undefined) {
-                root[currentValue] = {};
+            if(!root.has(currentValue)) {
+                root.set(currentValue, new Map());
             }
-            this._buildTreeHelper(root[currentValue], depth+1, context, delta);
+            this._buildTreeHelper(root.get(currentValue), depth+1, context, delta);
         }
     },
 
@@ -629,7 +1050,7 @@ Ycb.prototype = {
      * @return {nothing} results returned via callback
      */
     walkSettings: function (callback) {
-        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta))) {
+        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta.subbed))) {
             return undefined;
         }
         this._walkSettingsHelper(this.tree, 0, [], callback, [false]);
@@ -649,12 +1070,11 @@ Ycb.prototype = {
             return true;
         }
         if(depth === this.dimensionsList.length) {
-            stop[0] = !callback(this._contextToObject(context), cloneDeep(cur));
+            stop[0] = !callback(this._contextToObject(context), cloneDeep(cur.subbed));
             return stop[0];
         }
-        var key;
-        for(key in cur) {
-            if(this._walkSettingsHelper(cur[key], depth+1, context.concat(key), callback, stop)) {
+        for(var [key, value] of  cur) {
+            if(this._walkSettingsHelper(value, depth+1, context.concat(key), callback, stop)) {
                 return true;
             }
         }
@@ -677,6 +1097,7 @@ Ycb.prototype = {
 module.exports = {
 
     version: VERSION,
+    expirationKey: EXPIRATION_KEY,
 
     // object-oriented interface
     Ycb: Ycb,

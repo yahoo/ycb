@@ -1,0 +1,1122 @@
+[
+  {
+    "dimensions": [
+      {
+        "environment": {
+          "testing": null,
+          "prod": null
+        }
+      },
+      {
+        "device": {
+          "desktop": null,
+          "mobile": {
+            "table": null,
+            "smartphone": null
+          }
+        }
+      }
+    ]
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:12.247Z"
+      }
+    },
+    "name": "config_0",
+    "intervals": {
+      "config_0": {
+        "end": 1566246372247
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.162Z",
+        "end": "2019-08-19T20:26:18.177Z"
+      }
+    },
+    "name": "config_1",
+    "intervals": {
+      "config_1": {
+        "start": 1566246372162,
+        "end": 1566246378177
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:11.998Z",
+        "end": "2019-08-19T20:26:13.706Z"
+      }
+    },
+    "name": "config_2",
+    "intervals": {
+      "config_2": {
+        "start": 1566246371998,
+        "end": 1566246373706
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.186Z",
+        "end": "2019-08-19T20:26:15.698Z"
+      }
+    },
+    "name": "config_3",
+    "intervals": {
+      "config_3": {
+        "start": 1566246372186,
+        "end": 1566246375698
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.910Z",
+        "end": "2019-08-19T20:26:12.521Z"
+      }
+    },
+    "name": "config_4",
+    "intervals": {
+      "config_4": {
+        "start": 1566246370910,
+        "end": 1566246372521
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:13.535Z",
+        "end": "2019-08-19T20:26:15.330Z"
+      }
+    },
+    "name": "config_5",
+    "intervals": {
+      "config_5": {
+        "start": 1566246373535,
+        "end": 1566246375330
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.918Z",
+        "end": "2019-08-19T20:26:12.198Z"
+      }
+    },
+    "name": "config_6",
+    "intervals": {
+      "config_6": {
+        "start": 1566246370918,
+        "end": 1566246372198
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:16.702Z"
+      }
+    },
+    "name": "config_7",
+    "intervals": {
+      "config_7": {
+        "end": 1566246376702
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.316Z",
+        "end": "2019-08-19T20:26:19.804Z"
+      }
+    },
+    "name": "config_8",
+    "intervals": {
+      "config_8": {
+        "start": 1566246376316,
+        "end": 1566246379804
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.607Z",
+        "end": "2019-08-19T20:26:10.817Z"
+      }
+    },
+    "name": "config_9",
+    "intervals": {
+      "config_9": {
+        "start": 1566246370607,
+        "end": 1566246370817
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.020Z"
+      }
+    },
+    "name": "config_10",
+    "intervals": {
+      "config_10": {
+        "start": 1566246372020
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.239Z",
+        "end": "2019-08-19T20:26:19.483Z"
+      }
+    },
+    "name": "config_11",
+    "intervals": {
+      "config_11": {
+        "start": 1566246370239,
+        "end": 1566246379483
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.086Z",
+        "end": "2019-08-19T20:26:10.307Z"
+      }
+    },
+    "name": "config_12",
+    "intervals": {
+      "config_12": {
+        "start": 1566246370086,
+        "end": 1566246370307
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.912Z"
+      }
+    },
+    "name": "config_13",
+    "intervals": {
+      "config_13": {
+        "start": 1566246376912
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:13.364Z",
+        "end": "2019-08-19T20:26:13.388Z"
+      }
+    },
+    "name": "config_14",
+    "intervals": {
+      "config_14": {
+        "start": 1566246373364,
+        "end": 1566246373388
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.985Z",
+        "end": "2019-08-19T20:26:16.035Z"
+      }
+    },
+    "name": "config_15",
+    "intervals": {
+      "config_15": {
+        "start": 1566246372985,
+        "end": 1566246376035
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.913Z",
+        "end": "2019-08-19T20:26:16.893Z"
+      }
+    },
+    "name": "config_16",
+    "intervals": {
+      "config_16": {
+        "start": 1566246372913,
+        "end": 1566246376893
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.609Z",
+        "end": "2019-08-19T20:26:18.796Z"
+      }
+    },
+    "name": "config_17",
+    "intervals": {
+      "config_17": {
+        "start": 1566246375609,
+        "end": 1566246378796
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:10.480Z"
+      }
+    },
+    "name": "config_18",
+    "intervals": {
+      "config_18": {
+        "end": 1566246370480
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:11.656Z",
+        "end": "2019-08-19T20:26:13.125Z"
+      }
+    },
+    "name": "config_19",
+    "intervals": {
+      "config_19": {
+        "start": 1566246371656,
+        "end": 1566246373125
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:11.535Z",
+        "end": "2019-08-19T20:26:13.485Z"
+      }
+    },
+    "name": "config_20",
+    "intervals": {
+      "config_20": {
+        "start": 1566246371535,
+        "end": 1566246373485
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.579Z",
+        "end": "2019-08-19T20:26:17.862Z"
+      }
+    },
+    "name": "config_21",
+    "intervals": {
+      "config_21": {
+        "start": 1566246376579,
+        "end": 1566246377862
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:14.949Z",
+        "end": "2019-08-19T20:26:15.477Z"
+      }
+    },
+    "name": "config_22",
+    "intervals": {
+      "config_22": {
+        "start": 1566246374949,
+        "end": 1566246375477
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.686Z",
+        "end": "2019-08-19T20:26:16.979Z"
+      }
+    },
+    "name": "config_23",
+    "intervals": {
+      "config_23": {
+        "start": 1566246372686,
+        "end": 1566246376979
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.204Z",
+        "end": "2019-08-19T20:26:10.241Z"
+      }
+    },
+    "name": "config_24",
+    "intervals": {
+      "config_24": {
+        "start": 1566246370204,
+        "end": 1566246370241
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.130Z",
+        "end": "2019-08-19T20:26:16.132Z"
+      }
+    },
+    "name": "config_25",
+    "intervals": {
+      "config_25": {
+        "start": 1566246375130,
+        "end": 1566246376132
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.275Z",
+        "end": "2019-08-19T20:26:11.531Z"
+      }
+    },
+    "name": "config_26",
+    "intervals": {
+      "config_26": {
+        "start": 1566246370275,
+        "end": 1566246371531
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.332Z",
+        "end": "2019-08-19T20:26:16.175Z"
+      }
+    },
+    "name": "config_27",
+    "intervals": {
+      "config_27": {
+        "start": 1566246375332,
+        "end": 1566246376175
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:18.160Z",
+        "end": "2019-08-19T20:26:18.459Z"
+      }
+    },
+    "name": "config_28",
+    "intervals": {
+      "config_28": {
+        "start": 1566246378160,
+        "end": 1566246378459
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:16.232Z"
+      }
+    },
+    "name": "config_29",
+    "intervals": {
+      "config_29": {
+        "end": 1566246376232
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.935Z",
+        "end": "2019-08-19T20:26:12.079Z"
+      }
+    },
+    "name": "config_30",
+    "intervals": {
+      "config_30": {
+        "start": 1566246370935,
+        "end": 1566246372079
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.535Z",
+        "end": "2019-08-19T20:26:14.902Z"
+      }
+    },
+    "name": "config_31",
+    "intervals": {
+      "config_31": {
+        "start": 1566246370535,
+        "end": 1566246374902
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.504Z",
+        "end": "2019-08-19T20:26:11.168Z"
+      }
+    },
+    "name": "config_32",
+    "intervals": {
+      "config_32": {
+        "start": 1566246370504,
+        "end": 1566246371168
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.451Z",
+        "end": "2019-08-19T20:26:12.556Z"
+      }
+    },
+    "name": "config_33",
+    "intervals": {
+      "config_33": {
+        "start": 1566246370451,
+        "end": 1566246372556
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:12.074Z"
+      }
+    },
+    "name": "config_34",
+    "intervals": {
+      "config_34": {
+        "end": 1566246372074
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.979Z",
+        "end": "2019-08-19T20:26:17.239Z"
+      }
+    },
+    "name": "config_35",
+    "intervals": {
+      "config_35": {
+        "start": 1566246375979,
+        "end": 1566246377239
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.705Z"
+      }
+    },
+    "name": "config_36",
+    "intervals": {
+      "config_36": {
+        "start": 1566246376705
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.488Z",
+        "end": "2019-08-19T20:26:10.558Z"
+      }
+    },
+    "name": "config_37",
+    "intervals": {
+      "config_37": {
+        "start": 1566246370488,
+        "end": 1566246370558
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.666Z",
+        "end": "2019-08-19T20:26:14.697Z"
+      }
+    },
+    "name": "config_38",
+    "intervals": {
+      "config_38": {
+        "start": 1566246372666,
+        "end": 1566246374697
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "end": "2019-08-19T20:26:11.724Z"
+      }
+    },
+    "name": "config_39",
+    "intervals": {
+      "config_39": {
+        "end": 1566246371724
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.247Z",
+        "end": "2019-08-19T20:26:16.598Z"
+      }
+    },
+    "name": "config_40",
+    "intervals": {
+      "config_40": {
+        "start": 1566246372247,
+        "end": 1566246376598
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:18.177Z",
+        "end": "2019-08-19T20:26:19.141Z"
+      }
+    },
+    "name": "config_41",
+    "intervals": {
+      "config_41": {
+        "start": 1566246378177,
+        "end": 1566246379141
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:13.706Z",
+        "end": "2019-08-19T20:26:17.062Z"
+      }
+    },
+    "name": "config_42",
+    "intervals": {
+      "config_42": {
+        "start": 1566246373706,
+        "end": 1566246377062
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.698Z",
+        "end": "2019-08-19T20:26:16.650Z"
+      }
+    },
+    "name": "config_43",
+    "intervals": {
+      "config_43": {
+        "start": 1566246375698,
+        "end": 1566246376650
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.521Z",
+        "end": "2019-08-19T20:26:18.073Z"
+      }
+    },
+    "name": "config_44",
+    "intervals": {
+      "config_44": {
+        "start": 1566246372521,
+        "end": 1566246378073
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.330Z",
+        "end": "2019-08-19T20:26:16.078Z"
+      }
+    },
+    "name": "config_45",
+    "intervals": {
+      "config_45": {
+        "start": 1566246375330,
+        "end": 1566246376078
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:12.198Z",
+        "end": "2019-08-19T20:26:17.684Z"
+      }
+    },
+    "name": "config_46",
+    "intervals": {
+      "config_46": {
+        "start": 1566246372198,
+        "end": 1566246377684
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.702Z",
+        "end": "2019-08-19T20:26:18.731Z"
+      }
+    },
+    "name": "config_47",
+    "intervals": {
+      "config_47": {
+        "start": 1566246376702,
+        "end": 1566246378731
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:19.804Z",
+        "end": "2019-08-19T20:26:19.844Z"
+      }
+    },
+    "name": "config_48",
+    "intervals": {
+      "config_48": {
+        "start": 1566246379804,
+        "end": 1566246379844
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.817Z",
+        "end": "2019-08-19T20:26:12.877Z"
+      }
+    },
+    "name": "config_49",
+    "intervals": {
+      "config_49": {
+        "start": 1566246370817,
+        "end": 1566246372877
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:13.486Z",
+        "end": "2019-08-19T20:26:13.780Z"
+      }
+    },
+    "name": "config_50",
+    "intervals": {
+      "config_50": {
+        "start": 1566246373486,
+        "end": 1566246373780
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:17.863Z",
+        "end": "2019-08-19T20:26:19.968Z"
+      }
+    },
+    "name": "config_51",
+    "intervals": {
+      "config_51": {
+        "start": 1566246377863,
+        "end": 1566246379968
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:15.478Z",
+        "end": "2019-08-19T20:26:18.256Z"
+      }
+    },
+    "name": "config_52",
+    "intervals": {
+      "config_52": {
+        "start": 1566246375478,
+        "end": 1566246378256
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.980Z",
+        "end": "2019-08-19T20:26:18.154Z"
+      }
+    },
+    "name": "config_53",
+    "intervals": {
+      "config_53": {
+        "start": 1566246376980,
+        "end": 1566246378154
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:10.242Z",
+        "end": "2019-08-19T20:26:15.825Z"
+      }
+    },
+    "name": "config_54",
+    "intervals": {
+      "config_54": {
+        "start": 1566246370242,
+        "end": 1566246375825
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.133Z",
+        "end": "2019-08-19T20:26:19.608Z"
+      }
+    },
+    "name": "config_55",
+    "intervals": {
+      "config_55": {
+        "start": 1566246376133,
+        "end": 1566246379608
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:11.532Z",
+        "end": "2019-08-19T20:26:16.209Z"
+      }
+    },
+    "name": "config_56",
+    "intervals": {
+      "config_56": {
+        "start": 1566246371532,
+        "end": 1566246376209
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.176Z",
+        "end": "2019-08-19T20:26:17.106Z"
+      }
+    },
+    "name": "config_57",
+    "intervals": {
+      "config_57": {
+        "start": 1566246376176,
+        "end": 1566246377106
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod",
+        "device:smartphone"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:18.460Z",
+        "end": "2019-08-19T20:26:19.501Z"
+      }
+    },
+    "name": "config_58",
+    "intervals": {
+      "config_58": {
+        "start": 1566246378460,
+        "end": 1566246379501
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "master"
+      ],
+      "schedule": {
+        "start": "2019-08-19T20:26:16.233Z",
+        "end": "2019-08-19T20:26:17.937Z"
+      }
+    },
+    "name": "config_59",
+    "intervals": {
+      "config_59": {
+        "start": 1566246376233,
+        "end": 1566246377937
+      }
+    }
+  },
+  {
+    "settings": {
+      "dimensions": [
+        "environment:prod"
+      ],
+      "schedule": {}
+    },
+    "name": "config_60",
+    "intervals": {
+      "config_60": {}
+    }
+  }
+]
