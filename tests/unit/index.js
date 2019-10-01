@@ -522,6 +522,20 @@ describe('ycb unit tests', function () {
             assert.equal(80, config.appPort);
         });
 
+        it('should handle wildcard settings', function () {
+            var bundle,
+                ycb,
+                config;
+            bundle = readFixtureFile('wildcard.json');
+            ycb = new libycb.Ycb(bundle);
+            config = ycb.read({});
+            cmp(config, {val1:1, val5:1});
+            config = ycb.read({region: 'fr'});
+            cmp(config, {val1:1, val5:1, val2:1, val4:1});
+            config = ycb.read({region: 'fr', flavor: 'att'});
+            cmp(config, {val1:1, val5:1, val2:1, val4:1, val3:1});
+        });
+
         it('should handle multi-level matching', function () {
             var bundle,
                 ycb,

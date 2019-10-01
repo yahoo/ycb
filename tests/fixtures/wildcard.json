@@ -1,0 +1,48 @@
+[
+  {
+    "dimensions": [
+      {
+        "lang": {
+          "en":null,
+          "fr": {
+            "fr_FR": {
+              "fr_CA": null
+            }
+          }
+        }
+      },
+      {
+        "region": {
+          "us": null,
+          "fr": null
+        }
+      },
+      {
+        "flavor": {
+          "att": null,
+          "bt": null
+        }
+      }
+    ]
+  },
+  {
+    "settings": ["region:*"],
+    "val1": 1
+  },
+  {
+    "settings": ["region:fr","flavor:*"],
+    "val2": 1
+  },
+  {
+    "settings": ["region:fr","flavor:att,bt"],
+    "val3": 1
+  },
+  {
+    "settings": ["region:fr","flavor:att,*"],
+    "val4": 1
+  },
+  {
+    "settings": ["lang:en,*,*,*,*"],
+    "val5": 1
+  }
+]

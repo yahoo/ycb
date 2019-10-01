@@ -881,6 +881,8 @@ Ycb.prototype = {
                         var valueChunk = contextValue[k];
                         if(usedValues[dimensionName][valueChunk] === 2) {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
+                        } else if(valueChunk === DEFAULT) {
+                            newValue.push(0);
                         } else {
                             logBundleWarning(configIndex, 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
                                 JSON.stringify(setting));
