@@ -1088,7 +1088,23 @@ Ycb.prototype = {
      */
     getDimensions: function() {
         return cloneDeep(this.dimensions);
-    }
+    },
+
+    /**
+     * Generate dimsUsed property matching format used by YCB 1.x.x.
+     * Precaution for backwards compability. Not expected to be called by client code so we generate it lazily.
+     * @returns {object}
+     */
+    get dimsUsed() {
+        var used = {};
+        Object.keys(this.valueToNumber).forEach((dim) => {
+            used[dim] = {};
+            Object.keys(this.valueToNumber[dim]).forEach((val) => {
+                used[dim][val] = true;
+            })
+        });
+        return used;
+    },
 };
 
 
