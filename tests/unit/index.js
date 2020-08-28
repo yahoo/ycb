@@ -147,6 +147,46 @@ describe('ycb unit tests', function () {
             assert.equal(count, 10, 'the valid empty config should be included');
         });
 
+        it('should add the logging context', function () {
+            var bundle, ycb;
+            bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('bad-configs.json'))
+                .concat(readFixtureFile('simple-3.json'));
+            var logHistory = [];
+            var oldLog = console.log;
+            console.log = function(...args) {
+                logHistory.push(util.format(...args));
+            }
+            ycb = new libycb.Ycb(bundle, {logContext: '/bundle-path.json'});
+            console.log = oldLog;
+            assert.equal(logHistory[0], 'WARNING: config[2] has non-object config. [] source=/bundle-path.json','warning log should match');
+            assert.equal(logHistory[1], 'WARNING: config[3] has non-object config. null source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[2], 'WARNING: config[4] has non-object config. true source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[3], 'WARNING: config[5] has no valid settings field. {} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[4], 'WARNING: config[6] has no valid settings field. {"foo":"bar"} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[5], 'WARNING: config[7] has empty config. ["environment:production"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[6], 'WARNING: config[8] has no valid settings field. {"settings":null} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[7], 'WARNING: config[9] has empty settings array. source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[8], 'WARNING: config[10] has master setting with additional dimensions. ["master","lang:fr"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[9], 'WARNING: config[11] has invalid setting master. ["lang:fr","master"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[10], 'WARNING: config[13] has invalid dimension blah. ["blah:fr"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[11], 'WARNING: config[14] has empty config. ["master"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[12], 'WARNING: config[14] has empty schedule. {"dimensions":["master"],"schedule":{}} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[13], 'WARNING: config[15] has empty config. ["master"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[14], 'WARNING: config[15] has invalid start date. {"start":"bad"} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[15], 'WARNING: config[16] has empty config. ["master"] source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[16], 'WARNING: config[16] has invalid end date. {"end":"bad"} source=/bundle-path.json', 'warning log should match');
+            assert.equal(logHistory[17], 'WARNING: config[12] has invalid value barbar for dimension lang. {"dimensions":["lang:barbar"]} source=/bundle-path.json', 'warning log should match');
+
+            var count = 0;
+            ycb.walkSettings(function() {
+                count++;
+                return true;
+            });
+            assert.equal(count, 10, 'the valid empty config should be included');
+        });
+
         it('should not break if there are no dimensions', function () {
             var bundle, ycb;
             bundle = readFixtureFile('simple-1.json')
