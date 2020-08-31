@@ -54,11 +54,11 @@ function omit(obj, omitKey) {
     }, {});
 }
 
-function logBundleWarning(index, message, value) {
+function logBundleWarning(index, message, value, context) {
     if(value === undefined) {
-        console.log('WARNING: config[%d] has %s.', index, message);
+        console.log('WARNING: config[%d] has %s.%s', index, message, context);
     } else {
-        console.log('WARNING: config[%d] has %s. %s', index, message, value);
+        console.log('WARNING: config[%d] has %s. %s%s', index, message, value, context);
     }
 }
 
@@ -80,6 +80,10 @@ function Ycb(bundle, options) {
     this.tree = new Map();
     this.masterDelta = undefined;
     this.dimensions = [];
+    this.logContext = '';
+    if(this.options.logContext !== undefined) {
+        this.logContext = ' source=' + this.options.logContext;
+    }
     this._processRawBundle(cloneDeep(bundle));
 }
 Ycb.prototype = {
@@ -519,12 +523,12 @@ Ycb.prototype = {
         for(var i=0; i<config.length; i++) {
             var configObj = config[i];
             if(!isA(configObj, Object)) {
-                logBundleWarning(i, 'non-object config', JSON.stringify(configObj));
+                logBundleWarning(i, 'non-object config', JSON.stringify(configObj), this.logContext);
                 continue;
             }
             if(!configObj.settings) {
                 if(!configObj.dimensions) {
-                    logBundleWarning(i, 'no valid settings field', JSON.stringify(configObj));
+                    logBundleWarning(i, 'no valid settings field', JSON.stringify(configObj), this.logContext);
                 }
                 continue;
             }
@@ -537,26 +541,26 @@ Ycb.prototype = {
             var settingSchedule = setting.schedule;
             var interval = undefined;
             if(Object.keys(config[i]).length === 1) { //Don't skip as empty configs are valid and appear on tree walk
-                logBundleWarning(i, 'empty config', JSON.stringify(settingDimensions));
+                logBundleWarning(i, 'empty config', JSON.stringify(settingDimensions), this.logContext);
             }
             if(!Array.isArray(settingDimensions)) {
-                logBundleWarning(i, 'non-array settings', JSON.stringify(settingDimensions));
+                logBundleWarning(i, 'non-array settings', JSON.stringify(settingDimensions), this.logContext);
                 continue;
             }
             if(settingDimensions.length === 0 ) {
-                logBundleWarning(i, 'empty settings array');
+                logBundleWarning(i, 'empty settings array', undefined, this.logContext);
                 continue;
             }
             if(settingSchedule !== undefined) {
                 interval = {start: 0, end: SENTINEL_TIME};
                 if(settingSchedule.start === undefined && settingSchedule.end === undefined){
-                    logBundleWarning(i, 'empty schedule', JSON.stringify(setting));
+                    logBundleWarning(i, 'empty schedule', JSON.stringify(setting), this.logContext);
                     continue;
                 }
                 if(settingSchedule.start !== undefined) {
                     var startDate = new Date(settingSchedule.start);
                     if(isNaN(startDate)) {
-                        logBundleWarning(i, 'invalid start date', JSON.stringify(settingSchedule));
+                        logBundleWarning(i, 'invalid start date', JSON.stringify(settingSchedule), this.logContext);
                         continue;
                     }
                     interval.start = startDate.getTime();
@@ -564,7 +568,7 @@ Ycb.prototype = {
                 if(settingSchedule.end !== undefined) {
                     var endDate = new Date(settingSchedule.end);
                     if(isNaN(endDate)) {
-                        logBundleWarning(i, 'invalid end date', JSON.stringify(settingSchedule));
+                        logBundleWarning(i, 'invalid end date', JSON.stringify(settingSchedule), this.logContext);
                         continue;
                     }
                     interval.end = endDate.getTime();
@@ -573,7 +577,8 @@ Ycb.prototype = {
             }
             if(settingDimensions[0] === 'master') {
                 if(settingDimensions.length > 1) {
-                    logBundleWarning(i, 'master setting with additional dimensions', JSON.stringify(settingDimensions));
+                    logBundleWarning(i, 'master setting with additional dimensions',
+                        JSON.stringify(settingDimensions), this.logContext);
                     continue;
                 }
                 if(this.masterDelta !== undefined) { //if master delta has been set than combine with existing one
@@ -592,13 +597,15 @@ Ycb.prototype = {
             for(var j=0; j<settingDimensions.length; j++) {
                 var kv = settingDimensions[j].split(':');
                 if(kv.length !== 2) {
-                    logBundleWarning(i, 'invalid setting ' + settingDimensions[j], JSON.stringify(settingDimensions));
+                    logBundleWarning(i, 'invalid setting ' + settingDimensions[j],
+                        JSON.stringify(settingDimensions), this.logContext);
                     continue configLoop;
                 }
                 var dim = kv[0];
                 var index = allDimensions[dim];
                 if(index === undefined) {
-                    logBundleWarning(i, 'invalid dimension ' + dim, JSON.stringify(settingDimensions));
+                    logBundleWarning(i, 'invalid dimension ' + dim,
+                        JSON.stringify(settingDimensions), this.logContext);
                     continue configLoop;
                 }
                 usedDimensions[dim] = 1;
@@ -885,7 +892,7 @@ Ycb.prototype = {
                             newValue.push(0);
                         } else {
                             logBundleWarning(configIndex, 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
-                                JSON.stringify(setting));
+                                JSON.stringify(setting), this.logContext);
                         }
                     }
                     if(newValue.length === 0) {
@@ -897,7 +904,7 @@ Ycb.prototype = {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
                     } else if(contextValue !== DEFAULT) {
                         logBundleWarning(configIndex, 'invalid value ' + contextValue + ' for dimension ' + dimensionName,
-                            JSON.stringify(setting));
+                            JSON.stringify(setting), this.logContext);
                         return;
                     }
                 }
