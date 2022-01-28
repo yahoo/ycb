@@ -23,7 +23,7 @@ var isIterable = require('./lib/isIterable');
 
 function extract(bag, key, def) {
     var keys,
-        cur  = bag,
+        cur = bag,
         i;
     if (!key) {
         return bag || {};
@@ -46,8 +46,8 @@ function replacer(base) {
 }
 
 function omit(obj, omitKey) {
-    return Object.keys(obj).reduce(function(result, key) {
-        if(key !== omitKey) {
+    return Object.keys(obj).reduce(function (result, key) {
+        if (key !== omitKey) {
             result[key] = obj[key];
         }
         return result;
@@ -55,7 +55,7 @@ function omit(obj, omitKey) {
 }
 
 function logBundleWarning(index, message, value, context) {
-    if(value === undefined) {
+    if (value === undefined) {
         console.log('WARNING: config[%d] has %s.%s', index, message, context);
     } else {
         console.log('WARNING: config[%d] has %s. %s%s', index, message, value, context);
@@ -81,13 +81,12 @@ function Ycb(bundle, options) {
     this.masterDelta = undefined;
     this.dimensions = [];
     this.logContext = '';
-    if(this.options.logContext !== undefined) {
+    if (this.options.logContext !== undefined) {
         this.logContext = ' source=' + this.options.logContext;
     }
     this._processRawBundle(cloneDeep(bundle));
 }
 Ycb.prototype = {
-
     /**
      * Read the file.
      * @method read
@@ -95,13 +94,13 @@ Ycb.prototype = {
      * @param options {object}
      * @return {object}
      */
-    read: function(contextObj, options) {
+    read: function (contextObj, options) {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
-        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
         this._readHelper(this.tree, 0, context, collector, subKey);
-        if(collector.__ycb_source__) {
+        if (collector.__ycb_source__) {
             return omit(collector, '__ycb_source__');
         }
         return collector;
@@ -116,29 +115,29 @@ Ycb.prototype = {
      * @param subKey {string} determines if substituted or non-substituted configs are used.
      * @private
      */
-    _readHelper: function(cur, depth, context, collector, subKey) {
-        if(depth === context.length) {
+    _readHelper: function (cur, depth, context, collector, subKey) {
+        if (depth === context.length) {
             mergeDeep(cur[subKey], collector, false);
             return;
         }
         var value = context[depth];
-        if(!Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
-            for(var j=0; j<n; j++) {
-                if(cur.has(keys[j])) {
-                    this._readHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
+            for (var j = 0; j < n; j++) {
+                if (cur.has(keys[j])) {
+                    this._readHelper(cur.get(keys[j]), depth + 1, context, collector, subKey);
                 }
             }
         } else {
             var seen = {};
             var i = value.length;
-            while(i--) {
+            while (i--) {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
-                for(j=0; j<n; j++) {
-                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
-                        this._readHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
+                for (j = 0; j < n; j++) {
+                    if (cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        this._readHelper(cur.get(keys[j]), depth + 1, context, collector, subKey);
                         seen[keys[j]] = true;
                     }
                 }
@@ -155,25 +154,25 @@ Ycb.prototype = {
      * @param options {object}
      * @return {array}
      */
-    readTimeAware: function(contextObj, time, options) {
+    readTimeAware: function (contextObj, time, options) {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
-        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = {};
         var soonest = SENTINEL_TIME;
-        if(this.masterDelta) {
-            if(this.masterDelta[subKey]) {
+        if (this.masterDelta) {
+            if (this.masterDelta[subKey]) {
                 collector = cloneDeep(this.masterDelta[subKey]);
             }
-            if(this.masterDelta.schedules) {
+            if (this.masterDelta.schedules) {
                 soonest = this._readScheduled(this.masterDelta.schedules, time, collector, subKey);
             }
         }
         var ret = this._readTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
-        if(ret < soonest) {
+        if (ret < soonest) {
             soonest = ret;
         }
-        if(soonest !== SENTINEL_TIME && options.cacheInfo === true) {
+        if (soonest !== SENTINEL_TIME && options.cacheInfo === true) {
             collector[EXPIRATION_KEY] = soonest;
         }
         return collector;
@@ -189,26 +188,26 @@ Ycb.prototype = {
      * @param subKey {string} determines if substituted or non-substituted configs are used.
      * @private
      */
-    _readTimeAwareHelper: function(cur, depth, context, time, collector, subKey) {
+    _readTimeAwareHelper: function (cur, depth, context, time, collector, subKey) {
         var soonest = SENTINEL_TIME;
         var ret;
-        if(depth === context.length) {
-            if(cur[subKey]) {
+        if (depth === context.length) {
+            if (cur[subKey]) {
                 mergeDeep(cur[subKey], collector, false);
             }
-            if(cur.schedules) {
+            if (cur.schedules) {
                 soonest = this._readScheduled(cur.schedules, time, collector, subKey);
             }
             return soonest;
         }
         var value = context[depth];
-        if(!Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
-            for(var j=0; j<n; j++) {
-                if(cur.has(keys[j])) {
-                    ret = this._readTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
-                    if(ret < soonest) {
+            for (var j = 0; j < n; j++) {
+                if (cur.has(keys[j])) {
+                    ret = this._readTimeAwareHelper(cur.get(keys[j]), depth + 1, context, time, collector, subKey);
+                    if (ret < soonest) {
                         soonest = ret;
                     }
                 }
@@ -216,14 +215,14 @@ Ycb.prototype = {
         } else {
             var seen = {};
             var i = value.length;
-            while(i--) {
+            while (i--) {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
-                for(j=0; j<n; j++) {
-                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
-                        ret = this._readTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                for (j = 0; j < n; j++) {
+                    if (cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        ret = this._readTimeAwareHelper(cur.get(keys[j]), depth + 1, context, time, collector, subKey);
                         seen[keys[j]] = true;
-                        if(ret < soonest) {
+                        if (ret < soonest) {
                             soonest = ret;
                         }
                     }
@@ -240,10 +239,10 @@ Ycb.prototype = {
      * @param options {object}
      * @return {array}
      */
-    readNoMerge: function(contextObj, options) {
+    readNoMerge: function (contextObj, options) {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
-        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = this.masterDelta ? [this.masterDelta[subKey]] : [];
         this._readNoMergeHelper(this.tree, 0, context, collector, subKey);
         return cloneDeep(collector);
@@ -258,29 +257,29 @@ Ycb.prototype = {
      * @param subKey {string} determines if substituted or non-substituted configs are used.
      * @private
      */
-    _readNoMergeHelper: function(cur, depth, context, collector, subKey) {
-        if(depth === context.length) {
+    _readNoMergeHelper: function (cur, depth, context, collector, subKey) {
+        if (depth === context.length) {
             collector.push(cur[subKey]);
             return;
         }
         var value = context[depth];
-        if(!Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
-            for(var j=0; j<n; j++) {
-                if(cur.has(keys[j])) {
-                    this._readNoMergeHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
+            for (var j = 0; j < n; j++) {
+                if (cur.has(keys[j])) {
+                    this._readNoMergeHelper(cur.get(keys[j]), depth + 1, context, collector, subKey);
                 }
             }
         } else {
             var seen = {};
             var i = value.length;
-            while(i--) {
+            while (i--) {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
-                for(j=0; j<n; j++) {
-                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
-                        this._readNoMergeHelper(cur.get(keys[j]), depth+1, context, collector, subKey);
+                for (j = 0; j < n; j++) {
+                    if (cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        this._readNoMergeHelper(cur.get(keys[j]), depth + 1, context, collector, subKey);
                         seen[keys[j]] = true;
                     }
                 }
@@ -297,27 +296,27 @@ Ycb.prototype = {
      * @param options {object}
      * @return {array}
      */
-    readNoMergeTimeAware: function(contextObj, time, options) {
+    readNoMergeTimeAware: function (contextObj, time, options) {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
-        var subKey = options.applySubstitutions !== false ? 'subbed': 'unsubbed';
+        var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = [];
         var soonest = SENTINEL_TIME;
-        if(this.masterDelta) {
-            if(this.masterDelta[subKey]) {
+        if (this.masterDelta) {
+            if (this.masterDelta[subKey]) {
                 collector = [this.masterDelta[subKey]];
             }
-            if(this.masterDelta.schedules) {
+            if (this.masterDelta.schedules) {
                 soonest = this._readScheduledNoMerge(this.masterDelta.schedules, time, collector, subKey);
             }
         }
         var ret = this._readNoMergeTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
-        if(ret < soonest) {
+        if (ret < soonest) {
             soonest = ret;
         }
         collector = cloneDeep(collector); //clone before we may add cache info to result
-        if(soonest !== SENTINEL_TIME && options.cacheInfo === true) {
-            if(collector.length > 0) {
+        if (soonest !== SENTINEL_TIME && options.cacheInfo === true) {
+            if (collector.length > 0) {
                 collector[0][EXPIRATION_KEY] = soonest;
             } else {
                 var o = {};
@@ -338,26 +337,33 @@ Ycb.prototype = {
      * @param subKey {string} determines if substituted or non-substituted configs are used.
      * @private
      */
-    _readNoMergeTimeAwareHelper: function(cur, depth, context, time, collector, subKey) {
+    _readNoMergeTimeAwareHelper: function (cur, depth, context, time, collector, subKey) {
         var soonest = SENTINEL_TIME;
         var ret;
-        if(depth === context.length) {
-            if(cur[subKey]) {
+        if (depth === context.length) {
+            if (cur[subKey]) {
                 collector.push(cur[subKey]);
             }
-            if(cur.schedules) {
+            if (cur.schedules) {
                 soonest = this._readScheduledNoMerge(cur.schedules, time, collector, subKey);
             }
             return soonest;
         }
         var value = context[depth];
-        if(!Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             var keys = this.precedenceMap[value];
             var n = keys.length;
-            for(var j=0; j<n; j++) {
-                if(cur.has(keys[j])) {
-                    ret = this._readNoMergeTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
-                    if(ret < soonest) {
+            for (var j = 0; j < n; j++) {
+                if (cur.has(keys[j])) {
+                    ret = this._readNoMergeTimeAwareHelper(
+                        cur.get(keys[j]),
+                        depth + 1,
+                        context,
+                        time,
+                        collector,
+                        subKey
+                    );
+                    if (ret < soonest) {
                         soonest = ret;
                     }
                 }
@@ -365,14 +371,21 @@ Ycb.prototype = {
         } else {
             var seen = {};
             var i = value.length;
-            while(i--) {
+            while (i--) {
                 keys = this.precedenceMap[value[i]];
                 n = keys.length;
-                for(j=0; j<n; j++) {
-                    if(cur.has(keys[j]) && seen[keys[j]] === undefined) {
-                        ret = this._readNoMergeTimeAwareHelper(cur.get(keys[j]), depth+1, context, time, collector, subKey);
+                for (j = 0; j < n; j++) {
+                    if (cur.has(keys[j]) && seen[keys[j]] === undefined) {
+                        ret = this._readNoMergeTimeAwareHelper(
+                            cur.get(keys[j]),
+                            depth + 1,
+                            context,
+                            time,
+                            collector,
+                            subKey
+                        );
                         seen[keys[j]] = true;
-                        if(ret < soonest) {
+                        if (ret < soonest) {
                             soonest = ret;
                         }
                     }
@@ -389,7 +402,7 @@ Ycb.prototype = {
      * @returns {string}
      * @private
      */
-    getCacheKey: function(contextObj) {
+    getCacheKey: function (contextObj) {
         return JSON.stringify(this._parseContext(contextObj));
     },
 
@@ -400,30 +413,30 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _parseContext: function(contextObj) {
-        if(contextObj === undefined) {
+    _parseContext: function (contextObj) {
+        if (contextObj === undefined) {
             contextObj = {};
         }
         var context = new Array(this.dimensionsList.length);
-        for(var i=0; i<this.dimensionsList.length; i++) {
+        for (var i = 0; i < this.dimensionsList.length; i++) {
             var dimension = this.dimensionsList[i];
-            if(contextObj.hasOwnProperty(dimension)) {
+            if (contextObj.hasOwnProperty(dimension)) {
                 var value = contextObj[dimension];
-                if(Array.isArray(value)) {
+                if (Array.isArray(value)) {
                     var newValue = [];
-                    for(var j=0; j<value.length; j++) {
+                    for (var j = 0; j < value.length; j++) {
                         var numValue = this.valueToNumber[dimension][value[j]];
-                        if(numValue !== undefined) {
+                        if (numValue !== undefined) {
                             newValue.push(numValue);
                         }
                     }
-                    if(newValue.length) {
+                    if (newValue.length) {
                         context[i] = newValue;
                         continue;
                     }
                 } else {
                     numValue = this.valueToNumber[dimension][value];
-                    if(numValue !== undefined) {
+                    if (numValue !== undefined) {
                         context[i] = numValue;
                         continue;
                     }
@@ -440,10 +453,10 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _contextToObject: function(context) {
+    _contextToObject: function (context) {
         var contextObj = {};
-        for(var i=0; i<context.length; i++) {
-            if(context[i] !== 0) {
+        for (var i = 0; i < context.length; i++) {
+            if (context[i] !== 0) {
                 contextObj[this.dimensionsList[i]] = this.numberToValue[context[i]];
             }
         }
@@ -455,7 +468,7 @@ Ycb.prototype = {
      * @method _processRawBundle
      * @param config {object}
      */
-    _processRawBundle: function(config) {
+    _processRawBundle: function (config) {
         var dimCheckResult = this._checkDimensions(config);
         var dimensionsObject = dimCheckResult[0];
         var totalDimensions = dimCheckResult[1];
@@ -468,11 +481,17 @@ Ycb.prototype = {
 
         var activeDimensions = this._parseDimensions(dimensionsObject, usedDimensions, usedValues);
 
-        for(var configIndex=0; configIndex<config.length; configIndex++) {
+        for (var configIndex = 0; configIndex < config.length; configIndex++) {
             var fullContext = contexts[configIndex];
-            if(fullContext !== undefined) {
-                var context = this._filterContext(configIndex, fullContext, activeDimensions, usedValues, config[configIndex].settings);
-                if(context !== undefined) {
+            if (fullContext !== undefined) {
+                var context = this._filterContext(
+                    configIndex,
+                    fullContext,
+                    activeDimensions,
+                    usedValues,
+                    config[configIndex].settings
+                );
+                if (context !== undefined) {
                     var delta = this._buildDelta(config[configIndex], intervals[configIndex]);
                     this._buildTreeHelper(this.tree, 0, context, delta);
                 }
@@ -486,15 +505,15 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _checkDimensions: function(config) {
-        for(var i=0; i<config.length; i++) {
-            if(config[i].dimensions) {
+    _checkDimensions: function (config) {
+        for (var i = 0; i < config.length; i++) {
+            if (config[i].dimensions) {
                 var dimensions = config[i].dimensions;
                 this.dimensions = dimensions;
                 var allDimensions = {};
-                for(var j=0; j<dimensions.length; j++) {
+                for (var j = 0; j < dimensions.length; j++) {
                     var name;
-                    for(name in dimensions[j]) {
+                    for (name in dimensions[j]) {
                         allDimensions[name] = j;
                         break;
                     }
@@ -514,60 +533,61 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _checkSettings: function(config, allDimensions, height) {
+    _checkSettings: function (config, allDimensions, height) {
         var usedDimensions = {};
         var usedValues = {};
         var contexts = {};
         var intervals = {};
-        configLoop:
-        for(var i=0; i<config.length; i++) {
+        configLoop: for (var i = 0; i < config.length; i++) {
             var configObj = config[i];
-            if(!isA(configObj, Object)) {
+            if (!isA(configObj, Object)) {
                 logBundleWarning(i, 'non-object config', JSON.stringify(configObj), this.logContext);
                 continue;
             }
-            if(!configObj.settings) {
-                if(!configObj.dimensions) {
+            if (!configObj.settings) {
+                if (!configObj.dimensions) {
                     logBundleWarning(i, 'no valid settings field', JSON.stringify(configObj), this.logContext);
                 }
                 continue;
             }
-            if(Array.isArray(configObj.settings)) { //convert old style settings to new style
-                configObj.settings = {dimensions: configObj.settings};
+            if (Array.isArray(configObj.settings)) {
+                //convert old style settings to new style
+                configObj.settings = { dimensions: configObj.settings };
             }
             var setting = config[i].settings;
 
             var settingDimensions = setting.dimensions;
             var settingSchedule = setting.schedule;
             var interval = undefined;
-            if(Object.keys(config[i]).length === 1) { //Don't skip as empty configs are valid and appear on tree walk
+            if (Object.keys(config[i]).length === 1) {
+                //Don't skip as empty configs are valid and appear on tree walk
                 logBundleWarning(i, 'empty config', JSON.stringify(settingDimensions), this.logContext);
             }
-            if(!Array.isArray(settingDimensions)) {
+            if (!Array.isArray(settingDimensions)) {
                 logBundleWarning(i, 'non-array settings', JSON.stringify(settingDimensions), this.logContext);
                 continue;
             }
-            if(settingDimensions.length === 0 ) {
+            if (settingDimensions.length === 0) {
                 logBundleWarning(i, 'empty settings array', undefined, this.logContext);
                 continue;
             }
-            if(settingSchedule !== undefined) {
-                interval = {start: 0, end: SENTINEL_TIME};
-                if(settingSchedule.start === undefined && settingSchedule.end === undefined){
+            if (settingSchedule !== undefined) {
+                interval = { start: 0, end: SENTINEL_TIME };
+                if (settingSchedule.start === undefined && settingSchedule.end === undefined) {
                     logBundleWarning(i, 'empty schedule', JSON.stringify(setting), this.logContext);
                     continue;
                 }
-                if(settingSchedule.start !== undefined) {
+                if (settingSchedule.start !== undefined) {
                     var startDate = new Date(settingSchedule.start);
-                    if(isNaN(startDate)) {
+                    if (isNaN(startDate)) {
                         logBundleWarning(i, 'invalid start date', JSON.stringify(settingSchedule), this.logContext);
                         continue;
                     }
                     interval.start = startDate.getTime();
                 }
-                if(settingSchedule.end !== undefined) {
+                if (settingSchedule.end !== undefined) {
                     var endDate = new Date(settingSchedule.end);
-                    if(isNaN(endDate)) {
+                    if (isNaN(endDate)) {
                         logBundleWarning(i, 'invalid end date', JSON.stringify(settingSchedule), this.logContext);
                         continue;
                     }
@@ -575,13 +595,18 @@ Ycb.prototype = {
                 }
                 intervals[i] = interval;
             }
-            if(settingDimensions[0] === 'master') {
-                if(settingDimensions.length > 1) {
-                    logBundleWarning(i, 'master setting with additional dimensions',
-                        JSON.stringify(settingDimensions), this.logContext);
+            if (settingDimensions[0] === 'master') {
+                if (settingDimensions.length > 1) {
+                    logBundleWarning(
+                        i,
+                        'master setting with additional dimensions',
+                        JSON.stringify(settingDimensions),
+                        this.logContext
+                    );
                     continue;
                 }
-                if(this.masterDelta !== undefined) { //if master delta has been set than combine with existing one
+                if (this.masterDelta !== undefined) {
+                    //if master delta has been set than combine with existing one
                     var delta = this._buildDelta(configObj, interval);
                     this.masterDelta = this._combineDeltas(delta, this.masterDelta);
                 } else {
@@ -591,33 +616,36 @@ Ycb.prototype = {
             }
             //initialize context array with default values to be filled with any values specified in config
             var context = new Array(height);
-            for(var q=0; q<height; q++) {
+            for (var q = 0; q < height; q++) {
                 context[q] = DEFAULT;
             }
-            for(var j=0; j<settingDimensions.length; j++) {
+            for (var j = 0; j < settingDimensions.length; j++) {
                 var kv = settingDimensions[j].split(':');
-                if(kv.length !== 2) {
-                    logBundleWarning(i, 'invalid setting ' + settingDimensions[j],
-                        JSON.stringify(settingDimensions), this.logContext);
+                if (kv.length !== 2) {
+                    logBundleWarning(
+                        i,
+                        'invalid setting ' + settingDimensions[j],
+                        JSON.stringify(settingDimensions),
+                        this.logContext
+                    );
                     continue configLoop;
                 }
                 var dim = kv[0];
                 var index = allDimensions[dim];
-                if(index === undefined) {
-                    logBundleWarning(i, 'invalid dimension ' + dim,
-                        JSON.stringify(settingDimensions), this.logContext);
+                if (index === undefined) {
+                    logBundleWarning(i, 'invalid dimension ' + dim, JSON.stringify(settingDimensions), this.logContext);
                     continue configLoop;
                 }
                 usedDimensions[dim] = 1;
                 usedValues[dim] = usedValues[dim] || {};
 
-                if(kv[1].indexOf(',') === -1) {
+                if (kv[1].indexOf(',') === -1) {
                     usedValues[dim][kv[1]] = 1;
                     context[index] = kv[1];
                 } else {
                     var vals = kv[1].split(',');
                     context[index] = vals;
-                    for(var k=0; k<vals.length; k++) {
+                    for (var k = 0; k < vals.length; k++) {
                         usedValues[dim][vals[k]] = 1;
                     }
                 }
@@ -633,15 +661,15 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _buildDelta: function(config, interval) {
+    _buildDelta: function (config, interval) {
         config = omit(config, 'settings');
         var subbed = cloneDeep(config);
         var subFlag = this._applySubstitutions(subbed, null, null);
         var unsubbed = subFlag ? config : subbed;
-        if(interval) {
-            return {schedules: this._buildSchedule(subbed, unsubbed, interval)};
+        if (interval) {
+            return { schedules: this._buildSchedule(subbed, unsubbed, interval) };
         }
-        return {subbed:subbed, unsubbed:unsubbed};
+        return { subbed: subbed, unsubbed: unsubbed };
     },
 
     /**
@@ -654,8 +682,8 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _buildSchedule: function(subbed, unsubbed, interval) {
-        return {starts:[interval.start], ends:[interval.end], subbed:[subbed], unsubbed:[unsubbed]};
+    _buildSchedule: function (subbed, unsubbed, interval) {
+        return { starts: [interval.start], ends: [interval.end], subbed: [subbed], unsubbed: [unsubbed] };
     },
 
     /**
@@ -665,22 +693,22 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _combineDeltas: function(top, bottom) {
+    _combineDeltas: function (top, bottom) {
         var combinedDelta = {};
-        if(top.schedules || bottom.schedules) {
-            if(top.schedules === undefined) {
+        if (top.schedules || bottom.schedules) {
+            if (top.schedules === undefined) {
                 combinedDelta.schedules = bottom.schedules;
-            } else if(bottom.schedules === undefined) {
+            } else if (bottom.schedules === undefined) {
                 combinedDelta.schedules = top.schedules;
             } else {
                 combinedDelta.schedules = this._combineSchedules(top.schedules, bottom.schedules);
             }
         }
-        if(top.subbed || bottom.subbed) {
-            if(top.subbed === undefined) {
+        if (top.subbed || bottom.subbed) {
+            if (top.subbed === undefined) {
                 combinedDelta.subbed = bottom.subbed;
                 combinedDelta.unsubbed = bottom.unsubbed;
-            } else if(bottom.subbed === undefined) {
+            } else if (bottom.subbed === undefined) {
                 combinedDelta.subbed = top.subbed;
                 combinedDelta.unsubbed = top.unsubbed;
             } else if (top.subbed === top.unsubbed && bottom.subbed === bottom.unsubbed) {
@@ -702,21 +730,21 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _combineSchedules: function(s1, s2) {
-        var combined = {starts:[], ends:[], subbed:[], unsubbed:[]};
+    _combineSchedules: function (s1, s2) {
+        var combined = { starts: [], ends: [], subbed: [], unsubbed: [] };
         var i = 0;
         var j = 0;
-        while(i<s1.starts.length && j<s2.starts.length) {
-            if(s1.starts[i] <= s2.starts[j]) {
+        while (i < s1.starts.length && j < s2.starts.length) {
+            if (s1.starts[i] <= s2.starts[j]) {
                 this._pushScheduleComponents(s1, combined, i++);
             } else {
                 this._pushScheduleComponents(s2, combined, j++);
             }
         }
-        while(i<s1.starts.length) {
+        while (i < s1.starts.length) {
             this._pushScheduleComponents(s1, combined, i++);
         }
-        while(j<s2.starts.length) {
+        while (j < s2.starts.length) {
             this._pushScheduleComponents(s2, combined, j++);
         }
         return combined;
@@ -730,7 +758,7 @@ Ycb.prototype = {
      * @param i {number}
      * @private
      */
-    _pushScheduleComponents: function(from, to, i) {
+    _pushScheduleComponents: function (from, to, i) {
         to.starts.push(from.starts[i]);
         to.ends.push(from.ends[i]);
         to.subbed.push(from.subbed[i]);
@@ -746,21 +774,21 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _readScheduled: function(schedules, time, collector, subKey) {
+    _readScheduled: function (schedules, time, collector, subKey) {
         var soonest = SENTINEL_TIME;
         var i = 0;
         var n = schedules.starts.length;
-        while(i < n && schedules.starts[i] <= time){
-            if(time <= schedules.ends[i]) {
+        while (i < n && schedules.starts[i] <= time) {
+            if (time <= schedules.ends[i]) {
                 mergeDeep(schedules[subKey][i], collector, false);
-                if(schedules.ends[i] < soonest) {
+                if (schedules.ends[i] < soonest) {
                     soonest = schedules.ends[i];
                 }
             }
             i++;
         }
         soonest++;
-        if(i < n && schedules.starts[i] < soonest) {
+        if (i < n && schedules.starts[i] < soonest) {
             soonest = schedules.starts[i];
         }
         return soonest;
@@ -775,21 +803,21 @@ Ycb.prototype = {
      * @returns {object}
      * @private
      */
-    _readScheduledNoMerge: function(schedules, time, collector, subKey) {
+    _readScheduledNoMerge: function (schedules, time, collector, subKey) {
         var soonest = SENTINEL_TIME;
         var i = 0;
         var n = schedules.starts.length;
-        while(i < n && schedules.starts[i] <= time){
-            if(time <= schedules.ends[i]) {
+        while (i < n && schedules.starts[i] <= time) {
+            if (time <= schedules.ends[i]) {
                 collector.push(schedules[subKey][i]);
-                if(schedules.ends[i] < soonest) {
+                if (schedules.ends[i] < soonest) {
                     soonest = schedules.ends[i];
                 }
             }
             i++;
         }
         soonest++;
-        if(i < n && schedules.starts[i] < soonest) {
+        if (i < n && schedules.starts[i] < soonest) {
             soonest = schedules.starts[i];
         }
         return soonest;
@@ -803,21 +831,30 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _parseDimensions: function(dimensions, usedDimensions, usedValues) {
+    _parseDimensions: function (dimensions, usedDimensions, usedValues) {
         var activeDimensions = new Array(dimensions.length);
         var valueCounter = 1;
-        for(var i=0; i<dimensions.length; i++) {
+        for (var i = 0; i < dimensions.length; i++) {
             var dimensionName;
-            for(dimensionName in dimensions[i]){break}
-            if(usedDimensions[dimensionName] === undefined) {
+            for (dimensionName in dimensions[i]) {
+                break;
+            }
+            if (usedDimensions[dimensionName] === undefined) {
                 activeDimensions[i] = 0;
                 continue;
             }
             activeDimensions[i] = 1;
             this.dimensionsList.push(dimensionName);
             var labelCollector = {};
-            valueCounter = this._dimensionWalk(dimensions[i][dimensionName], usedValues[dimensionName],
-                valueCounter, [0], this.precedenceMap, labelCollector, this.numberToValue);
+            valueCounter = this._dimensionWalk(
+                dimensions[i][dimensionName],
+                usedValues[dimensionName],
+                valueCounter,
+                [0],
+                this.precedenceMap,
+                labelCollector,
+                this.numberToValue
+            );
             this.valueToNumber[dimensionName] = labelCollector;
         }
         return activeDimensions;
@@ -836,27 +873,34 @@ Ycb.prototype = {
      * @returns {number}
      * @private
      */
-    _dimensionWalk: function(dimension, used, label, path, pathCollector, valueToNumCollector, numToValueCollector) {
-        for(var key in dimension) {
+    _dimensionWalk: function (dimension, used, label, path, pathCollector, valueToNumCollector, numToValueCollector) {
+        for (var key in dimension) {
             var currentPath;
-            if(used[key]) {
+            if (used[key]) {
                 used[key] = 2;
                 currentPath = path.concat(label);
             } else {
                 currentPath = path;
             }
-            if(currentPath.length > 1) {
-                var ancestor = currentPath[currentPath.length-1];
+            if (currentPath.length > 1) {
+                var ancestor = currentPath[currentPath.length - 1];
                 valueToNumCollector[key] = ancestor;
-                if(label === ancestor) {
+                if (label === ancestor) {
                     pathCollector.push(currentPath);
                     numToValueCollector.push(key);
                     label++;
                 }
             }
-            if(dimension[key] !== null) {
-                label = this._dimensionWalk(dimension[key], used, label, currentPath,
-                    pathCollector, valueToNumCollector, numToValueCollector);
+            if (dimension[key] !== null) {
+                label = this._dimensionWalk(
+                    dimension[key],
+                    used,
+                    label,
+                    currentPath,
+                    pathCollector,
+                    valueToNumCollector,
+                    numToValueCollector
+                );
             }
         }
         return label;
@@ -871,40 +915,48 @@ Ycb.prototype = {
      * @returns {array}
      * @private
      */
-    _filterContext: function(configIndex, fullContext, activeDimensions, usedValues, setting) {
+    _filterContext: function (configIndex, fullContext, activeDimensions, usedValues, setting) {
         var height = this.dimensionsList.length;
         var newContext = new Array(height);
-        for(var i=0; i<height; i++) {
+        for (var i = 0; i < height; i++) {
             newContext[i] = 0;
         }
         var activeIndex = 0;
-        for(i=0; i<fullContext.length; i++) {
-            if(activeDimensions[i]) {
+        for (i = 0; i < fullContext.length; i++) {
+            if (activeDimensions[i]) {
                 var dimensionName = this.dimensionsList[activeIndex];
                 var contextValue = fullContext[i];
-                if(Array.isArray(contextValue)) {
+                if (Array.isArray(contextValue)) {
                     var newValue = [];
-                    for(var k=0; k<contextValue.length; k++) {
+                    for (var k = 0; k < contextValue.length; k++) {
                         var valueChunk = contextValue[k];
-                        if(usedValues[dimensionName][valueChunk] === 2) {
+                        if (usedValues[dimensionName][valueChunk] === 2) {
                             newValue.push(this.valueToNumber[dimensionName][valueChunk]);
-                        } else if(valueChunk === DEFAULT) {
+                        } else if (valueChunk === DEFAULT) {
                             newValue.push(0);
                         } else {
-                            logBundleWarning(configIndex, 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
-                                JSON.stringify(setting), this.logContext);
+                            logBundleWarning(
+                                configIndex,
+                                'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
+                                JSON.stringify(setting),
+                                this.logContext
+                            );
                         }
                     }
-                    if(newValue.length === 0) {
+                    if (newValue.length === 0) {
                         return;
                     }
                     newContext[activeIndex] = newValue;
                 } else {
-                    if(usedValues[dimensionName][contextValue] === 2) {
+                    if (usedValues[dimensionName][contextValue] === 2) {
                         newContext[activeIndex] = this.valueToNumber[dimensionName][contextValue];
-                    } else if(contextValue !== DEFAULT) {
-                        logBundleWarning(configIndex, 'invalid value ' + contextValue + ' for dimension ' + dimensionName,
-                            JSON.stringify(setting), this.logContext);
+                    } else if (contextValue !== DEFAULT) {
+                        logBundleWarning(
+                            configIndex,
+                            'invalid value ' + contextValue + ' for dimension ' + dimensionName,
+                            JSON.stringify(setting),
+                            this.logContext
+                        );
                         return;
                     }
                 }
@@ -922,40 +974,40 @@ Ycb.prototype = {
      * @param delta {object}
      * @private
      */
-    _buildTreeHelper: function(root, depth, context, delta) {
+    _buildTreeHelper: function (root, depth, context, delta) {
         var i;
         var currentValue = context[depth];
         var isMulti = Array.isArray(currentValue);
-        if(depth === context.length-1) {
-            if(isMulti) {
-                for(i=0; i<currentValue.length; i++) {
+        if (depth === context.length - 1) {
+            if (isMulti) {
+                for (i = 0; i < currentValue.length; i++) {
                     var curDelta = delta;
-                    if(root.has(currentValue[i])) {
+                    if (root.has(currentValue[i])) {
                         curDelta = this._combineDeltas(delta, root.get(currentValue[i]));
                     }
                     root.set(currentValue[i], curDelta);
                 }
             } else {
                 curDelta = delta;
-                if(root.has(currentValue)) {
+                if (root.has(currentValue)) {
                     curDelta = this._combineDeltas(delta, root.get(currentValue));
                 }
                 root.set(currentValue, curDelta);
             }
             return;
         }
-        if(isMulti){
-            for(i=0; i<currentValue.length; i++) {
-                if(!root.has(currentValue[i])) {
+        if (isMulti) {
+            for (i = 0; i < currentValue.length; i++) {
+                if (!root.has(currentValue[i])) {
                     root.set(currentValue[i], new Map());
                 }
-                this._buildTreeHelper(root.get(currentValue[i]), depth+1, context, delta);
+                this._buildTreeHelper(root.get(currentValue[i]), depth + 1, context, delta);
             }
         } else {
-            if(!root.has(currentValue)) {
+            if (!root.has(currentValue)) {
                 root.set(currentValue, new Map());
             }
-            this._buildTreeHelper(root.get(currentValue), depth+1, context, delta);
+            this._buildTreeHelper(root.get(currentValue), depth + 1, context, delta);
         }
     },
 
@@ -970,12 +1022,9 @@ Ycb.prototype = {
      * @return {boolean}
      */
     _applySubstitutions: function (config, base, parent) {
-        var key,
-            sub,
-            find,
-            item;
+        var key, sub, find, item;
         base = base || config;
-        parent = parent || {ref: config, key: null};
+        parent = parent || { ref: config, key: null };
         var subFlag = false;
 
         for (key in config) {
@@ -985,12 +1034,11 @@ Ycb.prototype = {
                 if (isIterable(config[key])) {
                     // parent param {ref: config, key: key} is a recursion
                     // pointer that needed only when replacing "keys"
-                    subFlag = this._applySubstitutions(config[key], base, {ref: config, key: key}) || subFlag;
-
+                    subFlag = this._applySubstitutions(config[key], base, { ref: config, key: key }) || subFlag;
                 } else {
                     // Test if the key is a "substitution" key
                     sub = SUBMATCH.exec(key);
-                    if (sub && (sub[0] === key)) {
+                    if (sub && sub[0] === key) {
                         subFlag = true;
                         // Pull out the key to "find"
                         find = extract(base, sub[1], null);
@@ -1014,7 +1062,6 @@ Ycb.prototype = {
                         } else {
                             config[key] = '--YCB-SUBSTITUTION-ERROR--';
                         }
-
                     } else if (SUBMATCH.test(config[key])) {
                         subFlag = true;
                         // Test if the value is a "substitution" value
@@ -1030,7 +1077,8 @@ Ycb.prototype = {
                             if (isA(find, Array) && isA(config, Array)) {
                                 // This has to be done on the parent or the reference is lost
                                 // The whole {ref: config, key: key} is needed only when replacing "keys"
-                                parent.ref[parent.key] = config.slice(0, parseInt(key, 10))
+                                parent.ref[parent.key] = config
+                                    .slice(0, parseInt(key, 10))
                                     .concat(find)
                                     .concat(config.slice(parseInt(key, 10) + 1));
                             } else {
@@ -1038,8 +1086,7 @@ Ycb.prototype = {
                             }
                         } else {
                             // If not it's just part of the whole value
-                            config[key] = config[key]
-                                .replace(SUBMATCHES, replacer(base));
+                            config[key] = config[key].replace(SUBMATCHES, replacer(base));
                         }
                     }
                 }
@@ -1059,7 +1106,7 @@ Ycb.prototype = {
      * @return {nothing} results returned via callback
      */
     walkSettings: function (callback) {
-        if(this.masterDelta && !callback({}, cloneDeep(this.masterDelta.subbed))) {
+        if (this.masterDelta && !callback({}, cloneDeep(this.masterDelta.subbed))) {
             return undefined;
         }
         this._walkSettingsHelper(this.tree, 0, [], callback, [false]);
@@ -1074,16 +1121,16 @@ Ycb.prototype = {
      * @param stop {array}
      * @private
      */
-    _walkSettingsHelper: function(cur, depth, context, callback, stop) {
-        if(stop[0]) {
+    _walkSettingsHelper: function (cur, depth, context, callback, stop) {
+        if (stop[0]) {
             return true;
         }
-        if(depth === this.dimensionsList.length) {
+        if (depth === this.dimensionsList.length) {
             stop[0] = !callback(this._contextToObject(context), cloneDeep(cur.subbed));
             return stop[0];
         }
-        for(var [key, value] of  cur) {
-            if(this._walkSettingsHelper(value, depth+1, context.concat(key), callback, stop)) {
+        for (var [key, value] of cur) {
+            if (this._walkSettingsHelper(value, depth + 1, context.concat(key), callback, stop)) {
                 return true;
             }
         }
@@ -1093,18 +1140,15 @@ Ycb.prototype = {
      * Return clone of the dimensions object.
      * @returns {array}
      */
-    getDimensions: function() {
+    getDimensions: function () {
         return cloneDeep(this.dimensions);
-    }
+    },
 };
-
-
 
 //---------------------------------------------------------------
 // MODULE INTERFACE
 
 module.exports = {
-
     version: VERSION,
     expirationKey: EXPIRATION_KEY,
 
@@ -1124,7 +1168,7 @@ module.exports = {
     read: function (bundle, context, validate, debug) {
         var opts = {
             validate: validate,
-            debug: debug
+            debug: debug,
         };
         var ycb = new Ycb(bundle, opts);
         return ycb.read(context, opts);
@@ -1144,5 +1188,5 @@ module.exports = {
         var opts = { debug: debug };
         var ycb = new Ycb(bundle, opts);
         return ycb.readNoMerge(context, opts);
-    }
+    },
 };

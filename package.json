@@ -1,37 +1,37 @@
 {
-  "name": "ycb",
-  "version": "2.1.2",
-  "description": "YCB is a multi-dimensional configuration library that builds bundles from resource files describing a variety of values.",
-  "author": "Ric Allinson <allinson@yahoo-inc.com>",
-  "license": "BSD",
-  "contributors": [
-    "Drew Folta <folta@yahoo-inc.com>",
-    "Michael Ridgway <mridgway@yahoo-inc.com>",
-    "Caridy Patino <caridy@yahoo-inc.com>",
-    "Isao Yagi <isao@yahoo-inc.com>"
-  ],
-  "dependencies": {},
-  "main": "index",
-  "scripts": {
-    "cover": "nyc npm run test",
-    "lint": "eslint . && prettier --check .",
-    "pretest": "npm run lint",
-    "test": "mocha tests/unit --recursive --reporter spec"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.0",
-    "mocha": "^9.0.0",
-    "nyc": "^15.0.1",
-    "prettier": "^2.5.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/yahoo/ycb.git"
-  },
-  "bugs": "https://github.com/yahoo/ycb/issues",
-  "prettier": {
-      "printWidth": 120,
-      "singleQuote": true,
-      "tabWidth": 4
-  }
+    "name": "ycb",
+    "version": "2.1.2",
+    "description": "YCB is a multi-dimensional configuration library that builds bundles from resource files describing a variety of values.",
+    "author": "Ric Allinson <allinson@yahoo-inc.com>",
+    "license": "BSD",
+    "contributors": [
+        "Drew Folta <folta@yahoo-inc.com>",
+        "Michael Ridgway <mridgway@yahoo-inc.com>",
+        "Caridy Patino <caridy@yahoo-inc.com>",
+        "Isao Yagi <isao@yahoo-inc.com>"
+    ],
+    "dependencies": {},
+    "main": "index",
+    "scripts": {
+        "cover": "nyc npm run test",
+        "lint": "eslint . && prettier --check .",
+        "pretest": "npm run lint",
+        "test": "mocha tests/unit --recursive --reporter spec"
+    },
+    "devDependencies": {
+        "eslint": "^8.0.0",
+        "mocha": "^9.0.0",
+        "nyc": "^15.0.1",
+        "prettier": "^2.5.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/yahoo/ycb.git"
+    },
+    "bugs": "https://github.com/yahoo/ycb/issues",
+    "prettier": {
+        "printWidth": 120,
+        "singleQuote": true,
+        "tabWidth": 4
+    }
 }
