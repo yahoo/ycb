@@ -14,23 +14,24 @@
   "main": "index",
   "scripts": {
     "cover": "nyc npm run test",
-    "dev": "mocha tests/unit --recursive --reporter spec -w",
-    "lint": "eslint .",
+    "lint": "eslint . && prettier --check .",
     "pretest": "npm run lint",
     "test": "mocha tests/unit --recursive --reporter spec"
-  },
-  "engines": {
-    "node": ">0.4",
-    "npm": ">1.0"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
     "mocha": "^9.0.0",
-    "nyc": "^15.0.1"
+    "nyc": "^15.0.1",
+    "prettier": "^2.5.1"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/yahoo/ycb.git"
   },
-  "bugs": "https://github.com/yahoo/ycb/issues"
+  "bugs": "https://github.com/yahoo/ycb/issues",
+  "prettier": {
+      "printWidth": 120,
+      "singleQuote": true,
+      "tabWidth": 4
+  }
 }
