@@ -9,7 +9,6 @@
 var deepMerge = require('../../../lib/mergeDeep');
 var assert = require('assert');
 
-
 describe('ycb unit tests', function () {
     describe('mergeDeep', function () {
         it('should deeply merge the full object without referencing from object', function () {
@@ -18,10 +17,10 @@ describe('ycb unit tests', function () {
                 inner: {
                     string: 'value',
                     number: 1,
-                    fn: function() {}
+                    fn: function () {},
                 },
                 list: ['a', 'b', 'c'],
-                string: 'string'
+                string: 'string',
             };
             copy = deepMerge(obj, {});
 
@@ -32,40 +31,42 @@ describe('ycb unit tests', function () {
         });
 
         it('should deeply merge the full object without referencing from object', function () {
-            var obj, copy, fn = function () {};
+            var obj,
+                copy,
+                fn = function () {};
             obj = {
                 inner: {
                     obj: {},
                     string: 'value',
                     number: 1,
-                    fn: fn
+                    fn: fn,
                 },
                 list: ['a', 'b', 'c'],
-                string: 'string'
+                string: 'string',
             };
 
             var start = {
                 inner: {
                     obj: {
-                        foo: 'bar'
+                        foo: 'bar',
                     },
-                    string: 'bar'
+                    string: 'bar',
                 },
-                list: ['a', 'b', 'c', 'd']
+                list: ['a', 'b', 'c', 'd'],
             };
             copy = deepMerge(obj, start);
 
             var expected = {
                 inner: {
                     obj: {
-                        foo: 'bar'
+                        foo: 'bar',
                     },
                     string: 'value',
                     number: 1,
-                    fn: fn
+                    fn: fn,
                 },
                 list: ['a', 'b', 'c'],
-                string: 'string'
+                string: 'string',
             };
             assert.deepEqual(expected, copy);
             assert.notEqual(obj, copy);

@@ -43,4 +43,3 @@ assert.equal(8080, config.appPort);
 // read "environment:prod", "device:desktop"
 config = ycb.read({ environment: 'prod', device: 'smartphone' });
 assert.equal(8888, config.appPort);
-

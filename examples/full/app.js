@@ -34,7 +34,6 @@ assert.equal(8000, config.appPort);
 assert.equal(false, config.viewEngine.cacheTemplates);
 assert.equal(undefined, config.selector);
 
-
 // read "device:opera-mini"
 config = ycb.read({ device: 'opera-mini' });
 assert.equal('opera-mini', config.selector);

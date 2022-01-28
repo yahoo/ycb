@@ -9,7 +9,6 @@
 var deepClone = require('../../../lib/cloneDeep');
 var assert = require('assert');
 
-
 describe('ycb unit tests', function () {
     describe('cloneDeep', function () {
         it('should deeply clone the full object', function () {
@@ -18,9 +17,9 @@ describe('ycb unit tests', function () {
                 inner: {
                     string: 'value',
                     number: 1,
-                    fn: function() {}
+                    fn: function () {},
                 },
-                list: ['a', 'b', 'c']
+                list: ['a', 'b', 'c'],
             };
             copy = deepClone(obj);
 
