@@ -1,6 +1,6 @@
 [
     {
-        "settings": ["master"],
+        "settings": ["main"],
         "enableFeatureA": false,
         "enableFeatureB": false,
         "__ycb_source__": "tests/fixtures/buckets.json"

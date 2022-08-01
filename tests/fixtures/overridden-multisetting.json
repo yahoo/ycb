@@ -1,6 +1,6 @@
 [
     {
-        "settings": ["master"],
+        "settings": ["main"],
         "foo": null,
         "bar": 0,
         "baz": false,

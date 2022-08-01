@@ -144,12 +144,12 @@ describe('ycb unit tests', function () {
             assert.equal(logHistory[7], 'WARNING: config[9] has empty settings array.', 'warning log should match');
             assert.equal(
                 logHistory[8],
-                'WARNING: config[10] has master setting with additional dimensions. ["master","lang:fr"]',
+                'WARNING: config[10] has main setting with additional dimensions. ["main","lang:fr"]',
                 'warning log should match'
             );
             assert.equal(
                 logHistory[9],
-                'WARNING: config[11] has invalid setting master. ["lang:fr","master"]',
+                'WARNING: config[11] has invalid setting main. ["lang:fr","main"]',
                 'warning log should match'
             );
             assert.equal(
@@ -157,31 +157,19 @@ describe('ycb unit tests', function () {
                 'WARNING: config[13] has invalid dimension blah. ["blah:fr"]',
                 'warning log should match'
             );
-            assert.equal(
-                logHistory[11],
-                'WARNING: config[14] has empty config. ["master"]',
-                'warning log should match'
-            );
+            assert.equal(logHistory[11], 'WARNING: config[14] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[12],
-                'WARNING: config[14] has empty schedule. {"dimensions":["master"],"schedule":{}}',
+                'WARNING: config[14] has empty schedule. {"dimensions":["main"],"schedule":{}}',
                 'warning log should match'
             );
-            assert.equal(
-                logHistory[13],
-                'WARNING: config[15] has empty config. ["master"]',
-                'warning log should match'
-            );
+            assert.equal(logHistory[13], 'WARNING: config[15] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[14],
                 'WARNING: config[15] has invalid start date. {"start":"bad"}',
                 'warning log should match'
             );
-            assert.equal(
-                logHistory[15],
-                'WARNING: config[16] has empty config. ["master"]',
-                'warning log should match'
-            );
+            assert.equal(logHistory[15], 'WARNING: config[16] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[16],
                 'WARNING: config[16] has invalid end date. {"end":"bad"}',
@@ -256,12 +244,12 @@ describe('ycb unit tests', function () {
             );
             assert.equal(
                 logHistory[8],
-                'WARNING: config[10] has master setting with additional dimensions. ["master","lang:fr"] source=/bundle-path.json',
+                'WARNING: config[10] has main setting with additional dimensions. ["main","lang:fr"] source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
                 logHistory[9],
-                'WARNING: config[11] has invalid setting master. ["lang:fr","master"] source=/bundle-path.json',
+                'WARNING: config[11] has invalid setting main. ["lang:fr","main"] source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
@@ -271,17 +259,17 @@ describe('ycb unit tests', function () {
             );
             assert.equal(
                 logHistory[11],
-                'WARNING: config[14] has empty config. ["master"] source=/bundle-path.json',
+                'WARNING: config[14] has empty config. ["main"] source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
                 logHistory[12],
-                'WARNING: config[14] has empty schedule. {"dimensions":["master"],"schedule":{}} source=/bundle-path.json',
+                'WARNING: config[14] has empty schedule. {"dimensions":["main"],"schedule":{}} source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
                 logHistory[13],
-                'WARNING: config[15] has empty config. ["master"] source=/bundle-path.json',
+                'WARNING: config[15] has empty config. ["main"] source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
@@ -291,7 +279,7 @@ describe('ycb unit tests', function () {
             );
             assert.equal(
                 logHistory[15],
-                'WARNING: config[16] has empty config. ["master"] source=/bundle-path.json',
+                'WARNING: config[16] has empty config. ["main"] source=/bundle-path.json',
                 'warning log should match'
             );
             assert.equal(
@@ -560,7 +548,7 @@ describe('ycb unit tests', function () {
             var bundle,
                 config,
                 foo = {
-                    settings: ['master'],
+                    settings: ['main'],
                     title_key: 'YRB_YAHOO',
                     'data-url': 'http://service.yahoo.com',
                     logo: 'yahoo.png',
@@ -659,12 +647,12 @@ describe('ycb unit tests', function () {
             assert.equal(config.foo, 1, '[fr,es] should be 1');
         });
 
-        it('should not pollute master settings with dimension values', function () {
+        it('should not pollute main settings with dimension values', function () {
             var bundle, ycb, config;
 
             bundle = readFixtureFile('dimensions.json');
             bundle.push({
-                settings: ['master'],
+                settings: ['main'],
                 appPort: 80,
             });
             bundle.push({
@@ -681,7 +669,7 @@ describe('ycb unit tests', function () {
 
             bundle = readFixtureFile('dimensions-other.json');
             bundle.push({
-                settings: ['master'],
+                settings: ['main'],
                 appPort: 80,
             });
             bundle.push({
@@ -711,7 +699,7 @@ describe('ycb unit tests', function () {
             bundle = readFixtureFile('dimensions-other.json');
             bundle = bundle.concat([
                 {
-                    settings: ['master'],
+                    settings: ['main'],
                     appPort: 8666,
                 },
                 {
@@ -749,7 +737,7 @@ describe('ycb unit tests', function () {
         it('should do substitutions by default', function () {
             var bundle, config, expected;
             bundle = readFixtureFile('substitutions.json');
-            bundle.settings = ['master'];
+            bundle.settings = ['main'];
             bundle = [bundle];
             bundle = readFixtureFile('dimensions.json').concat(bundle);
 
@@ -763,7 +751,7 @@ describe('ycb unit tests', function () {
         it('should not do substitutions if applySubstitutions=false', function () {
             var bundle, config, expected;
             bundle = readFixtureFile('substitutions.json');
-            bundle.settings = ['master'];
+            bundle.settings = ['main'];
             bundle = [bundle];
             bundle = readFixtureFile('dimensions.json').concat(bundle);
 
@@ -778,7 +766,7 @@ describe('ycb unit tests', function () {
         it('should handle multi-value dimensions', function () {
             var ycb, bundle, config;
             bundle = readFixtureFile('buckets.json');
-            bundle.settings = ['master'];
+            bundle.settings = ['main'];
             bundle = readFixtureFile('dimensions.json').concat(bundle);
             ycb = new libycb.Ycb(bundle);
 

@@ -7,11 +7,11 @@
   {"settings": ["environment:production"]},
   {"settings": null},
   {"settings": [], "foo":"bar"},
-  {"settings": ["master","lang:fr"], "foo":"bar"},
-  {"settings": ["lang:fr","master"], "foo":"bar"},
+  {"settings": ["main","lang:fr"], "foo":"bar"},
+  {"settings": ["lang:fr","main"], "foo":"bar"},
   {"settings": ["lang:barbar"], "foo":"bar"},
   {"settings": ["blah:fr"], "foo":"bar"},
-  {"settings": {"dimensions": ["master"], "schedule": {}}},
-  {"settings": {"dimensions": ["master"], "schedule": {"start": "bad"}}},
-  {"settings": {"dimensions": ["master"], "schedule": {"end": "bad"}}}
+  {"settings": {"dimensions": ["main"], "schedule": {}}},
+  {"settings": {"dimensions": ["main"], "schedule": {"start": "bad"}}},
+  {"settings": {"dimensions": ["main"], "schedule": {"end": "bad"}}}
 ]

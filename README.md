@@ -35,7 +35,7 @@ const configArray = [
         ],
     },
     {
-        settings: ['master'],
+        settings: ['main'],
         host: 'example.com',
         prefix: null,
     },
@@ -85,7 +85,7 @@ const configArray = [
         ],
     },
     {
-        settings: ['master'],
+        settings: ['main'],
         host: 'example.com',
     },
     {

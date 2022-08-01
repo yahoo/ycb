@@ -1,6 +1,6 @@
 [
     {
-        "settings": ["master"],
+        "settings": ["main"],
 
         "title_key": "YRB_YAHOO_2nd",
         "data-url": "http://service.yahoo.com",

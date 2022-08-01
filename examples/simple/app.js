@@ -28,7 +28,7 @@ data = readFile('dimensions.json').concat(readFile('application.json'));
 // create a new Ycb instance with `data`
 ycb = new libycb.Ycb(data, {});
 
-// read "master"
+// read "main"
 config = ycb.read({});
 assert.equal(8666, config.appPort);
 
