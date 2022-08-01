@@ -48,6 +48,23 @@ describe('ycb unit tests', function () {
         assert(libycb.version === '1.0.2');
     });
 
+    describe('leaking variables', function () {
+        it('should not share state between instances', function () {
+            var bundle = readFixtureFile('dimensions.json')
+                .concat(readFixtureFile('simple-1.json'))
+                .concat(readFixtureFile('simple-3.json'));
+
+            var one = new libycb.Ycb([]);
+            cmp(one.numberToValue, ['*']);
+
+            var two = new libycb.Ycb(bundle);
+            cmp(two.numberToValue, ['*', 'fr', 'ca', 'gb', 'fr', 'att', 'bt']);
+
+            // previously this would throw since we shared a reference to the same object
+            cmp(one.numberToValue, ['*']);
+        });
+    });
+
     describe('_parseContext', function () {
         it('context objects should be parsed', function () {
             var bundle, ycb;
