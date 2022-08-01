@@ -65,6 +65,34 @@ describe('ycb unit tests', function () {
         });
     });
 
+    describe('main or master', function () {
+        const dimensions = readFixtureFile('dimensions.json');
+        ['main', 'master'].forEach((mainOrMaster) => {
+            it(`it should allow ${mainOrMaster}`, function () {
+                const Ycb = libycb.Ycb;
+                const ycb = new Ycb(
+                    JSON.parse(JSON.stringify(dimensions)).concat([
+                        {
+                            settings: [mainOrMaster],
+                            hostname: 'example.com',
+                        },
+                        {
+                            settings: ['environment:development'],
+                            hostname: 'development.example.com',
+                        },
+                        {
+                            settings: ['environment:production'],
+                            hostname: 'production.example.com',
+                        },
+                    ])
+                );
+                assert.equal(ycb.read({}).hostname, 'example.com');
+                assert.equal(ycb.read({ environment: 'development' }).hostname, 'development.example.com');
+                assert.equal(ycb.read({ environment: 'production' }).hostname, 'production.example.com');
+            });
+        });
+    });
+
     describe('_parseContext', function () {
         it('context objects should be parsed', function () {
             var bundle, ycb;
