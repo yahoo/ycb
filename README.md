@@ -35,7 +35,7 @@ const configArray = [
         ],
     },
     {
-        settings: ['master'],
+        settings: ['main'],
         host: 'example.com',
         prefix: null,
     },
@@ -85,7 +85,7 @@ const configArray = [
         ],
     },
     {
-        settings: ['master'],
+        settings: ['main'],
         host: 'example.com',
     },
     {
@@ -133,7 +133,7 @@ To support proper cache expiration one may set the `cacheInfo` option, in which 
 
 ### Examples
 
-Examples are provided in [the tests directory](https://github.com/yahoo/ycb/tree/master/tests).
+Examples are provided in [the tests directory](https://github.com/yahoo/ycb/tree/main/tests).
 
 ### License
 

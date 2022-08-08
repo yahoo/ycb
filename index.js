@@ -11,8 +11,7 @@ var VERSION = '1.0.2',
     EXPIRATION_KEY = '__ycb_expires_at__',
     SENTINEL_TIME = Number.POSITIVE_INFINITY,
     SUBMATCH = /\$\$([\w.-_]+?)\$\$/,
-    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g,
-    DEFAULT_LOOKUP = [DEFAULT];
+    SUBMATCHES = /\$\$([\w.-_]+?)\$\$/g;
 var cloneDeep = require('./lib/cloneDeep');
 var mergeDeep = require('./lib/mergeDeep');
 var isA = require('./lib/isA');
@@ -75,10 +74,10 @@ function Ycb(bundle, options) {
     this.options = options || {};
     this.dimensionsList = [];
     this.valueToNumber = {};
-    this.numberToValue = DEFAULT_LOOKUP;
+    this.numberToValue = [DEFAULT];
     this.precedenceMap = [[0]];
     this.tree = new Map();
-    this.masterDelta = undefined;
+    this.mainDelta = undefined;
     this.dimensions = [];
     this.logContext = '';
     if (this.options.logContext !== undefined) {
@@ -98,7 +97,7 @@ Ycb.prototype = {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
         var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
-        var collector = this.masterDelta ? cloneDeep(this.masterDelta[subKey]) : {};
+        var collector = this.mainDelta ? cloneDeep(this.mainDelta[subKey]) : {};
         this._readHelper(this.tree, 0, context, collector, subKey);
         if (collector.__ycb_source__) {
             return omit(collector, '__ycb_source__');
@@ -160,12 +159,12 @@ Ycb.prototype = {
         var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = {};
         var soonest = SENTINEL_TIME;
-        if (this.masterDelta) {
-            if (this.masterDelta[subKey]) {
-                collector = cloneDeep(this.masterDelta[subKey]);
+        if (this.mainDelta) {
+            if (this.mainDelta[subKey]) {
+                collector = cloneDeep(this.mainDelta[subKey]);
             }
-            if (this.masterDelta.schedules) {
-                soonest = this._readScheduled(this.masterDelta.schedules, time, collector, subKey);
+            if (this.mainDelta.schedules) {
+                soonest = this._readScheduled(this.mainDelta.schedules, time, collector, subKey);
             }
         }
         var ret = this._readTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
@@ -243,7 +242,7 @@ Ycb.prototype = {
         options = options ? mergeDeep(this.options, options, true) : this.options;
         var context = this._parseContext(contextObj);
         var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
-        var collector = this.masterDelta ? [this.masterDelta[subKey]] : [];
+        var collector = this.mainDelta ? [this.mainDelta[subKey]] : [];
         this._readNoMergeHelper(this.tree, 0, context, collector, subKey);
         return cloneDeep(collector);
     },
@@ -302,12 +301,12 @@ Ycb.prototype = {
         var subKey = options.applySubstitutions !== false ? 'subbed' : 'unsubbed';
         var collector = [];
         var soonest = SENTINEL_TIME;
-        if (this.masterDelta) {
-            if (this.masterDelta[subKey]) {
-                collector = [this.masterDelta[subKey]];
+        if (this.mainDelta) {
+            if (this.mainDelta[subKey]) {
+                collector = [this.mainDelta[subKey]];
             }
-            if (this.masterDelta.schedules) {
-                soonest = this._readScheduledNoMerge(this.masterDelta.schedules, time, collector, subKey);
+            if (this.mainDelta.schedules) {
+                soonest = this._readScheduledNoMerge(this.mainDelta.schedules, time, collector, subKey);
             }
         }
         var ret = this._readNoMergeTimeAwareHelper(this.tree, 0, context, time, collector, subKey);
@@ -526,7 +525,7 @@ Ycb.prototype = {
 
     /**
      * Evaluate settings and determine which dimensions and values are used. Check for unknown dimensions.
-     * Set the master config if it exist.
+     * Set the main config if it exist.
      * @param config {object}
      * @param allDimensions {object}
      * @param height {number}
@@ -595,22 +594,22 @@ Ycb.prototype = {
                 }
                 intervals[i] = interval;
             }
-            if (settingDimensions[0] === 'master') {
+            if (settingDimensions[0] === 'main' || settingDimensions[0] === 'master') {
                 if (settingDimensions.length > 1) {
                     logBundleWarning(
                         i,
-                        'master setting with additional dimensions',
+                        'main setting with additional dimensions',
                         JSON.stringify(settingDimensions),
                         this.logContext
                     );
                     continue;
                 }
-                if (this.masterDelta !== undefined) {
-                    //if master delta has been set than combine with existing one
+                if (this.mainDelta !== undefined) {
+                    //if main delta has been set than combine with existing one
                     var delta = this._buildDelta(configObj, interval);
-                    this.masterDelta = this._combineDeltas(delta, this.masterDelta);
+                    this.mainDelta = this._combineDeltas(delta, this.mainDelta);
                 } else {
-                    this.masterDelta = this._buildDelta(configObj, interval);
+                    this.mainDelta = this._buildDelta(configObj, interval);
                 }
                 continue;
             }
@@ -1106,7 +1105,7 @@ Ycb.prototype = {
      * @return {nothing} results returned via callback
      */
     walkSettings: function (callback) {
-        if (this.masterDelta && !callback({}, cloneDeep(this.masterDelta.subbed))) {
+        if (this.mainDelta && !callback({}, cloneDeep(this.mainDelta.subbed))) {
             return undefined;
         }
         this._walkSettingsHelper(this.tree, 0, [], callback, [false]);

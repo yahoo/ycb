@@ -1,6 +1,6 @@
 [
     {
-        "settings": ["master"],
+        "settings": ["main"],
         "appPort": 8666
     },
     {

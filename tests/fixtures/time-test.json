@@ -38,7 +38,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:12.162Z",
@@ -56,7 +56,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:11.998Z",
@@ -74,7 +74,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:12.186Z",
@@ -92,7 +92,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:10.910Z",
@@ -110,7 +110,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:13.535Z",
@@ -360,7 +360,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:11.656Z",
@@ -527,7 +527,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:18.160Z",
@@ -669,7 +669,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:16.705Z"
@@ -776,7 +776,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:13.706Z",
@@ -794,7 +794,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:15.698Z",
@@ -906,7 +906,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:10.817Z",
@@ -924,7 +924,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:13.486Z",
@@ -1055,7 +1055,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:16.176Z",
@@ -1092,7 +1092,7 @@
   {
     "settings": {
       "dimensions": [
-        "master"
+        "main"
       ],
       "schedule": {
         "start": "2019-08-19T20:26:16.233Z",
