@@ -10,11 +10,11 @@
         "Caridy Patino <caridy@yahoo-inc.com>",
         "Isao Yagi <isao@yahoo-inc.com>"
     ],
-    "dependencies": {},
     "main": "index",
     "scripts": {
         "cover": "nyc npm run test",
         "lint": "eslint . && prettier --check .",
+        "lint:fix": "eslint . --fix && prettier --write .",
         "pretest": "npm run lint",
         "test": "mocha tests/unit --recursive --reporter spec"
     },
@@ -22,7 +22,7 @@
         "eslint": "^8.0.0",
         "mocha": "^10.0.0",
         "nyc": "^15.0.1",
-        "prettier": "^2.5.1"
+        "prettier": "^3.0.0"
     },
     "repository": {
         "type": "git",

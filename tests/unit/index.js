@@ -84,7 +84,7 @@ describe('ycb unit tests', function () {
                             settings: ['environment:production'],
                             hostname: 'production.example.com',
                         },
-                    ])
+                    ]),
                 );
                 assert.equal(ycb.read({}).hostname, 'example.com');
                 assert.equal(ycb.read({ environment: 'development' }).hostname, 'development.example.com');
@@ -169,61 +169,61 @@ describe('ycb unit tests', function () {
             assert.equal(
                 logHistory[3],
                 'WARNING: config[5] has no valid settings field. {}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[4],
                 'WARNING: config[6] has no valid settings field. {"foo":"bar"}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[5],
                 'WARNING: config[7] has empty config. ["environment:production"]',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[6],
                 'WARNING: config[8] has no valid settings field. {"settings":null}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(logHistory[7], 'WARNING: config[9] has empty settings array.', 'warning log should match');
             assert.equal(
                 logHistory[8],
                 'WARNING: config[10] has main setting with additional dimensions. ["main","lang:fr"]',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[9],
                 'WARNING: config[11] has invalid setting main. ["lang:fr","main"]',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[10],
                 'WARNING: config[13] has invalid dimension blah. ["blah:fr"]',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(logHistory[11], 'WARNING: config[14] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[12],
                 'WARNING: config[14] has empty schedule. {"dimensions":["main"],"schedule":{}}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(logHistory[13], 'WARNING: config[15] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[14],
                 'WARNING: config[15] has invalid start date. {"start":"bad"}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(logHistory[15], 'WARNING: config[16] has empty config. ["main"]', 'warning log should match');
             assert.equal(
                 logHistory[16],
                 'WARNING: config[16] has invalid end date. {"end":"bad"}',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[17],
                 'WARNING: config[12] has invalid value barbar for dimension lang. {"dimensions":["lang:barbar"]}',
-                'warning log should match'
+                'warning log should match',
             );
 
             var count = 0;
@@ -250,92 +250,92 @@ describe('ycb unit tests', function () {
             assert.equal(
                 logHistory[0],
                 'WARNING: config[2] has non-object config. [] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[1],
                 'WARNING: config[3] has non-object config. null source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[2],
                 'WARNING: config[4] has non-object config. true source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[3],
                 'WARNING: config[5] has no valid settings field. {} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[4],
                 'WARNING: config[6] has no valid settings field. {"foo":"bar"} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[5],
                 'WARNING: config[7] has empty config. ["environment:production"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[6],
                 'WARNING: config[8] has no valid settings field. {"settings":null} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[7],
                 'WARNING: config[9] has empty settings array. source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[8],
                 'WARNING: config[10] has main setting with additional dimensions. ["main","lang:fr"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[9],
                 'WARNING: config[11] has invalid setting main. ["lang:fr","main"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[10],
                 'WARNING: config[13] has invalid dimension blah. ["blah:fr"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[11],
                 'WARNING: config[14] has empty config. ["main"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[12],
                 'WARNING: config[14] has empty schedule. {"dimensions":["main"],"schedule":{}} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[13],
                 'WARNING: config[15] has empty config. ["main"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[14],
                 'WARNING: config[15] has invalid start date. {"start":"bad"} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[15],
                 'WARNING: config[16] has empty config. ["main"] source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[16],
                 'WARNING: config[16] has invalid end date. {"end":"bad"} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
             assert.equal(
                 logHistory[17],
                 'WARNING: config[12] has invalid value barbar for dimension lang. {"dimensions":["lang:barbar"]} source=/bundle-path.json',
-                'warning log should match'
+                'warning log should match',
             );
 
             var count = 0;
@@ -386,11 +386,11 @@ describe('ycb unit tests', function () {
             var ycb = new libycb.Ycb({});
             var delta1 = ycb._combineDeltas(
                 ycb._buildDelta({ a: 1 }, { start: 10, end: 1100 }),
-                ycb._buildDelta({ a: 'b' })
+                ycb._buildDelta({ a: 'b' }),
             );
             var delta2 = ycb._combineDeltas(
                 ycb._buildDelta({ a: 1 }, { start: 5, end: 2000 }),
-                ycb._buildDelta({ c: 'd' })
+                ycb._buildDelta({ c: 'd' }),
             );
             var combined = ycb._combineDeltas(delta1, delta2);
             assert.equal(combined.subbed, combined.unsubbed);
@@ -632,7 +632,7 @@ describe('ycb unit tests', function () {
                     rab: 0,
                     zab: false,
                 },
-                config
+                config,
             );
 
             config = ycb.read({
@@ -647,7 +647,7 @@ describe('ycb unit tests', function () {
                     rab: 0,
                     zab: false,
                 },
-                config
+                config,
             );
 
             config = ycb.read({
@@ -662,7 +662,7 @@ describe('ycb unit tests', function () {
                     rab: 0,
                     zab: false,
                 },
-                config
+                config,
             );
         });
 
@@ -986,7 +986,7 @@ describe('ycb unit tests', function () {
                 var unmerged = ycb.readNoMergeTimeAware(context, t, { cacheInfo: true });
                 assert(
                     Object.keys(config.intervals).length === valid.length,
-                    'Number of valid configs should be equal'
+                    'Number of valid configs should be equal',
                 );
                 assert(unmerged.length === valid.length, 'Number of unmerged configs should be equal');
                 valid.forEach((name) => {
@@ -996,7 +996,7 @@ describe('ycb unit tests', function () {
                 if (next) {
                     assert(
                         next === unmerged[0][libycb.expirationKey],
-                        t + ' Unmerged cache info should give next change time'
+                        t + ' Unmerged cache info should give next change time',
                     );
                 }
             }

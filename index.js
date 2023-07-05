@@ -360,7 +360,7 @@ Ycb.prototype = {
                         context,
                         time,
                         collector,
-                        subKey
+                        subKey,
                     );
                     if (ret < soonest) {
                         soonest = ret;
@@ -381,7 +381,7 @@ Ycb.prototype = {
                             context,
                             time,
                             collector,
-                            subKey
+                            subKey,
                         );
                         seen[keys[j]] = true;
                         if (ret < soonest) {
@@ -488,7 +488,7 @@ Ycb.prototype = {
                     fullContext,
                     activeDimensions,
                     usedValues,
-                    config[configIndex].settings
+                    config[configIndex].settings,
                 );
                 if (context !== undefined) {
                     var delta = this._buildDelta(config[configIndex], intervals[configIndex]);
@@ -600,7 +600,7 @@ Ycb.prototype = {
                         i,
                         'main setting with additional dimensions',
                         JSON.stringify(settingDimensions),
-                        this.logContext
+                        this.logContext,
                     );
                     continue;
                 }
@@ -625,7 +625,7 @@ Ycb.prototype = {
                         i,
                         'invalid setting ' + settingDimensions[j],
                         JSON.stringify(settingDimensions),
-                        this.logContext
+                        this.logContext,
                     );
                     continue configLoop;
                 }
@@ -852,7 +852,7 @@ Ycb.prototype = {
                 [0],
                 this.precedenceMap,
                 labelCollector,
-                this.numberToValue
+                this.numberToValue,
             );
             this.valueToNumber[dimensionName] = labelCollector;
         }
@@ -898,7 +898,7 @@ Ycb.prototype = {
                     currentPath,
                     pathCollector,
                     valueToNumCollector,
-                    numToValueCollector
+                    numToValueCollector,
                 );
             }
         }
@@ -938,7 +938,7 @@ Ycb.prototype = {
                                 configIndex,
                                 'invalid value ' + valueChunk + ' for dimension ' + dimensionName,
                                 JSON.stringify(setting),
-                                this.logContext
+                                this.logContext,
                             );
                         }
                     }
@@ -954,7 +954,7 @@ Ycb.prototype = {
                             configIndex,
                             'invalid value ' + contextValue + ' for dimension ' + dimensionName,
                             JSON.stringify(setting),
-                            this.logContext
+                            this.logContext,
                         );
                         return;
                     }
