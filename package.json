@@ -16,7 +16,8 @@
         "lint": "eslint . && prettier --check .",
         "lint:fix": "eslint . --fix && prettier --write .",
         "pretest": "npm run lint",
-        "test": "mocha tests/unit --recursive --reporter spec"
+        "test": "mocha tests/unit --recursive --reporter spec",
+        "posttest": "node -r ./tests/edgeRuntime.js ./node_modules/.bin/mocha tests/unit --recursive --reporter spec"
     },
     "devDependencies": {
         "eslint": "^9.0.0",
