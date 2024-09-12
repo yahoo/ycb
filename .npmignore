@@ -1,5 +1,5 @@
-.nyc_output
-tests
+.*
+eslint.config.mjs
 examples
-artifacts
 results.xml
+tests
