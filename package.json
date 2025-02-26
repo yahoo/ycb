@@ -2,8 +2,13 @@
     "name": "ycb",
     "version": "2.3.0",
     "description": "YCB is a multi-dimensional configuration library that builds bundles from resource files describing a variety of values.",
-    "author": "Ric Allinson <allinson@yahoo-inc.com>",
+    "bugs": "https://github.com/yahoo/ycb/issues",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/yahoo/ycb.git"
+    },
     "license": "BSD",
+    "author": "Ric Allinson <allinson@yahoo-inc.com>",
     "contributors": [
         "Drew Folta <folta@yahoo-inc.com>",
         "Michael Ridgway <mridgway@yahoo-inc.com>",
@@ -11,6 +16,7 @@
         "Isao Yagi <isao@yahoo-inc.com>"
     ],
     "main": "index",
+    "types": "index.d.ts",
     "scripts": {
         "cover": "nyc npm run test",
         "lint": "eslint . && prettier --check .",
@@ -19,20 +25,15 @@
         "test": "mocha tests/unit --recursive --reporter spec",
         "posttest": "node -r ./tests/edgeRuntime.js ./node_modules/.bin/mocha tests/unit --recursive --reporter spec"
     },
+    "prettier": {
+        "printWidth": 120,
+        "singleQuote": true,
+        "tabWidth": 4
+    },
     "devDependencies": {
         "eslint": "^9.0.0",
         "mocha": "^11.0.1",
         "nyc": "^17.0.0",
         "prettier": "^3.0.0"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/yahoo/ycb.git"
-    },
-    "bugs": "https://github.com/yahoo/ycb/issues",
-    "prettier": {
-        "printWidth": 120,
-        "singleQuote": true,
-        "tabWidth": 4
     }
 }
